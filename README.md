@@ -1,6 +1,6 @@
-# chugger
+# stewpot
  
-A tool for managing web assets, without the complexity. 
+Cook a stew of delicious assets...
 
     ⚠ WARNING: This project is young, under development and is not ready for use yet.
 
@@ -10,7 +10,7 @@ A tool for managing web assets, without the complexity.
 
 ## HTTPS Configuration
 
-In order to run chugger development server with HTTPS enabled, you'll have to make sure chugger can bind to port 443.
+In order to run stewpot development server with HTTPS enabled, you'll have to make sure stewpot can bind to port 443.
 
 ### Linux & WSL
 
@@ -29,10 +29,10 @@ If you are using WSL on Windows, make sure your project file are located on the 
 
 ### macOS
 
-To get the development server running on macOS you'll have to run `chugger start` as `sudo`. Like this:
+To get the development server running on macOS you'll have to run `stewpot start` as `sudo`. Like this:
 
 ```
-sudo bin/chugger start
+sudo bin/stewpot start
 ```
 
 ## File System Changes on WSL

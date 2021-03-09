@@ -7,28 +7,24 @@ console.log('granted', granted);
 const __filename = path.fromFileUrl(import.meta.url);
 const __dirname = path.dirname(path.fromFileUrl(import.meta.url));
 const projectRoot = Deno.cwd();
-const chuggerPath = path.join(__dirname, "..", "..");
-const configFilename = "chugger.config.js";
+const stewpotPath = path.join(__dirname, "..", "..");
+const configFilename = "stewpot.config.js";
 const projectConfigPath = path.join(projectRoot, configFilename);
 const defaultConfigPath = path.join(
-  chuggerPath,
+  stewpotPath,
   "src",
   "config",
   configFilename,
 );
 const templateConfigPath = path.join(
-  chuggerPath,
+  stewpotPath,
   "src",
   "templates",
   configFilename,
 );
 
-export function getChuggerPath() {
-  return chuggerPath;
-}
-
 export {
-  chuggerPath,
+  stewpotPath,
   defaultConfigPath,
   projectConfigPath,
   projectRoot,

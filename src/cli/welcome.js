@@ -1,4 +1,4 @@
-import { dim, green } from "../../deps.js";
+import chalk from "chalk";
 import { DESCRIPTION, NAME, VERSION } from "../../info.js";
 
 export default function welcome() {
@@ -7,9 +7,9 @@ export default function welcome() {
 
     ${NAME}@v${VERSION}
 
-    🎉 ${green("Welcome to chugger!")}
+    🎉 ${chalk.green("Welcome to stewpot!")}
 
-    ${dim(DESCRIPTION)}
+    ${chalk.dim(DESCRIPTION)}
 
 ********************************************************************\n`;
 

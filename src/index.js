@@ -1,7 +1,7 @@
 // deno standard modules
 import { parseFlags } from "../deps.js";
 
-// chugger modules
+// stewpot modules
 import welcome from "./cli/welcome.js";
 import { list, run } from "./cli/commands.js";
 
@@ -20,4 +20,4 @@ function main() {
   }
 }
 
-export default main();
+export default main;

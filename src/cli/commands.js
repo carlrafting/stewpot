@@ -1,5 +1,3 @@
-import { yellow } from "../../deps.js";
-
 import init from "./commands/init.js";
 import build from "./commands/build.js";
 import start from "./commands/start.js";
@@ -7,7 +5,7 @@ import start from "./commands/start.js";
 const commands = [
   {
     name: "init",
-    description: "Intitalize a new chugger project",
+    description: "Intitalize a new stewpot project",
     command: init,
   },
   { 
@@ -26,7 +24,7 @@ export function list() {
   let text = `   Available Commands: \n`;
 
   commands.forEach((command) => {
-      text += [`   chugger ${command.name}`,  `     ${command.description} \n`].join(' ')
+      text += [`   stewpot ${command.name}`,  `     ${command.description} \n`].join(' ')
     }
   );
 

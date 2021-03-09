@@ -1,4 +1,0 @@
-#!/usr/bin/env -S -v deno run --unstable
-
-// chugger main module
-import '../mod.js';
