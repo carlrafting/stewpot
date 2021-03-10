@@ -1,12 +1,9 @@
-import { path } from "../../deps.js";
+import * as path from "path";
+import * as url from "url";
 
-const { granted } = await Deno.permissions.request({ name: 'read' });
-
-console.log('granted', granted);
-
-const __filename = path.fromFileUrl(import.meta.url);
-const __dirname = path.dirname(path.fromFileUrl(import.meta.url));
-const projectRoot = Deno.cwd();
+const __filename = url.fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const projectRoot = process.cwd();
 const stewpotPath = path.join(__dirname, "..", "..");
 const configFilename = "stewpot.config.js";
 const projectConfigPath = path.join(projectRoot, configFilename);

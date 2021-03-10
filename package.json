@@ -1,10 +1,10 @@
 {
   "name": "stewpot",
   "version": "0.0.0",
-  "description": "Cook a stew of delicious assets...",
+  "description": "Serving you a delicious stew of assets!",
   "type": "module",
   "main": "./src/index.js",
-  "bin": "./bin/stewpot",
+  "bin": "./bin/stewpot.js",
   "directories": {
     "example": "examples"
   },

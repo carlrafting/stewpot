@@ -1,15 +1,16 @@
 import chalk from "chalk";
-import { DESCRIPTION, NAME, VERSION } from "../../info.js";
+import * as path from "path";
+import importJSON from '../utils/importJSON.js';
+
+const pkg = await importJSON(path.join('..', '..', 'package.json'));
 
 export default function welcome() {
   const message = `
 ********************************************************************
 
-    ${NAME}@v${VERSION}
+    🍲    ${pkg.name}@v${pkg.version}
 
-    🎉 ${chalk.green("Welcome to stewpot!")}
-
-    ${chalk.dim(DESCRIPTION)}
+    ${chalk.dim(pkg.description)}
 
 ********************************************************************\n`;
 

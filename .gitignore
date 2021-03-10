@@ -3,3 +3,4 @@ src/config/*.key
 src/config/*.crt
 .vscode
 node_modules
+examples/foobar

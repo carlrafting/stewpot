@@ -1,4 +1,8 @@
-import { copy, exists, green, red } from "../../../deps.js";
+// import { copy, exists, green, red } from "../../../deps.js";
+import * as fs from 'fs/promises';
+import { constants as FS_CONSTANTS } from 'fs';
+import chalk from 'chalk';
+
 import {
   projectConfigPath,
   projectRoot,
@@ -7,21 +11,17 @@ import {
 
 async function copyConfigurationFile() {
   try {
-    const status = await Deno.permissions.request({ name: 'write' });
-    await copy(templateConfigPath, projectConfigPath);
-    console.log(green("✅ Configuration file created!"));
-  } catch (error) {
-    console.log(red("⛔ Could not create configuration file!"), error);
-  }
+    await fs.copyFile(templateConfigPath, projectConfigPath, FS_CONSTANTS.COPYFILE_EXCL);
+    console.log(chalk.green("✅   Configuration file created!"));
+  } catch (e) {
+    console.log(chalk.red("⛔   Could not create configuration file!"));
+    if (e.code === 'EEXIST') {
+      console.info("Config file already exists!")
+    }
+  }    
 }
 
 export default async function init() {
   console.log('projectConfigPath', projectConfigPath);
-
-  if (await exists(`${projectConfigPath}`)) {
-    console.log("Config file already exists!");
-  } else {
-    console.log(`No configuration found in ${projectRoot}. Creating one...`);
-    copyConfigurationFile();
-  }
+  await copyConfigurationFile();
 }

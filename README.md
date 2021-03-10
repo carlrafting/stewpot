@@ -1,12 +1,26 @@
 # stewpot
- 
-Cook a stew of delicious assets...
 
-    ⚠ WARNING: This project is young, under development and is not ready for use yet.
+```
+┌─┐┌┬┐┌─┐┬ ┬┌─┐┌─┐┌┬┐
+└─┐ │ ├┤ │││├─┘│ │ │ 
+└─┘ ┴ └─┘└┴┘┴  └─┘ ┴ 
+
+Serving you a delicious stew of assets!
+```
+
+  ⚠ WARNING: This project is young, under development and is not ready for use yet.
 
 ## Install
 
-...
+This project is not currently available on npm, but you can install it as a npm package with github, like this:
+
+```
+# from master branch
+npm i carlrafting/stewpot/master
+
+# a specific version (currently 0.0.0)
+npm i carlrafting/stewpot@0.0.0
+```
 
 ## HTTPS Configuration
 
