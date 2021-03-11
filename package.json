@@ -9,8 +9,9 @@
     "example": "examples"
   },
   "scripts": {
-    "test": "ava src/**",
-    "test:watch": "ava src/** --watch"
+    "test": "uvu ./test",
+    "test:coverage": "c8 --include=src npm test",
+    "test:report": "c8 report --reporter=text-lcov > coverage.lcov"
   },
   "repository": {
     "type": "git",
@@ -24,7 +25,8 @@
   },
   "homepage": "https://github.com/carlrafting/stewpot#readme",
   "devDependencies": {
-    "ava": "^3.15.0"
+    "c8": "^7.6.0",
+    "uvu": "^0.5.1"
   },
   "dependencies": {
     "chalk": "^4.1.0"

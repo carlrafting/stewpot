@@ -1,12 +1,16 @@
-import { exists, path } from "../../../deps.js";
+import * as fs from 'fs/promises';
+import { constants as FS_CONSTANTS } from 'fs';
 import { defaultConfigPath, projectConfigPath } from "../../utils/paths.js";
-import { server } from "../server.js";
+import { exists } from '../../utils/exists.js';
+// import { server } from "../server.js";
+
+const { R_OK } = FS_CONSTANTS;
 
 function loadConfigurationFile(path) {
   return (
     import(path)
-      .then((module) => module.default)
-      .catch((e) => console.log(e))
+      .then(module => module.default)
+      .catch(e => console.log(e))
   );
 }
 
@@ -14,46 +18,27 @@ function getConfigProps(config) {
   return (typeof config === 'function' ? config() : config);
 }
 
-async function getConfigObject() {
-  const result = await exists(projectConfigPath);
-  
-  const config = await loadConfigurationFile(
-    result ? projectConfigPath : defaultConfigPath,
-  );
-
-  const { watch, server } = getConfigProps(config);
-
-  return {
-    watch,
-    server
-  };
-}
-
-async function getDefaultConfigObject() {
-  const config = await loadConfigurationFile(defaultConfigPath);
-  
-  return {
-    ...getConfigProps(config)
-  };
-}
-
 export default async function start() {
-  const { watch } = await getConfigObject();
-  let { server: serverConfig } = await getConfigObject();
+  const projectConfigExists = await exists(projectConfigPath);
+  const config = await (async () => {
+    const module = await loadConfigurationFile(
+      projectConfigExists ? projectConfigPath : defaultConfigPath,
+    );    
+    return {
+      ...getConfigProps(module)
+    };
+  })();
 
-  if (!serverConfig) {
-    // get default server configuration if there is no server property in project config
-    const { server: defaultServerConfig } = getDefaultConfigObject();
-    serverConfig = defaultServerConfig;
-    console.log(defaultServerConfig);
-  }
-
+  const serverKeysLength = Object.keys(config.server).length;
+  const watchKeysLength = Object.keys(config.watch).length;
+  
   // TODO: validate config file. If no properties were found, merge with default config.
 
-  console.log("serverConfig", serverConfig);
-  server({ ...serverConfig });
+  // server({ ...serverConfig });
 
   // console.log('defaultConfig', defaultConfig);
+
+  return;
 
   if (!watch) {
     return;  
