@@ -1,6 +1,6 @@
 import { test } from 'uvu';
 import * as assert from 'uvu/assert';
-import { run } from "../src/cli/run.js";
+import { run } from "../../src/cli/run.js";
 
 test('run without command', () => {
   assert.throws(() => run(), { instanceOf: Error }, '[WARNING] No command provided! \n');

@@ -1,6 +1,6 @@
 import { test } from 'uvu';
 import * as assert from 'uvu/assert';
-import welcome from "../src/cli/welcome.js";
+import welcome from "../../src/cli/welcome.js";
 
 test("welcome", () => {
   const result = welcome();
