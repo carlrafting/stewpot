@@ -26,6 +26,7 @@
   "homepage": "https://github.com/carlrafting/stewpot#readme",
   "devDependencies": {
     "c8": "^7.6.0",
+    "eslint": "^7.22.0",
     "uvu": "^0.5.1"
   },
   "dependencies": {
