@@ -1,34 +1,61 @@
-export const routes = [];
+export default (options={}) => {
+  // const defaultConfig = {};
 
-export function hasURL(url) {
-  const matches = routes.filter(route => (
-    url === route.url
-  ));
+  const config = {
+    ...options
+  };
 
-  const len = matches.length;
+  let initilaized = false;
+  const routes = new Map();
 
-  return len > 0;
-}
+  if (!initilaized) {
+    initilaized = true;
+  }
 
-export function add(method='GET', url='/', callback) {
-  const duplicates = routes.filter(route => (
-    route.method === method.toUpperCase() &&
-    route.url === url
-  ));
+  const isInitialized = () => {
+    if (!initilaized) {
+      throw new Error('Router was not initialized!');
+    }
+  };
 
-  console.log('duplicates', duplicates);
+  function add(name, method='GET', url='/', callback=()=>{}) {
+    isInitialized();
 
-  return (duplicates.length === 0) ? 
-  (
-    routes.push({
-      method: method.toUpperCase(),
-      url,
-      callback
-    })
-  ) : 
-  false;
-}
+    if (!routes.has(name)) {
+      routes.set(name, {
+        method: method.toUpperCase(),
+        url,
+        callback
+      });
 
-export function clear() {
+      return true;
+    }
 
-}
+    return false;
+  }
+
+  function get(name, url='/', callback=()=>{}) {
+    return add(name, 'GET', url, callback);
+  }
+
+  function post(name, url='/', callback=()=>{}) {
+    return add(name, 'POST', url, callback);
+  }
+  
+  function clear() {
+    isInitialized();
+    routes.clear();
+  }
+
+  return Object.freeze({
+    config,
+    routes() {
+      return routes;
+    },
+    add,
+    get,
+    post,
+    clear
+  });
+};
+

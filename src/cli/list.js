@@ -1,4 +1,4 @@
-import { commands } from "./commands.js";
+import { commands } from './commands.js';
 
 export function list() {
   let text = `   Available Commands: \n`;
@@ -9,7 +9,7 @@ export function list() {
   );
 
   console.log(text);
-  console.log("\n");
+  console.log('\n');
 
   return text;
 }

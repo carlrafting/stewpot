@@ -1,14 +1,16 @@
 // import { path, serve, serveTLS, Application, Router } from "../../deps.js";
-import notFound from "../middleware/not_found.js";
-import responseTime from "../middleware/response_time.js";
-import _static from "../middleware/static.js";
+import notFound from '../../middleware/not_found.js';
+import responseTime from '../../middleware/response_time.js';
+import _static from '../../middleware/static.js';
+
+// Original server implementation in deno.
 
 export async function server({
   hostname,
   port,
   https,
 }) {
-  console.log("https", https);
+  console.log('https', https);
   
   const status = await Deno.permissions.request({ name: 'net', host: hostname });
 
@@ -25,8 +27,8 @@ export async function server({
     // let { certFile, keyFile } = https;
     certFile = path.join(Deno.cwd(), https.certFile);
     keyFile = path.join(Deno.cwd(), https.keyFile);
-    console.log("certFile", certFile);
-    console.log("keyFile", keyFile);
+    console.log('certFile', certFile);
+    console.log('keyFile', keyFile);
   }
 
   // const server = https
@@ -34,15 +36,15 @@ export async function server({
   //   : serve({ hostname, port });
 
   router.get('/', (context) => {
-    context.response.body = "Hello world!";
+    context.response.body = 'Hello world!';
   });
 
   app.addEventListener('listen', () => {
     console.log(
-      `${https ? "HTTPS" : "HTTP"} webserver running.  Access it at:  ${
+      `${https ? 'HTTPS' : 'HTTP'} webserver running.  Access it at:  ${
         https
-          ? "https"
-          : "http"
+          ? 'https'
+          : 'http'
       }://${hostname}:${port}/`,
     );
   });

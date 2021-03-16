@@ -1,6 +1,6 @@
 import * as fs from 'fs/promises';
 import { constants as FS_CONSTANTS } from 'fs';
-import { defaultConfigPath, projectConfigPath } from "../../utils/paths.js";
+import { defaultConfigPath, projectConfigPath } from '../../utils/paths.js';
 import { exists } from '../../utils/exists.js';
 // import { server } from "../server.js";
 

@@ -1,7 +1,7 @@
 import { test } from 'uvu';
 import * as assert from 'uvu/assert';
 
-test("test commands", () => {
+test('test commands', () => {
   assert.ok(true);
 });
 

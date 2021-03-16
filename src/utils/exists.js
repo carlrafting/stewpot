@@ -1,8 +1,8 @@
-import * as fs from 'fs/promises';
+import fs from 'fs';
 
 export async function exists(path) {
   try {
-    const file = await fs.access(path);
+    await fs.promises.access(path);
     return true;
   } catch (err) {
     if (err.errno === -2) {

@@ -1,10 +1,15 @@
-import { commands } from "./commands.js";
+import { commands } from './commands.js';
 
-export function run(command, runCommand = true) {
+export function run({
+  command,
+  // eslint-disable-next-line no-unused-vars
+  flags,
+  execute=true
+}) {
   let message;
 
   if (!command) {
-    message = "[WARNING] No command provided! \n";
+    message = '[WARNING] No command provided! \n';
     throw new Error(message);
   }
 
@@ -19,7 +24,7 @@ export function run(command, runCommand = true) {
     throw new Error(message);
   }
 
-  return runCommand ?
+  return execute ?
     match && match.command() :
     match;
 }

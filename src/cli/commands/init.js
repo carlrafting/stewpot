@@ -6,24 +6,24 @@ import chalk from 'chalk';
 import {
   projectConfigPath,
   templateConfigPath,
-} from "../../utils/paths.js";
+} from '../../utils/paths.js';
 
 const { errno:{ EEXIST } } = os.constants;
 
 async function copyConfigurationFile() {
   try {
     await fs.copyFile(templateConfigPath, projectConfigPath, FS_CONSTANTS.COPYFILE_EXCL);
-    console.log(chalk.green("✅   Configuration file created!"));
+    console.log(chalk.green('✅   Configuration file created!'));
   } catch (err) {
-    console.log(chalk.red("⛔   Could not create configuration file!"));
+    console.log(chalk.red('⛔   Could not create configuration file!'));
     // NOTE: not sure if this is a good way to check for errors, probably not.
     if (err.errno === -EEXIST) {
-      console.info(chalk.white("  ↳   Config file already exists!"))
+      console.info(chalk.white('  ↳   Config file already exists!'));
     }
   }    
 }
 
-export default async function init() {
+export default function init() {
   console.log('projectConfigPath', projectConfigPath);
-  await copyConfigurationFile();
+  copyConfigurationFile();
 }
