@@ -4,8 +4,7 @@ import { list } from './cli/list.js';
 import { run } from './cli/run.js';
 
 const args = process.argv.slice(2);
-const command = args[0];
-const flags = args[1];
+const { command, flags } = args;
 const arglen = args.length;
 console.log('args', args);
 

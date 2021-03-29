@@ -1,11 +1,11 @@
 import { test } from 'uvu';
 import * as assert from 'uvu/assert';
-import stewpotrouter from '../../src/server/router.js';
+import stewpotRouter from '../../src/server/router.js';
 
 let router;
 
 test.before.each(() => {
-  router = stewpotrouter();
+  router = stewpotRouter();
 });
 
 test('should add routes', () => {

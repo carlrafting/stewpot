@@ -19,3 +19,5 @@ export const commands = [
     command: build
   },
 ];
+
+console.log(commands)

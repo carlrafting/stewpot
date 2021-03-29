@@ -1,17 +1,17 @@
 export default () => {
   return {
     server: {
-      hostname: "localhost",
+      hostname: 'localhost',
       port: 443,
       https: {
-        certFile: "config/localhost.crt",
-        keyFile: "config/localhost.key",
+        certFile: 'config/localhost.crt',
+        keyFile: 'config/localhost.key',
       },
     },
     watch: {
-      src: "/assets",
+      src: '/assets',
       public: {
-        url: "/",
+        url: '/',
         build: false,
       },
     },

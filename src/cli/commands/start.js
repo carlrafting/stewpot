@@ -1,10 +1,9 @@
-import * as fs from 'fs/promises';
-import { constants as FS_CONSTANTS } from 'fs';
+import fs from 'fs';
 import { defaultConfigPath, projectConfigPath } from '../../utils/paths.js';
 import { exists } from '../../utils/exists.js';
 // import { server } from "../server.js";
 
-const { R_OK } = FS_CONSTANTS;
+const { R_OK } = fs.constants;
 
 function loadConfigurationFile(path) {
   return (

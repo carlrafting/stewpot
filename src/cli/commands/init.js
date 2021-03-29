@@ -1,5 +1,5 @@
 // import { copy, exists, green, red } from "../../../deps.js";
-import * as fs from 'fs/promises';
+import fs from 'fs';
 import * as os from 'os';
 import { constants as FS_CONSTANTS } from 'fs';
 import chalk from 'chalk';
@@ -12,7 +12,7 @@ const { errno:{ EEXIST } } = os.constants;
 
 async function copyConfigurationFile() {
   try {
-    await fs.copyFile(templateConfigPath, projectConfigPath, FS_CONSTANTS.COPYFILE_EXCL);
+    await fs.promises.copyFile(templateConfigPath, projectConfigPath, FS_CONSTANTS.COPYFILE_EXCL);
     console.log(chalk.green('✅   Configuration file created!'));
   } catch (err) {
     console.log(chalk.red('⛔   Could not create configuration file!'));
@@ -25,5 +25,7 @@ async function copyConfigurationFile() {
 
 export default function init() {
   console.log('projectConfigPath', projectConfigPath);
-  copyConfigurationFile();
+  (async function() {
+    await copyConfigurationFile();
+  }());
 }

@@ -2,8 +2,7 @@ import { commands } from './commands.js';
 
 export function run({
   command,
-  // eslint-disable-next-line no-unused-vars
-  flags,
+  // flags,
   execute=true
 }) {
   let message;
@@ -17,7 +16,7 @@ export function run({
 
   console.log(message);
 
-  const match = commands.find((c) => c.name === command[0]);
+  const match = commands.find((c) => c.name === command);
 
   if (!match) {
     message = `Command '${command}' not found! \n`;

@@ -17,10 +17,7 @@ async function onWatch(event, filename) {
   if (filename && event === 'change') {
     try {
       const filePath = path.join('test', filename);
-      const spawnNode = spawn('node', [filePath], { shell: true });
-      spawnNode.on('disconnect', () => {
-        console.log('Shutting down watcher...');
-      });
+      const spawnNode = spawn('node', [ filePath ], { shell: true });
       spawnNode.stdout.on('data', (data) => {
         process.stdout.write(data, (err) => {
           if (err) {
