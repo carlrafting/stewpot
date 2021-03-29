@@ -55,13 +55,13 @@ export default (config={ ..._config }) => {
   
   const server = createServer({ ...config });
 
-  const mergedConfigValues = {
+  const configMerged = {
     ..._config,
     ...config,
     ...configExtra
   };
 
-  console.log('mergedConfigValues', mergedConfigValues);
+  console.log('configMerged', configMerged);
   
   server.on('request', handler);
   
@@ -75,10 +75,10 @@ export default (config={ ..._config }) => {
 
   function run() {
     server.listen({
-      ...mergedConfigValues
+      ...configMerged
     }, 
     () => {
-      console.log(`Started web server at ${mergedConfigValues.host}:${mergedConfigValues.port}`);
+      console.log(`Started web server at ${configMerged.host}:${configMerged.port}`);
     });
   }
 
@@ -92,7 +92,7 @@ export default (config={ ..._config }) => {
     .on('SIGTERM', signalHandler);
 
   return {
-    config: mergedConfigValues,
+    config: configMerged,
     use,
     run
   };
