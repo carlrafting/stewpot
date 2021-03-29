@@ -2,29 +2,17 @@ import http from 'http';
 import https from 'https';
 import chalk from 'chalk';
 import process from 'process';
-import url from 'url';
-import { defaultConfigURL } from '../utils/paths.js';
+// import url from 'url';
+import defaultConfig from '../config/stewpot.config.js';
 
-// const _config = {
-//   port: 80,
-//   host: 'localhost'
-// };
+// default server config object
+let _config;
 
-console.log('defaultConfigURL', defaultConfigURL);
-
-const _config = import(defaultConfigURL).then(module => {
-  console.log('_config module import', module);
-
-  if (module.default) {
-    if (typeof module.default === 'function') {
-      return module.default();
-    }
-
-    return module.default;
-  }
-
-  return module;
-}).catch(err => console.log('err', err));
+if (typeof defaultConfig === 'function') {
+  _config = defaultConfig().server;
+} else {
+  _config = defaultConfig.server;
+}
 
 console.log('_config', _config);
 
@@ -62,14 +50,12 @@ function validateConfig(config) {
   }
 }
 
-export default async (config={ ..._config }) => {
-  // if (Object.keys(_config).length === 0) {
-  //   throw new Error('Default config not loaded!');
-  // } 
+export default (config={ ..._config }) => {
+  if (Object.keys(_config).length === 0) {
+    throw new Error('Default config not loaded correctly!');
+  } 
   
   const server = createServer({ ...config });
-
-  // console.log(_config.default);
 
   const mergedConfigValues = {
     ..._config,
