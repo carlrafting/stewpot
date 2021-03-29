@@ -14,15 +14,7 @@ if (typeof defaultConfig === 'function') {
   _config = defaultConfig.server;
 }
 
-console.log('_config', _config);
-
 const portCheck = (config) => (config.port === 80 || config.port === 443);
-
-const configExtra = {
-  exclusive: portCheck(_config),
-  readableAll: portCheck(_config),
-  writeableAll: portCheck(_config)
-};
 
 function createServer(config) {
   return config.https ? https.createServer() : http.createServer();
@@ -51,19 +43,25 @@ function validateConfig(config) {
 }
 
 export default (config={ ..._config }) => {
-  if (Object.keys(_config).length === 0) {
-    throw new Error('Default config not loaded correctly!');
-  } 
+  if (Object.keys(config).length === 0) {
+    throw new Error('No configuration values detected!');
+  }
+
+  const configExtra = {
+    exclusive: portCheck(config),
+    readableAll: portCheck(config),
+    writeableAll: portCheck(config)
+  };
   
   const server = createServer({ ...config });
 
   const mergedConfigValues = {
     ..._config,
-    ...configExtra,
-    ...config
+    ...config,
+    ...configExtra
   };
 
-  console.log(mergedConfigValues);
+  console.log('mergedConfigValues', mergedConfigValues);
   
   server.on('request', handler);
   
@@ -71,12 +69,16 @@ export default (config={ ..._config }) => {
     console.log('Shutting down web server...');
   });
 
+  function use() {
+
+  }
+
   function run() {
     server.listen({
       ...mergedConfigValues
     }, 
     () => {
-      console.log(`Started web server at ${config.host}:${config.port}`);
+      console.log(`Started web server at ${mergedConfigValues.host}:${mergedConfigValues.port}`);
     });
   }
 
@@ -90,7 +92,8 @@ export default (config={ ..._config }) => {
     .on('SIGTERM', signalHandler);
 
   return {
-    config,
+    config: mergedConfigValues,
+    use,
     run
   };
 };
