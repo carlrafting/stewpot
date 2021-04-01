@@ -1,9 +1,6 @@
 import fs from 'fs';
 import _path from 'path';
 
-/** @typedef {Set<string>} results */
-const results = new Set();
-
 /** 
  * @typedef {Object} defaults
  * @property {boolean} recursive get directory content recursively
@@ -18,7 +15,7 @@ const defaults = {
   dirsOnly: false
 };
 
-let count = 0;
+let _refs = null;
 
 /**
  * Add content of a directory to  a results set, recursive by default.
@@ -26,6 +23,9 @@ let count = 0;
  * @returns {results} a results set of directory contents
  */
 export async function getDirContent(path = '.', options={ ...defaults }) {
+  /** @typedef {Set<string>} results */
+  const results = !_refs ? new Set() : _refs;
+  
   const dir = await fs.promises.opendir(path);
 
   const _options = {
@@ -33,27 +33,24 @@ export async function getDirContent(path = '.', options={ ...defaults }) {
     ...options
   };
 
-  if (_options.clearResults && (count === 0)) {
-    results.clear();
-  }
-
   for await (const dirent of dir) {
     const filePath = _path.join(path, dirent.name);
 
+    console.log(dirent);
+
     if (_options.recursive) {
       if (dirent.isDirectory()) {
-        count+=1;
-        getDirContent(_path.join(path, dirent.name), _options);
+        results.add(filePath);
+        _refs = results;
+        await getDirContent(filePath, _options);
       }
     }
 
     if (_options.filesOnly) {
       if (dirent.isFile()) {
-        return results.add(filePath);
+        results.add(filePath);
       }
     }
-
-    results.add(filePath);
   }
 
   // if (_options.clearResults) {
