@@ -47,11 +47,13 @@ export default (config={ ..._config }) => {
     throw new Error('No configuration values detected!');
   }
 
-  const configExtra = {
-    exclusive: portCheck(config),
-    readableAll: portCheck(config),
-    writeableAll: portCheck(config)
-  };
+  console.log('config', config);
+
+  const configExtra = portCheck(config) ? {
+    exclusive: true,
+    readableAll: true,
+    writeableAll: true
+  } : {};
   
   const server = createServer({ ...config });
 
