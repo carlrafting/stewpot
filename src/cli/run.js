@@ -2,7 +2,7 @@ import { commands } from './commands.js';
 
 export function run({
   command,
-  // flags,
+  flags,
   execute=true
 }) {
   let message;
