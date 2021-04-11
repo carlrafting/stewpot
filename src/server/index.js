@@ -13,11 +13,11 @@ const server = http.createServer();
 
 const portCheck = (config) => (config.port === 80 || config.port === 443);
 
-const configExtra = {
-  exclusive: portCheck(config),
-  readableAll: portCheck(config),
-  writeableAll: portCheck(config)
-};
+const configExtra = portCheck(config) ? {
+  exclusive: true,
+  readableAll: true,
+  writeableAll: true
+} : {};
 
 server
   .listen({
