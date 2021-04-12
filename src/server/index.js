@@ -41,7 +41,7 @@ export default function () {
     })
     .on('close', () => {
       setTimeout(() => {
-        console.log('\n Shutting down web server...');
+        console.log('↳  Shutting down web server...');
       }, 0);
     })
     .on('request', handler);
