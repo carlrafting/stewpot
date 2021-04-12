@@ -1,5 +1,6 @@
 import fs from 'fs';
 // import { IncomingMessage, ServerResponse } from 'http';
+import http from 'http';
 import path from 'path';
 import mimeTypes from './mime_types.js';
 
@@ -23,10 +24,16 @@ export default function serveStatic(request, response) {
   fs.readFile(filePath, function(error, content) {
     if (error) {
       if(error.code === 'ENOENT') {
-        fs.readFile('./404.html', function(error, content) {
-          response.writeHead(404, { 'Content-Type': mimeTypes['.html'] });
-          return response.end(content, 'utf-8');
+        // fs.readFile('./404.html', function(error, content) {
+        //   response.writeHead(404, { 'Content-Type': mimeTypes['.html'] });
+        //   return response.end(content, 'utf-8');
+        // });
+        const code = 404;
+        const message = `${code} ${http.STATUS_CODES[code]}`;
+        response.writeHead(code, {
+          'Content-Type': mimeTypes['.html']
         });
+        return response.end(message);
       }
       else {
         const message = `Server Error: ${error.code} \n`;
