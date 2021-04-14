@@ -3,7 +3,6 @@
   "version": "0.0.0",
   "description": "Serving you a delicious stew of assets!",
   "type": "module",
-  "main": "./src/index.js",
   "bin": "./bin/stewpot.js",
   "directories": {
     "example": "examples"

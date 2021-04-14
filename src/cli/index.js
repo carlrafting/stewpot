@@ -1,7 +1,7 @@
 // stewpot modules
-import welcome from './cli/welcome.js';
-import { list } from './cli/list.js';
-import { run } from './cli/run.js';
+import welcome from './welcome.js';
+import { list } from './list.js';
+import { run } from './run.js';
 
 const args = process.argv.slice(2);
 const [ command, flags ] = args;
