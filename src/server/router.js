@@ -5,33 +5,22 @@ export default (options={}) => {
     ...options
   };
 
-  let initilaized = false;
   const routes = new Map();
 
-  if (!initilaized) {
-    initilaized = true;
-  }
-
-  const isInitialized = () => {
-    if (!initilaized) {
-      throw new Error('Router was not initialized!');
-    }
-  };
-
   function add(name, method='GET', url='/', callback=()=>{}) {
-    isInitialized();
-
-    if (!routes.has(name)) {
-      routes.set(name, {
-        method: method.toUpperCase(),
-        url,
-        callback
-      });
-
-      return true;
+    const route = routes.get(name);
+    
+    if (route && route.method === method) {
+      throw new Error(`There is already a route with that method!`);
     }
+    
+    routes.set(name, {
+      method: method.toUpperCase(),
+      url,
+      callback
+    });
 
-    return false;
+    // throw new Error(`Route ${name} already exists!`);
   }
 
   function get(name, url='/', callback=()=>{}) {
@@ -43,7 +32,6 @@ export default (options={}) => {
   }
   
   function clear() {
-    isInitialized();
     routes.clear();
   }
 

@@ -10,7 +10,7 @@ test.before.each(() => {
 
 test('should add routes', () => {
   assert.ok(router.add('foo', 'GET', '/foo', () => {}));
-  assert.ok(router.add('foo_update', 'POST', '/foo', () => {}));
+  assert.ok(router.add('foo', 'POST', '/foo', () => {}));
 });
 
 test('should accept lowercase value for method parameter', () => {
@@ -25,7 +25,10 @@ test('should be able to get current routes', () => {
 
 test('should not be able to add duplicate routes', () => {
   assert.ok(router.add('duplicate', 'get', '/duplicate', () => {}));
-  assert.not.ok(router.add('duplicate', 'get', '/duplicate', () => {}));
+  assert.throws(() => {
+    router.add('duplicate', 'get', '/duplicate', () => {})
+  });
+  // assert.not.ok();
 });
 
 test.run();

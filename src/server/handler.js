@@ -1,10 +1,22 @@
 import chalk from 'chalk';
 import serveStatic from './static.js';
+import { IncomingMessage, ServerResponse } from 'http';
+import { URL } from 'url';
 
+/**
+ * Server handler 
+ * 
+ * @param {IncomingMessage} request 
+ * @param {ServerResponse} response 
+ * @returns 
+ */
 export default function handler(request, response) {
   const timestamp = new Date().toTimeString();
   console.log(`[${timestamp}] - ${chalk.bold(response.statusCode)} - ${chalk.blue(request.method)} - ${chalk.white(request.url)}`);
 
+  const url = new URL(request.url, `http://${request.headers.host}`);
+  console.log('url', url);
+  
   request
     .on('error', (err) => {
       console.error(err);

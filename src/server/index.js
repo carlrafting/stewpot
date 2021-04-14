@@ -7,21 +7,33 @@ import handler from './handler.js';
 import defaultConfig from '../config/stewpot.config.js';
 import { projectConfigPath } from '../utils/paths.js';
 
-function getServerConfig() {
-  import(pathToFileURL(projectConfigPath))
-    .then(c => console.log(c))
-    .catch(err => console.error(err));
+const defaultConfigFileCheck = () => (typeof defaultConfig === 'function' ? defaultConfig().server : defaultConfig.server);
 
-  if (typeof defaultConfig === 'function') {
-    return defaultConfig().server;
+async function getServerConfigFiles() {
+  try {
+    const projectConfig = await import(pathToFileURL(projectConfigPath)).catch(console.log);
+    const projectConfigFileCheck = () => projectConfig ? (typeof projectConfig === 'function' ? projectConfig().server : projectConfig.server) : {};
+
+    const config = {
+      ...defaultConfigFileCheck(),
+      ...projectConfigFileCheck()
+    };
+
+    return {
+      ...config
+    };
+  } catch (err) {
+    console.error(err);
+
+    return {
+      ...defaultConfigFileCheck()
+    };
   }
-  
-  return defaultConfig.server;
 }
 
 export default function () {
   const config = {
-    ...getServerConfig()
+    ...defaultConfigFileCheck()
   };
   const server = http.createServer();
   const portCheck = (config) => (config.port === 80 || config.port === 443);
