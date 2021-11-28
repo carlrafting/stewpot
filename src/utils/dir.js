@@ -1,36 +1,36 @@
 import fs from 'fs';
 import _path from 'path';
 
-/** 
- * @typedef {Object} defaults
- * @property {boolean} recursive get directory content recursively
- * @property {boolean} clearResults when true, results set is cleared between method calls
- * @property {boolean} maxDepth max depth to traverse directories
- * @property {boolean} filesOnly only get directory file contents
- * @property {boolean} dirsOnly only get a directorys directory contents
- **/
-const defaults = {
-  recursive: true,
-  clearResults: true,
-  maxDepth: 3,
-  filesOnly: false,
-  dirsOnly: false
-};
+export default async function init(path = '.', options={}) {
+  /** 
+   * @typedef {Object} defaults
+   * @property {Boolean} recursive get directory content recursively
+   * @property {Boolean} clearResults when true, results set is cleared between method calls
+   * @property {Number} maxDepth max depth to traverse directories
+   * @property {Boolean} filesOnly only get directory file contents
+   * @property {Boolean} dirsOnly only get a directorys directory contents
+   * @returns {results} a results set of directory contents
+   **/
 
-let _refs = null;
+  const defaults = {
+    recursive: true,
+    clearResults: true,
+    maxDepth: 3,
+    filesOnly: false,
+    dirsOnly: false
+  };
 
-/** @typedef {Set<string>} results */
-const results = !_refs ? new Set() : _refs;
+  let _refs = null;
+  let depth = 0;
 
-/**
- * Add content of a directory to  a results set, recursive by default.
- * 
- * @returns {results} a results set of directory contents
- */
-export async function getDirContent(path = '.', options={ ...defaults }) {
+  function clearRefsAndDepth() {
+    (_refs = null) && (depth = 0);
+  }
+
+  /** @typedef {Set<string>} results */
+  const results = !_refs ? new Set() : _refs;
+
   const dir = await fs.promises.opendir(path);
-  
-  let depth = 0; 
 
   const _options = {
     ...defaults,
@@ -38,41 +38,20 @@ export async function getDirContent(path = '.', options={ ...defaults }) {
   };
 
   if (depth >= _options.maxDepth) {
+    clearRefsAndDepth();
     return results;
   }
 
   for await (const dirent of dir) {
-    const filePath = _path.join(path, dirent.name);
+    const filePath = _path.resolve(path, dirent.name);
 
-    console.log(dirent);
+    console.log(filePath);
 
     if (_options.recursive && dirent.isDirectory()) {
       depth+=1;
-      await getDirContent(filePath, _options);
+      init(filePath, _options);
     }
-    
-    if (_options.filesOnly) {
-      if (dirent.isFile()) {
-        results.add(filePath);
-      }
-    }
-
-    results.add(filePath);
   }
 
   return results;
 }
-
-/**
- * Default method that handles errors internally, instead of having the developer doing it.
- * 
- * @alias getDirContent
- */
-export default async (path = '.', options={ ...defaults }) => {
-  try {
-    const contents = getDirContent(path, options); 
-    return (await contents);
-  } catch (err) {
-    console.error(err);
-  }
-};
