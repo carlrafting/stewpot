@@ -5,7 +5,7 @@ import { test } from 'uvu';
 const dir = './test/utils/foo';
 
 test('default dir method', async (context) => {
-  const foo = getDirContentDefault(dir);
+  const foo = getDirContentDefault(dir, { maxDepth: 5 });
 
   // assert.type(_test, Promise);
   // assert.throws(() => foo);
