@@ -5,7 +5,7 @@
 └─┐ │ ├┤ │││├─┘│ │ │ 
 └─┘ ┴ └─┘└┴┘┴  └─┘ ┴ 
 
-Serving you a delicious stew of assets!
+Serving you a delicious stew of http/https!
 ```
 
   ⚠ WARNING: This project is young, under development and is not ready for use yet.
