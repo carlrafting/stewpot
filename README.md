@@ -51,6 +51,6 @@ sudo bin/stewpot start
 
 ## File System Changes on WSL
 
-Deno doesn't pick up file system changes when you're running WSL and your project files is stored on the mounted Windows drive (`/c/mnt/path/to/project`). This is not recommended when running WSL, and the solution is to store those files on the Linux file system.
+Node.js doesn't pick up file system changes when you're running WSL and your project files is stored on the mounted Windows drive (`/c/mnt/path/to/project`). This is not recommended when running WSL, and the solution is to store those files on the Linux file system.
 
-You could also install deno on the Windows side and run deno there instead. [Here's som information on differences between WSL versions](https://docs.microsoft.com/en-us/windows/wsl/compare-versions#performance-across-os-file-systems) from Microsofts Official Documentation on WSL.
+You could also install Node.js on the Windows side and run deno there instead. [Here's som information on differences between WSL versions](https://docs.microsoft.com/en-us/windows/wsl/compare-versions#performance-across-os-file-systems) from Microsofts Official Documentation on WSL.

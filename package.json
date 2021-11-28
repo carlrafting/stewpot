@@ -2,8 +2,10 @@
   "name": "stewpot",
   "version": "0.0.0",
   "description": "Serving you a delicious stew of assets!",
+  "repository": "github:carlrafting/stewpot",
+  "author": "Carl Räfting",
   "type": "module",
-  "bin": "./bin/stewpot.js",
+  "bin": "bin/stewpot.js",
   "directories": {
     "example": "examples"
   },
@@ -12,12 +14,7 @@
     "test:coverage": "c8 --include=src npm test",
     "test:report": "c8 report --reporter=text-lcov > coverage.lcov"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/carlrafting/stewpot.git"
-  },
   "keywords": [],
-  "author": "Carl Räfting",
   "license": "",
   "bugs": {
     "url": "https://github.com/carlrafting/stewpot/issues"
@@ -25,11 +22,14 @@
   "homepage": "https://github.com/carlrafting/stewpot#readme",
   "devDependencies": {
     "c8": "^7.6.0",
-    "eslint": "^7.22.0",
+    "eslint": "^8.3.0",
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-plugin-prettier": "^4.0.0",
+    "prettier": "^2.5.0",
     "uvu": "^0.5.1"
   },
   "dependencies": {
-    "chalk": "^4.1.0",
+    "chalk": "^5.0.0",
     "lodash": "^4.17.21"
   }
 }

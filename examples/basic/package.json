@@ -1,6 +1,6 @@
 {
   "type": "module",
-  "dependencies": {
-    "stewpot": "file:../.."
+  "scripts": {
+    "start": "node app.js"
   }
 }

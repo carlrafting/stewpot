@@ -11,7 +11,7 @@ import { URL } from 'url';
  * @returns 
  */
 export default function handler(request, response) {
-  const timestamp = new Date().toTimeString();
+  const timestamp = new Date().toLocaleTimeString();
   console.log(`[${timestamp}] - ${chalk.bold(response.statusCode)} - ${chalk.blue(request.method)} - ${chalk.white(request.url)}`);
 
   const url = new URL(request.url, `http://${request.headers.host}`);
@@ -41,21 +41,23 @@ export default function handler(request, response) {
       console.log('Response Finished!');
     });
 
-  if (request.method === 'GET' && request.url === '/echo') {
+  if (request.method === 'GET') {
     response.writeHead(200, {
       'Content-Type': 'text/html'
     });
-    // response.write();
+  }
+
+  if (request.method === 'GET' && request.url === '/echo') {
     return response.end('<h1>Hello World!</h1>');
   }
   if (request.method === 'GET' && request.url === '/') {
-    response.writeHead(200, {
-      'Content-Type': 'text/html'
-    });
-    // response.write();
     return response.end('<h1>Hello from ROOT path!</h1>');
   }
   else {
-    serveStatic(request, response);
+    try {
+      serveStatic(request, response);
+    } catch (error) {
+      console.error(error);
+    }
   }
 }

@@ -2,17 +2,17 @@ import http from 'http';
 import https from 'https';
 import chalk from 'chalk';
 import process from 'process';
-// import url from 'url';
 import defaultConfig from '../config/stewpot.config.js';
+import defaultHandler from './handler.js';
 
 // default server config object
-let _config;
-
-if (typeof defaultConfig === 'function') {
-  _config = defaultConfig().server;
-} else {
-  _config = defaultConfig.server;
-}
+let defaultServerConfig = (() => {
+  if (typeof defaultConfig === 'function') {
+    return defaultConfig().server;
+  } else {
+    return defaultConfig.server;
+  }
+})();
 
 const portCheck = (config) => (config.port === 80 || config.port === 443);
 
@@ -20,29 +20,16 @@ function createServer(config) {
   return config.https ? https.createServer() : http.createServer();
 }
 
-function handler(req, res) {
-  const timestamp = new Date().toTimeString();
-  console.log(`[${timestamp}] - ${chalk.bold(res.statusCode)} - ${chalk.blue(req.method)} - ${chalk.white(req.url)}`);
-  res.end('Hello World');
-}
-
-function validateConfig(config) {
-  const hasKeys = Object.keys(config).length > 0;
-  let obj = {};
-
-  if (hasKeys) {
-    for (const key in _config) {
-      if (Object.prototype.hasOwnProperty.call(config, key)) {
-        console.log(key);
-        obj[key] = config[key];
-      }
-  
-      throw new Error(`Config value not valid`);
-    }
+export default (config={ ...defaultServerConfig }, handler=defaultHandler) => {
+  // if config parameter is set to null we have to reassign it.
+  if (!config) {
+    config = defaultConfig;
   }
-}
 
-export default (config={ ..._config }) => {
+  if (typeof config === 'function') {
+    config = config();
+  }
+  
   if (Object.keys(config).length === 0) {
     throw new Error('No configuration values detected!');
   }
@@ -58,8 +45,8 @@ export default (config={ ..._config }) => {
   const server = createServer({ ...config });
 
   const configMerged = {
-    ..._config,
-    ...config,
+    ...defaultServerConfig,
+    ...config.server,
     ...configExtra
   };
 
@@ -69,11 +56,8 @@ export default (config={ ..._config }) => {
   
   server.on('close', () => {
     console.log('Shutting down web server...');
+    process.exit(0);
   });
-
-  function use() {
-
-  }
 
   function run() {
     server.listen({
@@ -95,7 +79,6 @@ export default (config={ ..._config }) => {
 
   return {
     config: configMerged,
-    use,
     run
   };
 };

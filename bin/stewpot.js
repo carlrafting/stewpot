@@ -1,6 +1,6 @@
-#!/usr/bin/env -S -v node
+#!/usr/bin/env node
 
 // stewpot main module
 import main from '../src/cli/index.js';
 
-main();
+export default main();

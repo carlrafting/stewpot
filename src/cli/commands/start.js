@@ -1,13 +1,16 @@
 import fs from 'fs';
 import { defaultConfigPath, projectConfigPath } from '../../utils/paths.js';
 import { exists } from '../../utils/exists.js';
+import { pathToFileURL } from 'url';
 // import { server } from "../server.js";
 
 const { R_OK } = fs.constants;
 
 function loadConfigurationFile(path) {
+  const url = pathToFileURL(path, 'file:');
+  
   return (
-    import(path)
+    import(url)
       .then(module => module.default)
       .catch(e => console.log(e))
   );
