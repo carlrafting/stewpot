@@ -14,7 +14,7 @@ A delicious serving of http/https!
 
 This project is not currently available on npm, but you can install it as a npm package from Github, like this:
 
-```
+```bash
 # from main branch
 npm i carlrafting/stewpot
 
