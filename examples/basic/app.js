@@ -1,4 +1,4 @@
-import application from 'stewpot/src/server/application.js';
+import { application } from 'stewpot';
 import config from './stewpot.config.js';
 
 const app = application(config);

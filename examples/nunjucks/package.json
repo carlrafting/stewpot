@@ -4,7 +4,8 @@
     "start": "node app.js"
   },
   "dependencies": {
-    "nunjucks": "^3.2.3"
+    "nunjucks": "^3.2.3",
+    "stewpot": "file:../.."
   },
   "devDependencies": {
     "chokidar": "^3.5.2"

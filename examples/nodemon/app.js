@@ -1,4 +1,4 @@
-import application from 'stewpot/src/server/application.js';
+import { application } from 'stewpot';
 
 application(null, (_, response) => {
   response.end('<h1>Hello World</h1>');

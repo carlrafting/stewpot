@@ -1,5 +1,4 @@
-import application from 'stewpot/src/server/application.js';
-import * as router from 'stewpot/src/server/router.js';
+import { application, router } from 'stewpot';
 
 router
   .add('root', 'get', '/', (request, response) => {
