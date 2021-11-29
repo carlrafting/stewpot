@@ -1,12 +1,12 @@
 import { application } from 'stewpot';
 import sirv from 'sirv';
 
-const servePublic = sirv('public', {
-  maxAge: 0, // 0 for development environment
-  immutable: true
-});
-
 application(null, (request, response) => {
+  const servePublic = sirv('public', {
+    maxAge: 0, // 0 for development environment
+    // immutable: true
+  });
+  
   try {
     servePublic(request, response, () => {
       response.writeHead(200, { 'Content-Type': 'text/html' });
