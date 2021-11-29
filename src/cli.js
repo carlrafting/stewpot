@@ -11,7 +11,7 @@ import { projectConfigPath, templateConfigPath } from './utils/paths.js';
 const args = process.argv.slice(2);
 const [command, flags] = args;
 const arglen = args.length;
-console.log('args', args);
+// console.log('args', args);
 
 export function run({ command, flags, execute = true }) {
   let message;
@@ -25,14 +25,14 @@ export function run({ command, flags, execute = true }) {
 
   console.log(message);
 
-  const match = commands.find((c) => c.name === command);
+  const match = commands.has(command) && commands.get(command);
 
   if (!match) {
     message = `Command '${command}' not found! \n`;
     throw new Error(message);
   }
 
-  return execute ? match && match.command() : match;
+  return execute ? match && match.fn() : match;
 }
 
 const {
@@ -56,32 +56,40 @@ async function copyConfigurationFile() {
   }
 }
 
-export const commands = [
-  {
-    name: 'init',
-    description: 'Intitalize a new stewpot project',
-    command: init,
-  },
-  {
-    name: 'start',
-    description: 'Start development server',
-    command: start,
-  },
-  {
-    name: 'build',
-    description: 'Build project assets for production deployment',
-    command: build,
-  },
-];
+const commands = new Map();
 
-function build() {
-  console.log('Building project for production...');
+function defineCommand(name, description, fn) {
+  if (!name && !description && !fn) {
+    throw new Error('Expected 3 arguments!');
+  }
+
+  return commands.set(name, { name, description, fn });
 }
 
+defineCommand(
+    'build', 
+    'Build project assets for production deployment',
+    build
+);
+function build() {
+  console.log('Building project for production...');
+  return 
+}
+
+defineCommand(
+  'start', 
+  'Start development server',
+  start
+);
 async function start() {
   console.log('Start something great!');
 }
 
+defineCommand(
+  'init', 
+  'Intitalize a new stewpot project',
+  init
+);
 async function init() {
   console.log('projectConfigPath', projectConfigPath);
   (async function () {
@@ -108,8 +116,13 @@ export async function welcome() {
 }
 
 export function list() {
-  console.log('  Available commands:');
-  return console.table(commands);
+  console.log('  Available commands:\n');
+  if (commands.size > 0) {
+    for (const command of commands) {
+      const [name, props] = command;
+      console.log(`  stewpot ${name}:\n`, `    ${props.description}\n`);
+    }
+  }
 }
 
 async function main() {
