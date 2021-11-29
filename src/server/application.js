@@ -37,7 +37,7 @@ export default (
     throw new Error('No configuration values detected!');
   }
 
-  console.log('config', config);
+  // console.log('config', config);
 
   const configExtra = portCheck(config)
     ? {
@@ -55,7 +55,7 @@ export default (
     ...configExtra,
   };
 
-  console.log('configMerged', configMerged);
+  // console.log('configMerged', configMerged);
 
   server.on('request', handler);
 
@@ -64,12 +64,14 @@ export default (
     process.exit(0);
   });
 
-  function run() {
+  const close = () => server.close();
+
+  function run(callback) {
     server.listen(
       {
         ...configMerged,
       },
-      () => {
+      callback ? callback : () => {
         console.log(
           `Started web server at ${configMerged.host}:${configMerged.port}`
         );
@@ -87,5 +89,6 @@ export default (
   return {
     config: configMerged,
     run,
+    close
   };
 };
