@@ -36,6 +36,7 @@ application().run();
 ```json
 {
   "//": "package.json"
+  
   "scripts": {
     "start": "node app.js"
   }
