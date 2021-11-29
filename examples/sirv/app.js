@@ -1,10 +1,5 @@
-import { application, router } from 'stewpot';
+import { application } from 'stewpot';
 import sirv from 'sirv';
-
-router
-  .add('root', 'get', '/', (request, response) => {
-    
-  })
 
 const servePublic = sirv('public', {
   maxAge: 0, // 0 for development environment
