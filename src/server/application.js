@@ -1,9 +1,8 @@
 import http from 'http';
 import https from 'https';
-import chalk from 'chalk';
 import process from 'process';
 import defaultConfig from '../config/stewpot.config.js';
-import defaultHandler from './handler.js';
+import defaultHandler from './default_handler.js';
 
 // default server config object
 let defaultServerConfig = (() => {
