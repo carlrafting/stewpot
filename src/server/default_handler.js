@@ -5,7 +5,7 @@ import path from 'node:path';
 import sirv from 'sirv';
 
 router.add('root', 'GET', '/', (_, response) => {
-  response.setHeader('Content-Type', 'text/html');
+  response.setHeader('Content-Type', 'text/html; charset=utf-8');
   return nunjucks.render('index.html', { title: 'Stewpot' }, (err, template) => {
     if (err) {
       console.error({ err });
