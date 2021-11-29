@@ -1,11 +1,11 @@
 {
   "name": "stewpot",
   "version": "0.0.0",
-  "description": "Serving you a delicious stew of assets!",
+  "description": "A delicious serving of http/https!",
   "repository": "github:carlrafting/stewpot",
   "author": "Carl Räfting",
   "type": "module",
-  "bin": "bin/stewpot.js",
+  "bin": "src/cli.js",
   "main": "stewpot.js",
   "directories": {
     "example": "examples"
