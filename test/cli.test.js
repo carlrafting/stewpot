@@ -1,6 +1,22 @@
 import { test } from 'uvu';
 import * as assert from 'uvu/assert';
-import { run } from '../../src/cli/run.js';
+import { list, welcome, run } from '../src/cli.js';
+
+test('test commands', () => {
+  assert.ok(true);
+});
+
+test('welcome', async () => {
+  const result = await welcome();
+  assert.type(result, 'string');
+  assert.not.type(result, 'undefined');
+  assert.ok(result.length > 0);
+});
+
+// test('list commands', () => {
+//   const results = list();
+//   assert.type(results, 'object');
+// });
 
 test('run without command', () => {
   assert.throws(() => run(), { instanceOf: Error }, '[WARNING] No command provided! \n');
