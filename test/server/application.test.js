@@ -28,7 +28,7 @@ test('successfully overrides default configuration', () => {
       port: 8000
     }
   }, (request, response) => {
-    console.log(request);
+    // console.log(request);
     assert.ok(response.statusCode);
     assert.equal(response.statusCode, 200);
   }).run(() => {

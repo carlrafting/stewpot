@@ -1,63 +1,35 @@
-import chalk from 'chalk';
-import serveStatic from './static.js';
-import { IncomingMessage, ServerResponse } from 'http';
-import { URL } from 'url';
+import { logger } from '../middleware/logger.js';
+import router from './router.js';
+import nunjucks from 'nunjucks';
+import path from 'node:path';
+import sirv from 'sirv';
 
-/**
- * Server handler 
- * 
- * @param {IncomingMessage} request 
- * @param {ServerResponse} response 
- * @returns 
- */
-export default function handler(request, response) {
-  const timestamp = new Date().toLocaleTimeString();
-  console.log(`[${timestamp}] - ${chalk.bold(response.statusCode)} - ${chalk.blue(request.method)} - ${chalk.white(request.url)}`);
+nunjucks.configure(path.resolve('src/templates'), {
+  watch: true,
+});
 
-  const url = new URL(request.url, `http://${request.headers.host}`);
-  console.log('url', url);
-  
-  request
-    .on('error', (err) => {
-      console.error(err);
-    })
-    .on('abort', (arg) => {
-      console.log('Aborted Request!', arg);
-      // response.end();
-    })
-    .on('close', () => {
-      console.log('Closed Request!');
-      // response.end();
-    });
+const serveStatic = sirv(path.resolve('src/static'), {
+  maxAge: 0
+});
 
-  response
-    .on('error', (err) => {
-      console.error(err);
-    })
-    .on('close', () => {
-      console.log('Response Closed!');
-    })
-    .on('finish', () => {
-      console.log('Response Finished!');
-    });
-
-  if (request.method === 'GET') {
-    response.writeHead(200, {
-      'Content-Type': 'text/html'
-    });
-  }
-
-  if (request.method === 'GET' && request.url === '/echo') {
-    return response.end('<h1>Hello World!</h1>');
-  }
-  if (request.method === 'GET' && request.url === '/') {
-    return response.end('<h1>Hello from ROOT path!</h1>');
-  }
-  else {
-    try {
-      serveStatic(request, response);
-    } catch (error) {
-      console.error(error);
+router.add('root', 'GET', '/', (_, response) => {
+  response.setHeader('Content-Type', 'text/html');
+  return nunjucks.render('index.html', { title: 'Stewpot' }, (err, template) => {
+    if (err) {
+      console.error({ err });
     }
-  }
+    return response.end(template);
+  });
+});
+
+export default function handler(request, response) {
+  logger(response, request, function () {
+    try {
+      serveStatic(request, response, () => {
+        router.route(request, response);
+      });
+    } catch (error) {
+      console.log('servePublic', { error });
+    }
+  });
 }

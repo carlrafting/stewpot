@@ -1,0 +1,84 @@
+html,
+body,
+pre,
+h1,
+p {
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  display: grid;
+  grid-template-rows: 100vh;
+  grid-template-columns: 1fr;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  background-color: #fff;
+  color: #333;
+}
+
+@media (prefers-color-scheme: dark) {
+  html {
+    background-color: #333;
+    color: #eee;
+  }
+}
+
+body {
+  margin: auto;
+}
+
+a {
+  color: dodgerblue;
+}
+
+a:link,
+a:active {
+  font-weight: bold;
+  text-decoration: none;
+}
+
+a:hover,
+a:focus {
+  text-decoration: underline;
+  text-decoration-color: rgba(255, 255, 255, 0.15);
+}
+
+h1 {
+  margin-bottom: .5rem;
+}
+
+p {
+  margin-bottom: 1rem;
+}
+
+pre {
+  font-size: 1.25rem;
+  font-family: Cascadia Code, monospace;
+  word-break: break-all;
+  background-color: rgba(0, 0, 0, .1);
+  padding: 2rem;
+  border-radius: .25rem;
+  white-space: pre-wrap;
+}
+
+pre > .comment {
+  color: green;
+}
+
+header > pre {
+  font-size: 2rem;
+  overflow-x: auto;
+  margin-bottom: 2.5rem;
+  text-align: left;
+}
+
+header > h1 {
+  margin-bottom: 1rem;
+}
+
+body > header {
+  text-align: center;
+  margin-bottom: 2.5rem;
+}
+
+body > main {}

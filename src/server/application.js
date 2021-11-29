@@ -72,7 +72,7 @@ export default (
       },
       callback ? callback : () => {
         console.log(
-          `Started web server at ${configMerged.host}:${configMerged.port}`
+          `=> Started web server at ${configMerged.host}:${configMerged.port}`
         );
       }
     );

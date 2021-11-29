@@ -1,5 +1,13 @@
 const routes = new Map();
 
+class NotFound extends Error {
+  constructor(...params) {
+    super(...params);
+    this.statusCode = 404;
+    this.text = 'Not Found';
+  }
+}
+
 export function add(name, method = "GET", pathname = "/", callback = () => {}) {
   const route = routes.has(name) && routes.get(name);
 
@@ -38,9 +46,9 @@ export function route(request, response) {
     const [name, route] = match;
     return route.callback(request, response);
   }
-  !match && (() => {
-    throw new Error(`No matching route found for ${url}.`)
-  })();
+  // !match && (() => {
+  //   throw new NotFound(`No matching route found for ${url}.`)
+  // })();
 }
 
 export function pathname(name) {

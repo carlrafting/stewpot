@@ -1,13 +1,7 @@
-import { green, cyan, bold } from '../../deps.js';
+import chalk from 'chalk';
 
-export default (context, next) => {
-  await next();
-  const rt = context.response.headers.get("X-Response-Time");
-  console.log(
-    `${green(context.request.method)} ${cyan(context.request.url.pathname)} - ${
-      bold(
-        String(rt),
-      )
-    }`,
-  );
-};
+export function logger(response, request, next) {
+  const timestamp = new Date().toLocaleTimeString();
+  console.log(`[${timestamp}] - ${chalk.bold(response.statusCode)} - ${chalk.blue(request.method)} - ${chalk.white(request.url)}`);
+  next && next();
+}
