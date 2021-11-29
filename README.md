@@ -22,6 +22,34 @@ npm i carlrafting/stewpot
 npm i carlrafting/stewpot@0.0.0
 ```
 
+## Quick Start
+
+Get up and running with stewpot by following these steps.
+
+```js
+// app.js
+
+import { application } from 'stewpot';
+
+application().run();
+```
+```json
+// package.json
+
+{
+  "scripts": {
+    "start": "node app.js"
+  }
+}
+```
+``` bash
+# npm
+
+npm start
+
+=> Started web server at localhost:8080
+```
+
 ## HTTPS Configuration
 
 In order to run stewpot development server with HTTPS enabled, you'll have to make sure stewpot can bind to port 443.
