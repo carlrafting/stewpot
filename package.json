@@ -6,6 +6,7 @@
   "author": "Carl Räfting",
   "type": "module",
   "bin": "bin/stewpot.js",
+  "main": "stewpot.js",
   "directories": {
     "example": "examples"
   },
