@@ -4,14 +4,6 @@ import nunjucks from 'nunjucks';
 import path from 'node:path';
 import sirv from 'sirv';
 
-nunjucks.configure(path.resolve('src/templates'), {
-  watch: true,
-});
-
-const serveStatic = sirv(path.resolve('src/static'), {
-  maxAge: 0
-});
-
 router.add('root', 'GET', '/', (_, response) => {
   response.setHeader('Content-Type', 'text/html');
   return nunjucks.render('index.html', { title: 'Stewpot' }, (err, template) => {
@@ -23,6 +15,14 @@ router.add('root', 'GET', '/', (_, response) => {
 });
 
 export default function handler(request, response) {
+  nunjucks.configure(path.resolve('src/templates'), {
+    watch: true,
+  });
+  
+  const serveStatic = sirv(path.resolve('src/static'), {
+    maxAge: 0
+  });
+
   logger(response, request, function () {
     try {
       serveStatic(request, response, () => {
