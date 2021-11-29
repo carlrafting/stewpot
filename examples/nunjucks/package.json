@@ -1,0 +1,12 @@
+{
+  "type": "module",
+  "scripts": {
+    "start": "node app.js"
+  },
+  "dependencies": {
+    "nunjucks": "^3.2.3"
+  },
+  "devDependencies": {
+    "chokidar": "^3.5.2"
+  }
+}
