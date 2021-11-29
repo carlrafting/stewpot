@@ -12,11 +12,11 @@ Serving you a delicious stew of http/https!
 
 ## Install
 
-This project is not currently available on npm, but you can install it as a npm package with github, like this:
+This project is not currently available on npm, but you can install it as a npm package from Github, like this:
 
 ```
-# from master branch
-npm i carlrafting/stewpot/master
+# from main branch
+npm i carlrafting/stewpot
 
 # a specific version (currently 0.0.0)
 npm i carlrafting/stewpot@0.0.0
@@ -46,8 +46,10 @@ If you are using WSL on Windows, make sure your project file are located on the 
 To get the development server running on macOS you'll have to run `stewpot start` as `sudo`. Like this:
 
 ```
-sudo bin/stewpot start
+sudo npx stewpot start
 ```
+
+It's not generally recommended to run web processes with root access, so you might want to set the port to something other than 80.
 
 ## File System Changes on WSL
 
