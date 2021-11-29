@@ -13,7 +13,7 @@ const [command, flags] = args;
 const arglen = args.length;
 console.log('args', args);
 
-function run({ command, flags, execute = true }) {
+export function run({ command, flags, execute = true }) {
   let message;
 
   if (!command) {
@@ -89,7 +89,7 @@ async function init() {
   })();
 }
 
-async function welcome() {
+export async function welcome() {
   const pkg = await importJSON(path.join('..', '..', 'package.json'));
 
   const message = `
@@ -107,9 +107,9 @@ async function welcome() {
   return message;
 }
 
-function list() {
+export function list() {
   console.log('  Available commands:');
-  console.table(commands);
+  return console.table(commands);
 }
 
 async function main() {
@@ -130,4 +130,6 @@ async function main() {
   }
 }
 
-export default main();
+main();
+
+// export default main();
