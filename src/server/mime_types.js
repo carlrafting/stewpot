@@ -13,5 +13,5 @@ export default {
   '.ttf': 'application/font-ttf',
   '.eot': 'application/vnd.ms-fontobject',
   '.otf': 'application/font-otf',
-  '.wasm': 'application/wasm'
+  '.wasm': 'application/wasm',
 };

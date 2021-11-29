@@ -14,13 +14,16 @@ let defaultServerConfig = (() => {
   }
 })();
 
-const portCheck = (config) => (config.port === 80 || config.port === 443);
+const portCheck = (config) => config.port === 80 || config.port === 443;
 
 function createServer(config) {
   return config.https ? https.createServer() : http.createServer();
 }
 
-export default (config={ ...defaultServerConfig }, handler=defaultHandler) => {
+export default (
+  config = { ...defaultServerConfig },
+  handler = defaultHandler
+) => {
   // if config parameter is set to null we have to reassign it.
   if (!config) {
     config = defaultConfig;
@@ -29,56 +32,60 @@ export default (config={ ...defaultServerConfig }, handler=defaultHandler) => {
   if (typeof config === 'function') {
     config = config();
   }
-  
+
   if (Object.keys(config).length === 0) {
     throw new Error('No configuration values detected!');
   }
 
   console.log('config', config);
 
-  const configExtra = portCheck(config) ? {
-    exclusive: true,
-    readableAll: true,
-    writeableAll: true
-  } : {};
-  
+  const configExtra = portCheck(config)
+    ? {
+        exclusive: true,
+        readableAll: true,
+        writeableAll: true,
+      }
+    : {};
+
   const server = createServer({ ...config });
 
   const configMerged = {
     ...defaultServerConfig,
     ...config.server,
-    ...configExtra
+    ...configExtra,
   };
 
   console.log('configMerged', configMerged);
-  
+
   server.on('request', handler);
-  
+
   server.on('close', () => {
     console.log('Shutting down web server...');
     process.exit(0);
   });
 
   function run() {
-    server.listen({
-      ...configMerged
-    }, 
-    () => {
-      console.log(`Started web server at ${configMerged.host}:${configMerged.port}`);
-    });
+    server.listen(
+      {
+        ...configMerged,
+      },
+      () => {
+        console.log(
+          `Started web server at ${configMerged.host}:${configMerged.port}`
+        );
+      }
+    );
   }
 
   function signalHandler(signal) {
     console.log(`Recieved ${signal}`);
     server.close();
   }
-  
-  process
-    .on('SIGINT', signalHandler)
-    .on('SIGTERM', signalHandler);
+
+  process.on('SIGINT', signalHandler).on('SIGTERM', signalHandler);
 
   return {
     config: configMerged,
-    run
+    run,
   };
 };
