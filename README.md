@@ -47,7 +47,7 @@ application().run();
 
 npm start
 
-=> Started web server at localhost:8080
+# => Started web server at localhost:8080
 ```
 
 ## HTTPS Configuration
