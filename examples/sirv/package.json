@@ -1,0 +1,13 @@
+{
+  "type": "module",
+  "scripts": {
+    "start": "nodemon app.js"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.15",
+    "stewpot": "file:../.."
+  },
+  "dependencies": {
+    "sirv": "^1.0.18"
+  }
+}
