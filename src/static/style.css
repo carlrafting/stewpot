@@ -25,6 +25,8 @@ html {
 
 body {
   margin: auto;
+  max-width: 45rem;
+  padding: 1rem;
 }
 
 a {
