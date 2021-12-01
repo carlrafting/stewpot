@@ -1,10 +1,10 @@
 import { test } from 'uvu';
 import * as assert from 'uvu/assert';
-import { list, welcome, run } from '../src/cli.js';
+import { list, welcome, run } from '../src/cli/index.js';
 
-test('test commands', () => {
-  assert.ok(true);
-});
+// test('test commands', () => {
+//   assert.ok(true);
+// });
 
 test('welcome', async () => {
   const result = await welcome();
@@ -13,18 +13,18 @@ test('welcome', async () => {
   assert.ok(result.length > 0);
 });
 
-// test('list commands', () => {
-//   const results = list();
-//   assert.type(results, 'object');
-// });
+test('list commands', () => {
+  const results = list();
+  assert.type(results, "undefined");
+});
 
 test('run without command', () => {
-  assert.throws(() => run(), { instanceOf: Error }, '[WARNING] No command provided! \n');
+  assert.throws(() => run({ execute: false }), { instanceOf: Error }, '[WARNING] No command provided! \n');
 });
 
 test('run with invalid command', () => {
   const command = 'foobar';
-  assert.throws(() => run({ command }), { instanceOf: Error }, `Command '${command}' not found! \n`);
+  assert.throws(() => run({ command, execute: false }), { instanceOf: Error }, `Command '${command}' not found! \n`);
 });
 
 test('run with valid command', () => {
