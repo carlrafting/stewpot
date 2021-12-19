@@ -42,12 +42,12 @@ export default function stewpot(
         writeableAll: true,
       }
     : {};
-    
-    const configMerged = {
-      ...defaultServerConfig,
-      ...config,
-      ...configExtra,
-    };
+  
+  const configMerged = {
+    ...defaultServerConfig,
+    ...config,
+    ...configExtra,
+  };
     
   const server = createServer({ ...configMerged });
 
