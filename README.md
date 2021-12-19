@@ -29,9 +29,10 @@ Get up and running with stewpot by following these steps.
 ```js
 // app.js
 
-import { application } from 'stewpot';
+import { stewpot } from 'stewpot';
 
-application().run();
+const app = stewpot();
+app.run();
 ```
 ```json
 {
