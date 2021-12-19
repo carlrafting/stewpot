@@ -8,7 +8,7 @@
 A delicious serving of http/https!
 ```
 
-  ⚠ WARNING: This project is young, under development and is not ready for use yet.
+  ⚠ WARNING: This project is young, under development and is not ready for use in a production environment yet.
 
 ## Install
 
