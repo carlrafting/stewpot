@@ -8,10 +8,15 @@ class NotFound extends Error {
   }
 }
 
-export function add(name, method = "GET", pathname = "/", callback = () => {}) {
-  const route = routes.has(name) && routes.get(name);
+export function add(
+  name = 'root',
+  method = 'GET',
+  pathname = '/',
+  callback = () => {}
+) {
+  const routeExists = routes.has(name);
 
-  if (route || route.method === method) {
+  if (routeExists) {
     throw new Error(`The route you're trying to add already exists!`);
   }
 
@@ -26,12 +31,9 @@ export function add(name, method = "GET", pathname = "/", callback = () => {}) {
 }
 
 export function find(url) {
-  // console.log('[find]', {url});
   for (const route of routes) {
     const [name, entry] = route;
-    // console.log({ name, entry });
     if (url === entry.pathname) {
-      // console.log('[find][match]', { route });
       return route;
     }
   }
@@ -39,9 +41,7 @@ export function find(url) {
 
 export function route(request, response) {
   const { url } = request;
-  // console.log('[route]', { url });
   const match = find(url);
-  // console.log('[route]', { match });
   if (match) {
     const [name, route] = match;
     return route.callback(request, response);
@@ -88,7 +88,7 @@ const api = {
   inspect() {
     inspect();
     return api;
-  }
+  },
 };
 
 export default api;

@@ -1,3 +1,4 @@
-import { application } from './index.js';
+import { stewpot as application } from './index.js';
 
-application().run();
+const app = application();
+app.run();

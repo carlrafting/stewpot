@@ -1,6 +1,6 @@
-import http from 'http';
-import https from 'https';
-import process from 'process';
+import http from 'node:http';
+import https from 'node:https';
+import process from 'node:process';
 import defaultConfig from '../config/stewpot.config.js';
 import defaultHandler from './default_handler.js';
 
@@ -19,25 +19,22 @@ function createServer(config) {
   return config.https ? https.createServer() : http.createServer();
 }
 
-export default (
-  config = { ...defaultServerConfig },
-  handler = defaultHandler
-) => {
-  // if config parameter is set to null we have to reassign it.
-  if (!config) {
-    config = defaultConfig;
+export default function stewpot(
+  config = { ...defaultServerConfig }
+) {
+  // if config parameter is set to null or empty object we have to reassign it.
+  if (
+    !config ||
+    (typeof config === 'object' && Object.keys(config).length === 0)
+  ) {
+    config = defaultServerConfig;
   }
 
   if (typeof config === 'function') {
     config = config();
   }
 
-  if (Object.keys(config).length === 0) {
-    throw new Error('No configuration values detected!');
-  }
-
-  // console.log('config', config);
-
+  // is this useful/necessary? not sure it's doing what i think it's doing...
   const configExtra = portCheck(config)
     ? {
         exclusive: true,
@@ -45,18 +42,14 @@ export default (
         writeableAll: true,
       }
     : {};
-
-  const server = createServer({ ...config });
-
-  const configMerged = {
-    ...defaultServerConfig,
-    ...config.server,
-    ...configExtra,
-  };
-
-  // console.log('configMerged', configMerged);
-
-  server.on('request', handler);
+    
+    const configMerged = {
+      ...defaultServerConfig,
+      ...config,
+      ...configExtra,
+    };
+    
+  const server = createServer({ ...configMerged });
 
   server.on('close', () => {
     console.log('Shutting down web server...');
@@ -65,8 +58,35 @@ export default (
 
   const close = () => server.close();
 
+  const handlers = [];
+
+  function use(...fns) {
+    if (fns.length > 0) {
+      for (const handler of fns) {
+        if (typeof handler === 'function') {
+          handlers.push(handler);
+        }
+      }
+    }
+
+    return {
+      run
+    };
+  }
+
   function run(callback) {
-    server.listen(
+    if (handlers.length > 0) {
+      for (const handler of handlers) {
+        if (typeof handler === 'function') {
+          server.on('request', handler);
+        }
+      }
+    }
+
+    // register default request handler if none were defined with use(...fns)
+    handlers.length === 0 && server.on('request', defaultHandler);
+
+    return server.listen(
       {
         ...configMerged,
       },
@@ -83,10 +103,13 @@ export default (
     server.close();
   }
 
-  process.on('SIGINT', signalHandler).on('SIGTERM', signalHandler);
+  process
+    .on('SIGINT', signalHandler)
+    .on('SIGTERM', signalHandler);
 
   return {
     config: configMerged,
+    use,
     run,
     close
   };

@@ -1,5 +1,8 @@
-import { application } from 'stewpot';
+import { stewpot } from 'stewpot';
 
-application(null, (_, response) => {
+const app = stewpot();
+
+app.use((_, response) => {
   response.end('<h1>Hello World</h1>');
-}).run();
+})
+app.run();

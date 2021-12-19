@@ -3,6 +3,6 @@
 export default async (context) => {
   await context.send({
     root: `${Deno.cwd()}/public`,
-    index: "index.html",
+    index: 'index.html',
   });
 };

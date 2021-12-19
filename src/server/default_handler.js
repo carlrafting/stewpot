@@ -3,24 +3,35 @@ import router from './router.js';
 import nunjucks from 'nunjucks';
 import path from 'node:path';
 import sirv from 'sirv';
+import { fileURLToPath, URL } from 'node:url';
+
+const url = new URL(import.meta.url);
+const dirname = path.dirname(fileURLToPath(url.href));
+const srcPath = path.join(dirname, '..');
+
+router.clear();
 
 router.add('root', 'GET', '/', (_, response) => {
   response.setHeader('Content-Type', 'text/html; charset=utf-8');
-  return nunjucks.render('index.html', { title: 'Stewpot' }, (err, template) => {
-    if (err) {
-      console.error({ err });
+  return nunjucks.render(
+    'index.html',
+    { title: 'Stewpot' },
+    (err, template) => {
+      if (err) {
+        console.error({ err });
+      }
+      return response.end(template);
     }
-    return response.end(template);
-  });
+  );
 });
 
-export default function handler(request, response) {
-  nunjucks.configure(path.resolve('src/templates'), {
+export default function defaultHandler(request, response) {
+  nunjucks.configure(path.join(srcPath, 'templates'), {
     watch: true,
   });
-  
-  const serveStatic = sirv(path.resolve('src/static'), {
-    maxAge: 0
+
+  const serveStatic = sirv(path.join(srcPath, 'static'), {
+    maxAge: 0,
   });
 
   logger(response, request, function () {

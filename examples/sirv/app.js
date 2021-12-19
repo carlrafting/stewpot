@@ -1,12 +1,11 @@
-import { application } from 'stewpot';
+import { stewpot } from 'stewpot';
 import sirv from 'sirv';
 
-application(null, (request, response) => {
-  const servePublic = sirv('public', {
-    maxAge: 0, // 0 for development environment
-    // immutable: true
-  });
-  
+const app = stewpot();
+
+app.use((request, response) => {
+  const servePublic = sirv('./public');
+
   try {
     servePublic(request, response, () => {
       response.writeHead(200, { 'Content-Type': 'text/html' });
@@ -17,4 +16,5 @@ application(null, (request, response) => {
   } catch (error) {
     console.log('servePublic', { error });
   }
-}).run();
+})
+app.run();

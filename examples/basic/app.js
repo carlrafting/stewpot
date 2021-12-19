@@ -1,4 +1,4 @@
-import { application } from 'stewpot';
+import { stewpot } from 'stewpot';
 
-const app = application();
+const app = stewpot();
 app.run();

@@ -65,7 +65,7 @@ p {
 }
 
 pre {
-  font-size: 1.25rem;
+  font-size: 1.125rem;
   font-family: Cascadia Code, monospace;
   word-break: break-all;
   background-color: rgba(0, 0, 0, .1);
@@ -80,6 +80,7 @@ pre > .comment {
 
 header > pre {
   font-size: 2rem;
+  line-height: 1;
   overflow-x: auto;
   margin-bottom: 2.5rem;
   text-align: left;
@@ -100,4 +101,4 @@ body > main {
   padding-bottom: 2rem;
 }
 
-body > main {}
+/* body > main {} */

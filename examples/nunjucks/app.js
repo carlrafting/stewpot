@@ -1,12 +1,14 @@
-import { application } from 'stewpot';
+import { stewpot } from 'stewpot';
 import nunjucks from 'nunjucks';
+import path from 'node:path';
 
-nunjucks.configure('./views', {
+const app = stewpot();
+
+nunjucks.configure(path.join('.', 'views'), {
   watch: true,
 });
 
 function handler(_, response) {
-  // console.log(nunjucks);
   nunjucks.render('index.html', { title: 'Nunjucks!' }, (err, template) => {
     if (err) {
       console.error({ err });
@@ -15,4 +17,5 @@ function handler(_, response) {
   });
 }
 
-application({ server: { port: 8081 } }, handler).run();
+app.use(handler)
+app.run();

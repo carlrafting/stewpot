@@ -11,7 +11,7 @@ const [command, flags] = args;
 const arglen = args.length;
 // console.log('args', args);
 
-export function run({ command, flags, execute = true }) {
+export function run({ command, /*flags,*/ execute = true }) {
   let message;
 
   if (!command) {
@@ -64,30 +64,18 @@ function defineCommand(name, description, fn) {
   return commands.set(name, { name, description, fn });
 }
 
-defineCommand(
-    'build', 
-    'Build project assets for production deployment',
-    build
-);
+defineCommand('build', 'Build project assets for production deployment', build);
 function build() {
   console.log('Building project for production...');
-  return 
+  return;
 }
 
-defineCommand(
-  'start', 
-  'Start development server',
-  start
-);
+defineCommand('start', 'Start development server', start);
 async function start() {
   console.log('Start something great!');
 }
 
-defineCommand(
-  'init', 
-  'Intitalize a new stewpot project',
-  init
-);
+defineCommand('init', 'Intitalize a new stewpot project', init);
 async function init() {
   console.log('projectConfigPath', projectConfigPath);
   (async function () {

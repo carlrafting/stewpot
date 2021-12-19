@@ -29,7 +29,7 @@ export default async (context, next) => {
                 <h1>500 - Internal Server Error</h1>
               </body>
             </html>`;
-      console.log("Unhandled Error:", red(bold(e.message)));
+      console.log('Unhandled Error:', red(bold(e.message)));
       console.log(e.stack);
     }
   }

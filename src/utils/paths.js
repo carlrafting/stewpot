@@ -1,5 +1,5 @@
-import path from 'path';
-import url from 'url';
+import path from 'node:path';
+import url from 'node:url';
 
 const __filename = url.fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -11,14 +11,14 @@ const defaultConfigPath = path.join(
   stewpotPath,
   'src',
   'config',
-  configFilename,
+  configFilename
 );
 const defaultConfigURL = url.pathToFileURL(defaultConfigPath);
 const templateConfigPath = path.join(
   stewpotPath,
   'src',
   'templates',
-  configFilename,
+  configFilename
 );
 
 export {
@@ -28,5 +28,5 @@ export {
   projectRoot,
   templateConfigPath,
   configFilename,
-  defaultConfigURL
+  defaultConfigURL,
 };

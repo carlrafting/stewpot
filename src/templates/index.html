@@ -11,6 +11,22 @@
 </header>
 <main>
 <h2>First Steps</h2>
-<p>Take a look at the <a href="https://github.com/carlrafting/stewpot/tree/main/examples">examples on GitHub for getting started</a>. Make sure to <a href="https://github.com/carlrafting/stewpot/blob/main/src/server/default_handler.js">check out the default request handler</a>, which is responsible for rendering this very page, as well.</p>
+<p>Congratiulations! You got this far! Now define your applications request handler to override the default one.</p>
+<pre>
+<span class="comment">// hello world example</span>
+
+import { stewpot } from 'stewpot';
+
+const app = stewpot();
+
+app.use((_, response) => {
+  response.writeHead(200, { 'Content-Type': 'text/html' });
+  reponse.end('Hello World!');
+});
+
+app.run(); <span class="comment">=> Started web server at localhost:8080</span>
+</pre>
+<h2>Next Steps</h2>
+<p>Take a look at the <a href="https://github.com/carlrafting/stewpot/tree/main/examples">examples on GitHub for getting started</a>. Make sure to <a href="https://github.com/carlrafting/stewpot/blob/main/src/server/default_handler.js">check out the default request handler</a>, which is responsible for rendering this very page.</p>
 </main>
 {% endblock %}

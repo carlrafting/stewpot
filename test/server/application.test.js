@@ -3,13 +3,16 @@ import application from '../../src/server/application.js';
 import { test } from 'uvu';
 import * as assert from 'uvu/assert';
 
-function makeRequest(options, callback) {
-  return http.request(options || {
+function makeRequest(
+  options = {
     host: 'localhost',
     port: 8080,
-    method: 'GET'
-  }, (response) => {
-    callback && callback(response)
+    method: 'GET',
+  },
+  callback
+) {
+  return http.request(options, (response) => {
+    callback && callback(response);
   });
 }
 
@@ -23,34 +26,34 @@ test('has run method', () => {
 });
 
 test('successfully overrides default configuration', () => {
-  application({
-    server: {
-      port: 8000
-    }
-  }, (request, response) => {
-    // console.log(request);
+  const app = application({ port: 8000 });
+  app.use((_, response) => {
     assert.ok(response.statusCode);
     assert.equal(response.statusCode, 200);
-  }).run(() => {
+    response.end();
+  });
+  app.run(() => {
+    const request = makeRequest({
+      host: 'localhost',
+      port: 8000,
+      method: 'GET',
+    });
     request.end();
-  })
-  const request = makeRequest({
-    host: 'localhost',
-    port: 8000,
-    method: 'GET'
+    process.exit(0);
   });
 });
 
 test('successfully listens on default port', () => {
-  const app = application(null, (request, response) => {
+  const app = application();
+  const handler = app.use((_, response) => {
     assert.equal(response.statusCode, 200);
-    response.end() && app.close();
+    response.end() && handler.close();
   });
   app.run(() => {
+    const request = makeRequest({}, (response) => {
+      assert.ok(response);
+      assert.equal(response.statusCode, 200);
+    });
     request.end();
-  });
-  const request = makeRequest(null, (response) => {
-    assert.ok(response);
-    assert.equal(response.statusCode, 200);
   });
 });
