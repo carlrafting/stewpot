@@ -11,7 +11,7 @@ const srcPath = path.join(dirname, '..');
 
 router.clear();
 
-router.add('root', 'GET', '/', (_, response) => {
+router.add('get', 'root', '/', (_, response) => {
   response.setHeader('Content-Type', 'text/html; charset=utf-8');
   return nunjucks.render(
     'index.html',

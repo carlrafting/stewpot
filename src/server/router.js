@@ -9,8 +9,8 @@ class NotFound extends Error {
 }
 
 export function add(
-  name = 'root',
   method = 'GET',
+  name = 'root',
   pathname = '/',
   callback = () => {}
 ) {

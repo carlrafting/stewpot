@@ -5,7 +5,7 @@ const app = application();
 router.clear();
 
 router
-  .add('root', 'get', '/', (_, response) => {
+  .add('get', 'root', '/', (_, response) => {
     response.writeHead(200, { 'Content-Type': 'application/json' });
     response.end(
       JSON.stringify({
@@ -13,7 +13,7 @@ router
       })
     );
   })
-  .add('home', 'get', '/home/', (_, response) => {
+  .add('get', 'home', '/home/', (_, response) => {
     response.writeHead(200, { 'Content-Type': 'application/json' });
     response.end(
       JSON.stringify({
