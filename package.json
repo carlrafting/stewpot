@@ -4,6 +4,7 @@
   "description": "A delicious serving of http/https!",
   "repository": "github:carlrafting/stewpot",
   "author": "Carl Räfting",
+  "license": "MIT",
   "type": "module",
   "bin": "src/cli.js",
   "main": "src/index.js",
@@ -17,7 +18,6 @@
     "test:report": "c8 report --reporter=text-lcov > coverage.lcov"
   },
   "keywords": [],
-  "license": "",
   "bugs": {
     "url": "https://github.com/carlrafting/stewpot/issues"
   },
