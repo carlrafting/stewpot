@@ -90,15 +90,23 @@ header > h1 {
   margin-bottom: 1rem;
 }
 
-body > header {
-  text-align: center;
-  margin-bottom: 2.5rem;
-}
-
 body > header,
 body > main {
   border-bottom: 1px solid var(--border-color);
   padding-bottom: 2rem;
+  margin-bottom: 2.5rem;
 }
 
-/* body > main {} */
+body > header,
+body > footer {
+  text-align: center;
+}
+
+footer > nav > ul {
+  list-style: none;
+}
+
+footer > nav > ul > li {
+  display: inline-block;
+  margin-right: 1rem;
+}
