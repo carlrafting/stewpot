@@ -32,7 +32,7 @@ export function add(
 
 export function find(url) {
   for (const route of routes) {
-    const [name, entry] = route;
+    const [, entry] = route;
     if (url === entry.pathname) {
       return route;
     }
@@ -51,7 +51,7 @@ export function route(request, response) {
   // })();
 }
 
-export function pathname(name) {
+export function pathname() {
   for (const route of routes) {
     const [name, entry] = route;
     if (name === name) {
