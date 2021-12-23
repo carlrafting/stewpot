@@ -1,11 +1,12 @@
-import { stewpot as application, router } from 'stewpot';
+import { stewpot as application, useRouter } from 'stewpot';
 
 const app = application();
+const router = useRouter(); 
 
-router.clear();
+// router.clear();
 
 router
-  .add('get', 'root', '/', (_, response) => {
+  .get('root', (_, response) => {
     response.writeHead(200, { 'Content-Type': 'application/json' });
     response.end(
       JSON.stringify({
@@ -13,7 +14,7 @@ router
       })
     );
   })
-  .add('get', 'home', '/home/', (_, response) => {
+  .get('home', (_, response) => {
     response.writeHead(200, { 'Content-Type': 'application/json' });
     response.end(
       JSON.stringify({

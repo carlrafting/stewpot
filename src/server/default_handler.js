@@ -1,5 +1,5 @@
 import { logger } from '../middleware/logger.js';
-import router from './router.js';
+import useRouter from './router.js';
 import nunjucks from 'nunjucks';
 import path from 'node:path';
 import sirv from 'sirv';
@@ -9,9 +9,9 @@ const url = new URL(import.meta.url);
 const dirname = path.dirname(fileURLToPath(url.href));
 const srcPath = path.join(dirname, '..');
 
-router.clear();
+const router = useRouter();
 
-router.add('get', 'root', '/', (_, response) => {
+router.add('get', 'root', (_, response) => {
   response.setHeader('Content-Type', 'text/html; charset=utf-8');
   return nunjucks.render(
     'index.html',
