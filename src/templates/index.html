@@ -7,26 +7,53 @@
 └─┐ │ ├┤ │││├─┘│ │ │ 
 └─┘ ┴ └─┘└┴┘┴  └─┘ ┴
 </pre>
-<h1>🎉 Welcome to the delicious world of {{ title }}!</h1>
+<h1>Welcome to the delicious world of {{ title }}! 🎉</h1>
 </header>
 <main>
 <h2>First Steps</h2>
-<p>Congratiulations! You got this far! Now define your applications request handler to override the default one.</p>
 <pre>
-<span class="comment">// hello world example</span>
-
 import { stewpot } from 'stewpot';
 
+<span class="comment">// 1. create app instance</span>
 const app = stewpot();
 
+<span class="comment">// 2. register request handler</span>
 app.use((_, response) => {
   response.writeHead(200, { 'Content-Type': 'text/html' });
   reponse.end('Hello World!');
 });
 
-app.run(); <span class="comment">=> Started web server at localhost:8080</span>
+<span class="comment">// 3. run app!</span>
+app.run();
 </pre>
 <h2>Next Steps</h2>
+<pre>
+import { stewpot, useRouter } from 'stewpot';
+
+<span class="comment">// 1. create app and router instances</span>
+const app = stewpot();
+const router = useRouter();
+
+<span class="comment">// 2. define root (/) path</span>
+router.get('root', (_, response) => {
+  response.writeHead(200, { 'Content-Type': 'text/html' });
+  response.end('&lt;h1&gt;Hello World!&lt;/h1&gt;');
+});
+
+<span class="comment">// 3. register request handler</span>
+app.use((_, response) => {
+  try {
+    return router.route(_, response);
+  } catch(err) {
+    console.log(err);
+    response.end();
+  }
+});
+
+<span class="comment">// 4. run app!</span>
+app.run();
+</pre>
+<h2>Further Steps</h2>
 <p>Take a look at the <a href="https://github.com/carlrafting/stewpot/tree/main/examples">examples on GitHub for getting started</a>. Make sure to <a href="https://github.com/carlrafting/stewpot/blob/main/src/server/default_handler.js">check out the default request handler</a>, which is responsible for rendering this very page.</p>
 </main>
 <footer>
