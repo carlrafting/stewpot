@@ -34,7 +34,7 @@ export default function defaultHandler(request, response) {
     maxAge: 0,
   });
 
-  logger(response, request, function () {
+  logger(response, request, () => {
     try {
       serveStatic(request, response, () => {
         router.route(request, response);
