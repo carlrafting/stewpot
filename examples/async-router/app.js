@@ -8,7 +8,7 @@ function resolvePromiseAfter5Seconds() {
     try {
       setTimeout(() => resolve('resolved!'), 5000);
     } catch (err) {
-      reject(`Something went during resolving of promise: ${err}`);
+      reject(`Something went wrong during resolving of promise: ${err}`);
     }
   });
 }
