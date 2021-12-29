@@ -10,6 +10,10 @@ A delicious serving of http/https!
 
   ⚠ WARNING: This project is young, under development and is not ready for use in a production environment yet.
 
+## Introduction
+
+Stewpot is a small abstraction on top of node.js http/https server module, similar to Koa, express or Polka. Stewpot is taking advantage of ES Modules. That means it's only compatible with node.js versions that has support for ES Modules and not versions supporting only CommonJS.
+
 ## Install
 
 This project is not currently available on npm, but you can install it as a npm package from Github, like this:
