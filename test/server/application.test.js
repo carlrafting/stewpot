@@ -20,9 +20,19 @@ test('is a function', () => {
   assert.type(application, 'function');
 });
 
+test('exposes server object', () => {
+  const app = application();
+  assert.type(app.server, 'object');
+});
+
 test('has run method', () => {
   const app = application();
   assert.type(app.run, 'function');
+});
+
+test('exposes method for registering request handlers', () => {
+  const app = application();
+  assert.type(app.use, 'function');
 });
 
 test('successfully overrides default configuration', () => {
@@ -45,9 +55,9 @@ test('successfully overrides default configuration', () => {
 
 test('successfully listens on default port', () => {
   const app = application();
-  const handler = app.use((_, response) => {
+  app.use((_, response) => {
     assert.equal(response.statusCode, 200);
-    response.end() && handler.close();
+    response.end();
   });
   app.run(() => {
     const request = makeRequest({}, (response) => {
@@ -57,3 +67,5 @@ test('successfully listens on default port', () => {
     request.end();
   });
 });
+
+test.run();

@@ -56,8 +56,6 @@ export default function stewpot(
     process.exit(0);
   });
 
-  const close = () => server.close();
-
   const handlers = [];
 
   function use(...fns) {
@@ -109,8 +107,8 @@ export default function stewpot(
 
   return {
     config: configMerged,
+    server,
     use,
-    run,
-    close
+    run
   };
 };
