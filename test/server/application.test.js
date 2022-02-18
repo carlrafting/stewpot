@@ -49,7 +49,7 @@ test('successfully overrides default configuration', () => {
       method: 'GET',
     });
     request.end();
-    process.exit(0);
+    app.server.close();
   });
 });
 
