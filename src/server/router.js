@@ -133,6 +133,7 @@ export default function useRouter(config={ ...defaultConfig }) {
       add(method, name, ...rest);
       return api;
     };
+    // NOTE: this statement mutates the api object, might want to look into another way of solving this.
     if (!api.hasOwnProperty(method)) {
       api[method] = addMethodRoute;
     }
