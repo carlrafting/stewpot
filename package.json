@@ -31,7 +31,7 @@
     "nodemon": "^2.0.15",
     "nunjucks": "^3.2.3",
     "prettier": "^2.5.0",
-    "sirv": "^1.0.18",
+    "sirv": "^2.0.2",
     "uvu": "^0.5.1"
   },
   "dependencies": {
