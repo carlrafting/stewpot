@@ -3,12 +3,14 @@ import application from '../../src/server/application.js';
 import { test } from 'uvu';
 import * as assert from 'uvu/assert';
 
+const makeRequestOptions = {
+  host: 'localhost',
+  port: 8080,
+  method: 'GET',
+};
+
 function makeRequest(
-  options = {
-    host: 'localhost',
-    port: 8080,
-    method: 'GET',
-  },
+  options = { ...makeRequestOptions },
   callback
 ) {
   return http.request(options, (response) => {
@@ -60,11 +62,12 @@ test('successfully listens on default port', () => {
     response.end();
   });
   app.run(() => {
-    const request = makeRequest({}, (response) => {
+    const request = makeRequest(null, (response) => {
       assert.ok(response);
       assert.equal(response.statusCode, 200);
     });
     request.end();
+    app.server.close();
   });
 });
 
