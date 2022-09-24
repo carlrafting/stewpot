@@ -19,9 +19,7 @@ function createServer(config) {
   return config.https ? https.createServer() : http.createServer();
 }
 
-export default function stewpot(
-  config = { ...defaultServerConfig }
-) {
+export default function stewpot(config = { ...defaultServerConfig }) {
   // if config parameter is set to null or empty object we have to reassign it.
   if (
     !config ||
@@ -42,13 +40,13 @@ export default function stewpot(
         writeableAll: true,
       }
     : {};
-  
+
   const configMerged = {
     ...defaultServerConfig,
     ...config,
     ...configExtra,
   };
-    
+
   const server = createServer({ ...configMerged });
 
   server.on('close', () => {
@@ -68,7 +66,7 @@ export default function stewpot(
     }
 
     return {
-      run
+      run,
     };
   }
 
@@ -88,11 +86,13 @@ export default function stewpot(
       {
         ...configMerged,
       },
-      callback ? callback : () => {
-        console.log(
-          `=> Started web server at ${configMerged.host}:${configMerged.port}`
-        );
-      }
+      callback
+        ? callback
+        : () => {
+            console.log(
+              `=> Started web server at ${configMerged.host}:${configMerged.port}`
+            );
+          }
     );
   }
 
@@ -101,14 +101,12 @@ export default function stewpot(
     server.close();
   }
 
-  process
-    .on('SIGINT', signalHandler)
-    .on('SIGTERM', signalHandler);
+  process.on('SIGINT', signalHandler).on('SIGTERM', signalHandler);
 
   return {
     config: configMerged,
     server,
     use,
-    run
+    run,
   };
-};
+}

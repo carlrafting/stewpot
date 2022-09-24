@@ -2,13 +2,13 @@
 
 ```
 ┌─┐┌┬┐┌─┐┬ ┬┌─┐┌─┐┌┬┐
-└─┐ │ ├┤ │││├─┘│ │ │ 
-└─┘ ┴ └─┘└┴┘┴  └─┘ ┴ 
+└─┐ │ ├┤ │││├─┘│ │ │
+└─┘ ┴ └─┘└┴┘┴  └─┘ ┴
 
 A delicious serving of http/https!
 ```
 
-  ⚠ WARNING: This project is young, under development and is not ready for use in a production environment yet.
+⚠ WARNING: This project is young, under development and is not ready for use in a production environment yet.
 
 ## Introduction
 
@@ -38,16 +38,17 @@ import { stewpot } from 'stewpot';
 const app = stewpot();
 app.run();
 ```
+
 ```json
+// package.json
 {
-  "//": "package.json",
-  
   "scripts": {
     "start": "node app.js"
   }
 }
 ```
-``` bash
+
+```bash
 # npm
 
 npm start

@@ -17,5 +17,5 @@ function handler(_, response) {
   });
 }
 
-app.use(handler)
+app.use(handler);
 app.run();

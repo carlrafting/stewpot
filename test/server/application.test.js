@@ -9,10 +9,7 @@ const makeRequestOptions = {
   method: 'GET',
 };
 
-function makeRequest(
-  options = { ...makeRequestOptions },
-  callback
-) {
+function makeRequest(options = { ...makeRequestOptions }, callback) {
   return http.request(options, (response) => {
     callback && callback(response);
   });

@@ -5,14 +5,13 @@ import _static from '../../middleware/static.js';
 
 // Original server implementation in deno.
 
-export async function server({
-  hostname,
-  port,
-  https,
-}) {
+export async function server({ hostname, port, https }) {
   console.log('https', https);
-  
-  const status = await Deno.permissions.request({ name: 'net', host: hostname });
+
+  const status = await Deno.permissions.request({
+    name: 'net',
+    host: hostname,
+  });
 
   if (status.state === 'denied') {
     return;
@@ -42,10 +41,8 @@ export async function server({
   app.addEventListener('listen', () => {
     console.log(
       `${https ? 'HTTPS' : 'HTTP'} webserver running.  Access it at:  ${
-        https
-          ? 'https'
-          : 'http'
-      }://${hostname}:${port}/`,
+        https ? 'https' : 'http'
+      }://${hostname}:${port}/`
     );
   });
 
@@ -60,7 +57,7 @@ export async function server({
     port,
     secure: https,
     certFile,
-    keyFile
+    keyFile,
   });
 
   // for await (const request of server) {

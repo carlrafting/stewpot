@@ -1,7 +1,7 @@
 import { stewpot as application, useRouter } from 'stewpot';
 
 const app = application();
-const router = useRouter(); 
+const router = useRouter();
 
 // router.clear();
 

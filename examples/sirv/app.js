@@ -16,5 +16,5 @@ app.use((request, response) => {
   } catch (error) {
     console.log('servePublic', { error });
   }
-})
+});
 app.run();
