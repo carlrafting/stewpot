@@ -7,27 +7,29 @@ class NotFound extends Error {
 }
 
 const defaultConfig = {
-  trailingSlashes: false
-}
+  trailingSlashes: false,
+};
 
 const httpMethodsToVerbs = {
   post: 'create',
   get: 'index',
   put: 'update',
-  delete: 'delete'
+  delete: 'delete',
 };
 
-export default function useRouter(config={ ...defaultConfig }) {
+export default function useRouter(config = { ...defaultConfig }) {
   const routes = new Map();
 
   // console.log({ config });
 
   function createRoutePathname(name) {
     const { trailingSlashes } = config;
-    if (typeof name !== 'string') throw new Error('Name must be a string value!');
-    return name === 'root' ? '/' : (
-      trailingSlashes ? `/${name}/` : `/${name}`
-    );
+
+    if (typeof name !== 'string') {
+      throw new Error('Name must be a string value!');
+    }
+
+    return name === 'root' ? '/' : trailingSlashes ? `/${name}/` : `/${name}`;
   }
 
   function add(
@@ -51,7 +53,7 @@ export default function useRouter(config={ ...defaultConfig }) {
     };
 
     const routeExists = routes.has(name) && routes.get(name);
-  
+
     if (routeExists) {
       routeExists.forEach((item) => {
         // console.log({ item });
@@ -63,9 +65,9 @@ export default function useRouter(config={ ...defaultConfig }) {
       routeExists.push(props);
       return api;
     }
-  
+
     !routeExists && routes.set(name, [props]);
-  
+
     return api;
   }
 
@@ -79,7 +81,7 @@ export default function useRouter(config={ ...defaultConfig }) {
       }
     }
   }
-  
+
   function route(request, response) {
     const { url } = request;
     const match = find(url);
@@ -88,7 +90,7 @@ export default function useRouter(config={ ...defaultConfig }) {
       return match.callback(request, response);
     }
   }
-  
+
   function pathname(name, method) {
     for (const route of routes) {
       // console.log({route});
@@ -104,14 +106,14 @@ export default function useRouter(config={ ...defaultConfig }) {
       }
     }
   }
-  
+
   function clear() {
     routes.clear();
   }
-  
+
   function inspect() {
     return routes;
-  }  
+  }
 
   const api = {
     add,
@@ -134,7 +136,7 @@ export default function useRouter(config={ ...defaultConfig }) {
       return api;
     };
     // NOTE: this statement mutates the api object, might want to look into another way of solving this.
-    if (!api.hasOwnProperty(method)) {
+    if (!Object.hasOwn(api, method)) {
       api[method] = addMethodRoute;
     }
   });
@@ -154,8 +156,8 @@ export default function useRouter(config={ ...defaultConfig }) {
   // console.log(routes);
 
   return {
-    ...api
+    ...api,
   };
-};
+}
 
 // useRouter();
