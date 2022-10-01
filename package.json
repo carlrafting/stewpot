@@ -32,10 +32,11 @@
     "uvu": "^0.5.1"
   },
   "dependencies": {
-    "chokidar": "^3.5.2",
-    "sirv": "^2.0.2",
-    "nunjucks": "^3.2.3",
     "chalk": "^5.0.0",
-    "lodash": "^4.17.21"
+    "chokidar": "^3.5.2",
+    "lodash": "^4.17.21",
+    "nunjucks": "^3.2.3",
+    "regexparam": "^2.0.1",
+    "sirv": "^2.0.2"
   }
 }
