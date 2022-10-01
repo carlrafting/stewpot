@@ -1,158 +1,136 @@
-class NotFound extends Error {
-  constructor(...params) {
-    super(...params);
-    this.statusCode = 404;
-    this.text = 'Not Found';
-  }
-}
+import { parse } from 'regexparam';
 
 const defaultConfig = {
   trailingSlashes: false,
 };
 
-const httpMethodsToVerbs = {
-  post: 'create',
-  get: 'index',
-  put: 'update',
-  delete: 'delete',
-};
+const methods = [
+  'GET',
+  'HEAD',
+  'POST',
+  'PUT',
+  'DELETE',
+  'CONNECT',
+  'OPTIONS',
+  'TRACE',
+  'PATCH',
+];
 
-export default function useRouter(config = { ...defaultConfig }) {
-  const routes = new Map();
+const addSlash = (str) => (str.charAt(0) === '/' ? str : `/${str}`);
+
+console.log('foo', addSlash('foo'));
+console.log('/foo', addSlash('/foo'));
+console.log('/', addSlash('/'));
+
+export default function router(config = { ...defaultConfig }) {
+  const routes = [];
 
   // console.log({ config });
 
-  function createRoutePathname(name) {
-    const { trailingSlashes } = config;
-
-    if (typeof name !== 'string') {
-      throw new Error('Name must be a string value!');
-    }
-
-    return name === 'root' ? '/' : trailingSlashes ? `/${name}/` : `/${name}`;
-  }
-
-  function add(
-    method = 'GET',
-    name = 'root',
-    // pathname = '/',
-    callback = (_, response) => {
-      response.end();
-    }
-  ) {
-    // let pathname;
-    // if (name.includes('/')) {
-    //   pathname = name;
-    // }
-
-    const props = {
-      name: `${name}_${httpMethodsToVerbs[method]}`,
-      method: method.toUpperCase(),
-      pathname: createRoutePathname(name),
-      callback,
-    };
-
-    const routeExists = routes.has(name) && routes.get(name);
-
-    if (routeExists) {
-      routeExists.forEach((item) => {
-        // console.log({ item });
-        if (item.method === props.method && item.name === props.name) {
-          throw new Error(`A route already exist with that name and method!`);
-        }
-      });
-      // console.log({ routeExists });
-      routeExists.push(props);
-      return api;
-    }
-
-    !routeExists && routes.set(name, [props]);
-
-    return api;
-  }
-
-  function find(url) {
-    for (const route of routes) {
-      const [name, items] = route;
-      for (const item of items) {
-        if (url === item.pathname) {
-          return item;
-        }
+  const api = {
+    add(
+      method = 'GET',
+      route = '/',
+      handler = (_, response) => {
+        response.end();
       }
-    }
-  }
+    ) {
+      routes.push({
+        method,
+        route,
+        handler,
+        type: 'route',
+      });
 
-  function route(request, response) {
-    const { url } = request;
-    const match = find(url);
-    // console.log({match});
-    if (match) {
-      return match.callback(request, response);
-    }
-  }
+      return api;
+    },
 
-  function pathname(name, method) {
-    for (const route of routes) {
-      // console.log({route});
-      const [routeName, items] = route;
-      if (name === routeName) {
-        // return item.pathname;
+    addMiddleware(...args) {
+      const [base] = args;
+      const handlers = [...args.slice(1)];
+
+      console.log(base, handlers);
+
+      if (typeof base === 'string') {
+        routes.push({
+          route: base,
+          handlers,
+          type: 'middleware',
+        });
+      } else {
+        routes.push({
+          route: '/',
+          handlers: [base, ...handlers],
+          type: 'middleware',
+        });
+      }
+    },
+
+    // register routes for use in application
+    register() {
+      return routes.map((route) => console.log(route));
+    },
+
+    find(method, url) {
+      for (const route of routes) {
+        const [name, items] = route;
         for (const item of items) {
-          // console.log({item})
-          if (item.method === method.toUpperCase()) {
-            return item.pathname;
+          if (url === item.route) {
+            return item;
           }
         }
       }
-    }
-  }
+    },
 
-  function clear() {
-    routes.clear();
-  }
+    route(request, response) {
+      const { method, url } = request;
+      const match = find(method, url);
+      // console.log({match});
+      if (match) {
+        return match.callback(request, response);
+      }
+    },
 
-  function inspect() {
-    return routes;
-  }
+    pathname(name, method) {
+      for (const route of routes) {
+        // console.log({route});
+        const [routeName, items] = route;
+        if (name === routeName) {
+          // return item.pathname;
+          for (const item of items) {
+            // console.log({item})
+            if (item.method === method.toUpperCase()) {
+              return item.pathname;
+            }
+          }
+        }
+      }
+    },
 
-  const api = {
-    add,
-    route,
-    find,
-    pathname,
     clear() {
-      clear();
+      routes.clear();
       return api;
     },
-    inspect() {
-      inspect();
-      return api;
+
+    routes() {
+      return routes;
     },
   };
 
-  Object.keys(httpMethodsToVerbs).forEach((method) => {
-    const addMethodRoute = (name, ...rest) => {
-      add(method, name, ...rest);
-      return api;
-    };
-    // NOTE: this statement mutates the api object, might want to look into another way of solving this.
-    if (!Object.hasOwn(api, method)) {
-      api[method] = addMethodRoute;
+  // alias addMiddleware as use
+  api.use = api.addMiddleware;
+
+  // methods for http methods
+  for (const m of methods) {
+    if (!Object.hasOwn(api, m)) {
+      api[m.toLowerCase()] = (n, cb) => {
+        api.add(m, n, cb);
+        return api;
+      };
     }
-  });
+  }
 
-  // console.log({ api });
-
-  // api.get('root', () => {});
-  // api.post('root', () => {});
-  // api.get('foo',  () => {});
-  // api.post('foo', () => {});
-  // api.get('welcome');
-  // api.post('welcome');
-
-  // const rootPath = api.pathname('root', 'get');
-  // console.log({ rootPath });
-
+  console.log({ api });
   // console.log(routes);
 
   return {
@@ -160,4 +138,31 @@ export default function useRouter(config = { ...defaultConfig }) {
   };
 }
 
-// useRouter();
+const routes = router();
+routes.get('root', () => {});
+routes.post('root', () => {});
+routes.get('foo', () => {});
+routes.post('foo', () => {});
+routes.get('welcome');
+routes.post('welcome');
+routes.get('foo/bar', () => {});
+routes.post('foo/bar', () => {});
+routes.get('posts/:id', () => {});
+routes.get('posts/:id', () => {});
+
+routes.addMiddleware(
+  '/foo',
+  function first() {},
+  function second() {}
+);
+
+routes.addMiddleware(
+  function one() {},
+  function two() {}
+);
+console.log('register', routes.register());
+
+console.log('routes', ...routes.routes());
+
+// const rootPath = routes.pathname('root', 'get');
+// console.log({ rootPath });

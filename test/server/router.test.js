@@ -36,9 +36,7 @@ test('should be able to inspect routes', () => {
 
 test('should not be able to add duplicate routes', () => {
   assert.ok(router.add('get', 'duplicate', () => {}));
-  assert.throws(() => {
-    router.add('get', 'duplicate', () => {});
-  });
+  assert.not.ok(router.add('get', 'duplicate', () => {}));
 });
 
 test('should find correct route', () => {
