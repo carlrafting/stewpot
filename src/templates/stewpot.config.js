@@ -1,8 +1,8 @@
 export default {
-  server: {
-    // ...
-  },
-  watch: {
-    // ...
-  },
+    server: {
+        // ...
+    },
+    watch: {
+        // ...
+    },
 };

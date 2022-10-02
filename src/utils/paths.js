@@ -8,25 +8,25 @@ const stewpotPath = path.join(__dirname, '..', '..');
 const configFilename = 'stewpot.config.js';
 const projectConfigPath = path.join(projectRoot, configFilename);
 const defaultConfigPath = path.join(
-  stewpotPath,
-  'src',
-  'config',
-  configFilename
+    stewpotPath,
+    'src',
+    'config',
+    configFilename
 );
 const defaultConfigURL = url.pathToFileURL(defaultConfigPath);
 const templateConfigPath = path.join(
-  stewpotPath,
-  'src',
-  'templates',
-  configFilename
+    stewpotPath,
+    'src',
+    'templates',
+    configFilename
 );
 
 export {
-  stewpotPath,
-  defaultConfigPath,
-  projectConfigPath,
-  projectRoot,
-  templateConfigPath,
-  configFilename,
-  defaultConfigURL,
+    stewpotPath,
+    defaultConfigPath,
+    projectConfigPath,
+    projectRoot,
+    templateConfigPath,
+    configFilename,
+    defaultConfigURL,
 };

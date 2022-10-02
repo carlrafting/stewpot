@@ -12,35 +12,35 @@ const srcPath = path.join(dirname, '..');
 const router = useRouter();
 
 router.add('get', 'root', (_, response) => {
-  response.setHeader('Content-Type', 'text/html; charset=utf-8');
-  return nunjucks.render(
-    'index.html',
-    { title: 'Stewpot' },
-    (err, template) => {
-      if (err) {
-        console.error({ err });
-      }
-      return response.end(template);
-    }
-  );
+    response.setHeader('Content-Type', 'text/html; charset=utf-8');
+    return nunjucks.render(
+        'index.html',
+        { title: 'Stewpot' },
+        (err, template) => {
+            if (err) {
+                console.error({ err });
+            }
+            return response.end(template);
+        }
+    );
 });
 
 export default function defaultHandler(request, response) {
-  nunjucks.configure(path.join(srcPath, 'templates'), {
-    watch: true,
-  });
+    nunjucks.configure(path.join(srcPath, 'templates'), {
+        watch: true,
+    });
 
-  const serveStatic = sirv(path.join(srcPath, 'static'), {
-    maxAge: 0,
-  });
+    const serveStatic = sirv(path.join(srcPath, 'static'), {
+        maxAge: 0,
+    });
 
-  logger(response, request, () => {
-    try {
-      serveStatic(request, response, () => {
-        router.route(request, response);
-      });
-    } catch (error) {
-      console.log('servePublic', { error });
-    }
-  });
+    logger(response, request, () => {
+        try {
+            serveStatic(request, response, () => {
+                router.route(request, response);
+            });
+        } catch (error) {
+            console.log('servePublic', { error });
+        }
+    });
 }
