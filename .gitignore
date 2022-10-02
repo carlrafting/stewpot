@@ -4,7 +4,7 @@ src/config/*.crt
 .vscode
 node_modules
 examples/foobar
-sandbox
+src/sandbox
 coverage
 *.lcov
 *.esproj
