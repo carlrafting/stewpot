@@ -1,10 +1,10 @@
 src/config/*.pem
 src/config/*.key
 src/config/*.crt
+src/sandbox
 .vscode
 node_modules
 examples/foobar
-src/sandbox
 coverage
 *.lcov
 *.esproj
