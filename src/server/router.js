@@ -17,28 +17,22 @@ const methods = [
 ];
 
 const addSlash = (str) => (str.charAt(0) === '/' ? str : `/${str}`);
-
+/*
 console.log('foo', addSlash('foo'));
 console.log('/foo', addSlash('/foo'));
 console.log('/', addSlash('/'));
-
+// */
 export default function router(config = { ...defaultConfig }) {
     const routes = [];
 
     // console.log({ config });
 
     const api = {
-        add(
-            method = 'GET',
-            route = '/',
-            handler = (_, response) => {
-                response.end();
-            }
-        ) {
+        add(method = 'GET', route = '/', ...handlers) {
             routes.push({
                 method,
                 route,
-                handler,
+                handlers,
                 type: 'route',
             });
 
@@ -55,31 +49,75 @@ export default function router(config = { ...defaultConfig }) {
                 routes.push({
                     route: base,
                     handlers,
+                    method: '',
                     type: 'middleware',
                 });
             } else {
                 routes.push({
                     route: '/',
                     handlers: [base, ...handlers],
+                    method: '',
                     type: 'middleware',
                 });
             }
-        },
 
-        // register routes for use in application
-        register() {
-            return routes.map((route) => console.log(route));
+            return api;
         },
 
         find(method, url) {
-            for (const route of routes) {
-                const [name, items] = route;
-                for (const item of items) {
-                    if (url === item.route) {
-                        return item;
+            let matches = [],
+                params = {},
+                handlers = [],
+                i = 0;
+
+            for (const item of routes) {
+                const { keys, pattern } = (() => {
+                    if (item.type === 'route') {
+                        return parse(item.route);
                     }
+                    if (item.type === 'middleware') {
+                        return parse(item.route, true);
+                    }
+                })();
+
+                console.log({
+                    keys,
+                    pattern,
+                });
+
+                if (
+                    item.method.length === 0 ||
+                    item.method === method ||
+                    item.method === 'GET'
+                ) {
+                    matches = pattern.exec(url);
+
+                    if (matches === null) {
+                        continue;
+                    }
+
+                    if (!keys) {
+                        if (matches.groups) {
+                            for (const key of matches.groups) {
+                                params[key] = matches.groups[key];
+                            }
+                        }
+                    }
+
+                    if (keys && keys.length > 0) {
+                        for (i = 0; i < keys.length; ) {
+                            params[keys[i]] = matches[++i];
+                        }
+                    }
+
+                    (matches || pattern.test(url)) &&
+                        (item.handlers.length > 1
+                            ? (handlers = [...item.handlers])
+                            : handlers.push(...item.handlers));
                 }
             }
+
+            return { params, handlers };
         },
 
         route(request, response) {
@@ -91,28 +129,12 @@ export default function router(config = { ...defaultConfig }) {
             }
         },
 
-        pathname(name, method) {
-            for (const route of routes) {
-                // console.log({route});
-                const [routeName, items] = route;
-                if (name === routeName) {
-                    // return item.pathname;
-                    for (const item of items) {
-                        // console.log({item})
-                        if (item.method === method.toUpperCase()) {
-                            return item.pathname;
-                        }
-                    }
-                }
-            }
-        },
-
         clear() {
             routes.clear();
             return api;
         },
 
-        routes() {
+        get routes() {
             return routes;
         },
     };
@@ -130,14 +152,14 @@ export default function router(config = { ...defaultConfig }) {
         }
     }
 
-    console.log({ api });
+    // console.log({ api });
     // console.log(routes);
 
     return {
         ...api,
     };
 }
-
+/*
 const routes = router();
 routes.get('root', () => {});
 routes.post('root', () => {});
@@ -163,6 +185,6 @@ routes.addMiddleware(
 console.log('register', routes.register());
 
 console.log('routes', ...routes.routes());
-
+*/
 // const rootPath = routes.pathname('root', 'get');
 // console.log({ rootPath });
