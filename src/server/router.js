@@ -80,10 +80,10 @@ export default function router(config = { ...defaultConfig }) {
                     }
                 })();
 
-                console.log({
-                    keys,
-                    pattern,
-                });
+                // console.log({
+                //     keys,
+                //     pattern,
+                // });
 
                 if (
                     item.method.length === 0 ||
