@@ -5,16 +5,16 @@ import path from 'node:path';
 const app = stewpot();
 
 nunjucks.configure(path.join('.', 'views'), {
-  watch: true,
+    watch: true,
 });
 
 function handler(_, response) {
-  nunjucks.render('index.html', { title: 'Nunjucks!' }, (err, template) => {
-    if (err) {
-      console.error({ err });
-    }
-    response.end(template);
-  });
+    nunjucks.render('index.html', { title: 'Nunjucks!' }, (err, template) => {
+        if (err) {
+            console.error({ err });
+        }
+        response.end(template);
+    });
 }
 
 app.use(handler);

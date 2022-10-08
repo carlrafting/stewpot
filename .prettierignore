@@ -2,3 +2,5 @@
 /coverage
 *.html
 *.css
+package.json
+package-lock.json

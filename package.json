@@ -13,8 +13,8 @@
   },
   "scripts": {
     "start": "nodemon src/app.js",
-    "check": "prettier -c src",
-    "format": "prettier -w src",
+    "check": "prettier -c .",
+    "format": "prettier -w .",
     "test": "uvu test",
     "test:coverage": "c8 --include=src npm test",
     "test:report": "c8 report --reporter=text-lcov > coverage.lcov",
