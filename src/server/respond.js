@@ -8,6 +8,21 @@ import mime from './mime.js';
 
 export const TYPE = 'Content-Type';
 
+/**
+ * @example
+ *
+ * // set header content type html with 200 status code and no additional headers
+ * headers(res, 'html');
+ *
+ * // set header content type to html with 500 status code and no additional headers
+ * headers(res, 500, 'html');
+ *
+ * // set header content type to html with 301 status code and with additional location header
+ * headers(res, 301, 'html', { Location: '/' })
+ *
+ * @param {OutgoingMessage} res
+ * @param  {...any} args
+ */
 export function headers(res, ...args) {
     let code = 200,
         headers = {},
