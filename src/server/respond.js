@@ -1,5 +1,28 @@
 import { join } from 'node:path';
 import { readFile } from 'node:fs/promises';
+import mime from './mime.js';
+
+// export function headers(res, code = 200, headers = {}, format = 'default') {
+//     res.writeHead(code, { 'Content-Type': mime[format], ...headers });
+// }
+
+export const TYPE = 'Content-Type';
+
+export function headers(res, ...args) {
+    let code = 200,
+        headers = {},
+        format = 'default';
+
+    if (args.length > 0) {
+        for (const arg of args) {
+            code = typeof arg === 'number' ? arg : code;
+            headers = typeof arg === 'object' ? arg : headers;
+            format = typeof arg === 'string' ? arg : format;
+        }
+    }
+
+    res.writeHead(code, { [TYPE]: mime[format], ...headers });
+}
 
 export function notFound(_, res) {
     res.writeHead(404, {
@@ -14,17 +37,52 @@ export function onError(err, req, res, next) {
 }
 
 export function json(req, res, data = {}) {
-    res.writeHead(200, { 'Content-Type': 'application/json' });
+    // res.writeHead(200, { 'Content-Type': 'application/json' });
+    headers(res, 200, 'json');
     res.end(JSON.stringify(data));
 }
 
 export function text(req, res, text = '') {
-    res.writeHead(200, { 'Content-Type': 'text/plain' });
+    // res.writeHead(200, { 'Content-Type': 'text/plain' });
+    headers(res, 200, 'html');
     res.end(text);
 }
 
+/**
+ * 
+ * @example
+ *
+    // template string
+    html(req, res, (
+        `<!doctype html>
+        <meta charset="utf-8">
+        <title>Hello World!</title>
+        <h1>Hello World!</h1>`
+    ));
+
+    // template string with data
+    html(req, res, (
+        `<!doctype html>
+        <meta charset="utf-8">
+        <title>{title}</title>
+        <h1>{title}</h1>
+        <p>{text}</p>`
+    ), { title: 'Hello World', text: 'This is some text!' });
+
+    // template file
+    html(req, res, {
+        template: 'index.html'
+    });
+ 
+ * @param {IncomingMessage} req 
+ * @param {ServerResponse} res 
+ * @param {string|object} html 
+ * @param {object} data
+ * @returns
+ */
 export async function html(req, res, html, data = {}) {
-    res.writeHead(200, { 'Content-Type': 'text/html' });
+    // res.writeHead(200, { 'Content-Type': 'text/html' });
+    headers(res, 'html');
 
     let template = typeof html === 'string' ? html : '';
 
@@ -34,9 +92,9 @@ export async function html(req, res, html, data = {}) {
                 join(process.cwd(), 'src', 'templates', html.template),
                 { encoding: 'utf-8' }
             );
-            console.log(template);
         } catch (err) {
-            res.writeHead(500, { 'Content-Type': 'text/html' });
+            // res.writeHead(500, { 'Content-Type': mime.html });
+            headers(res, 500, 'html');
             res.end(err.message);
             return;
         }
