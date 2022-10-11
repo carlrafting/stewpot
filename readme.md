@@ -65,7 +65,7 @@ In order to run stewpot development server with HTTPS enabled, you'll have to ma
 Linux doesn't allow for processes to bind to that port without root access. One way to get around that is by running this command:
 
 ```bash
-sudo sysctl -w net.ipv4.ip_unprivileged_port_start=0
+sudo sysctl -w net.ipv4.ip_unprivileged_port_start=80
 ```
 
 Here are some useful resources you can read for more information about privileged ports on Linux:
