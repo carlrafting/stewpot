@@ -3,19 +3,24 @@ import https from 'node:https';
 import process from 'node:process';
 import defaultConfig from '../config/stewpot.config.js';
 import defaultHandler from './default_handler.js';
-import Module from 'node:module';
-
-console.log(Module);
 
 const portCheck = (config) => config.port === 80 || config.port === 443;
+
+const defaultServerConfig =
+    typeof defaultConfig === 'function'
+        ? defaultConfig().server
+        : defaultConfig.server;
 
 const createServer = (config) =>
     config.https ? https.createServer() : http.createServer();
 
 export default function stewpot(config = {}) {
-    const { configMerged } = init(config);
+    const { http, https, port, host } = {
+        ...defaultServerConfig,
+        ...config,
+    };
 
-    const server = createServer({ ...configMerged });
+    const server = createServer({ https });
 
     server.on('close', () => {
         console.log('Shutting down web server...');
@@ -33,52 +38,13 @@ export default function stewpot(config = {}) {
     const handlers = [];
     const middleware = [];
 
-    function init(config) {
-        console.log({ config });
-        // if config parameter is set to null or empty object we have to reassign it.
-        if (
-            // !config ||
-            typeof config === 'object' &&
-            Object.keys(config).length === 0
-        ) {
-            config =
-                typeof defaultConfig === 'function'
-                    ? defaultConfig().server
-                    : defaultConfig.server;
-        }
-
-        // if (typeof config === 'function') {
-        //   config = config().server;
-        // }
-
-        // if (typeof config === 'object') {
-        //   config = config.server;
-        // }
-
-        console.log({ config });
-
-        // is this useful/necessary? not sure it's doing what i think it's doing...
-        const configExtra = portCheck(config)
-            ? {
-                  exclusive: true,
-                  readableAll: true,
-                  writeableAll: true,
-              }
-            : {};
-
-        const configMerged = {
-            ...defaultConfig.server,
-            ...config,
-            ...configExtra,
-        };
-
-        return {
-            configMerged,
-        };
-    }
-
     const api = {
-        config: configMerged,
+        config: {
+            https,
+            http,
+            port,
+            host,
+        },
 
         server,
 
@@ -108,9 +74,9 @@ export default function stewpot(config = {}) {
 
         handler() {},
 
-        run(callback) {
-            console.log(handlers);
+        render() {},
 
+        run(callback) {
             if (handlers.length > 0) {
                 for (const handler of handlers) {
                     if (typeof handler === 'function') {
@@ -120,19 +86,21 @@ export default function stewpot(config = {}) {
             }
 
             // register default request handler if none were defined with use(...fns)
-            handlers.length === 0 && server.on('request', defaultHandler);
+            if (handlers.length === 0 && middleware.length === 0) {
+                const { handler } = defaultHandler();
+                server.on('request', handler);
+            }
 
             return server.listen(
-                {
-                    ...configMerged,
-                },
+                port,
+                host,
                 callback
                     ? callback
                     : () => {
                           console.log(
                               `=> Started web server at ${
-                                  configMerged.https ? 'https://' : 'http://'
-                              }${configMerged.host}:${configMerged.port}`
+                                  https ? 'https://' : 'http://'
+                              }${host}:${port}`
                           );
                       }
             );
@@ -144,6 +112,3 @@ export default function stewpot(config = {}) {
 
     return { ...api };
 }
-
-const app = stewpot();
-app.listen();
