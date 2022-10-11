@@ -1,11 +1,9 @@
 {
-  "type": "module",
   "scripts": {
-    "start": "node app.js"
+    "start": "node app.mjs"
   },
   "dependencies": {
-    "nunjucks": "^3.2.3",
-    "stewpot": "file:../.."
+    "nunjucks": "^3.2.3"
   },
   "devDependencies": {
     "chokidar": "^3.5.2"
