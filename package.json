@@ -18,8 +18,8 @@
     "test": "uvu test",
     "test:coverage": "c8 --include=src npm test",
     "test:report": "c8 report --reporter=text-lcov > coverage.lcov",
-    "ava:server": "ava src\\server\\*.test.js",
-    "ava:server:coverage": "c8 ava src\\server\\*.test.js"
+    "ava:server": "ava src/server/*.test.js",
+    "ava:server:coverage": "c8 npm run ava:server"
   },
   "keywords": [],
   "bugs": {
@@ -41,7 +41,6 @@
     "chokidar": "^3.5.2",
     "lodash": "^4.17.21",
     "nunjucks": "^3.2.3",
-    "regexparam": "^2.0.1",
-    "sirv": "^2.0.2"
+    "regexparam": "^2.0.1"
   }
 }
