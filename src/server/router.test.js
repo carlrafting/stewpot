@@ -23,9 +23,9 @@ test('should not be able to add duplicate routes', (t) => {
 });
 
 test('should find correct route', (t) => {
-    t.assert(router.add('GET', 'foo', () => {}));
-    t.assert(router.add('get', 'root', () => {}));
-    t.assert(router.find('/'));
+    t.assert(router.add('get', '/', () => {}));
+    t.assert(router.add('get', '/foo', () => {}));
+    t.assert(router.find('get', '/'));
     // console.log(router.inspect());
 });
 
