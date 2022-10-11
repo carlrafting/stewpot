@@ -1,46 +1,47 @@
 import { logger } from '../middleware/logger.js';
-import useRouter from './router.js';
+import r from './router.js';
 import nunjucks from 'nunjucks';
 import path from 'node:path';
-import sirv from 'sirv';
 import { fileURLToPath, URL } from 'node:url';
+import { createReadStream } from 'node:fs';
 
 const url = new URL(import.meta.url);
 const dirname = path.dirname(fileURLToPath(url.href));
 const srcPath = path.join(dirname, '..');
 
-const router = useRouter();
+export default function defaultHandler() {
+    const router = r();
 
-router.add('get', 'root', (_, response) => {
-    response.setHeader('Content-Type', 'text/html; charset=utf-8');
-    return nunjucks.render(
-        'index.html',
-        { title: 'Stewpot' },
-        (err, template) => {
-            if (err) {
-                console.error({ err });
-            }
-            return response.end(template);
-        }
-    );
-});
-
-export default function defaultHandler(request, response) {
     nunjucks.configure(path.join(srcPath, 'templates'), {
         watch: true,
     });
 
-    const serveStatic = sirv(path.join(srcPath, 'static'), {
-        maxAge: 0,
+    async function render(_, res) {
+        return nunjucks.render(
+            'index.html',
+            { title: 'Stewpot' },
+            (err, template) => {
+                if (err) {
+                    console.error({ err });
+                }
+                return res.end(template);
+            }
+        );
+    }
+
+    router.use(logger);
+
+    router.get('/style.css', (_, res) => {
+        res.setHeader('Content-Type', 'text/css');
+        createReadStream(path.join(srcPath, 'static', 'style.css')).pipe(res);
     });
 
-    logger(response, request, () => {
-        try {
-            serveStatic(request, response, () => {
-                router.route(request, response);
-            });
-        } catch (error) {
-            console.log('servePublic', { error });
-        }
+    router.get('/', (_, res) => {
+        res.setHeader('Content-Type', 'text/html; charset=utf-8');
+        render(_, res);
     });
+
+    return {
+        handler: router.handler,
+    };
 }
