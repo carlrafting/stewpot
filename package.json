@@ -7,7 +7,11 @@
   "license": "MIT",
   "type": "module",
   "bin": "src/cli.js",
-  "main": "src/index.js",
+  "exports": {
+    "./app": "./src/server/application.js",
+    "./router": "./src/server/router.js",
+    "./url": "./src/server/url.js"
+  },
   "directories": {
     "example": "examples"
   },
