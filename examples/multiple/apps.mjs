@@ -1,4 +1,4 @@
-import { stewpot } from 'stewpot';
+import stewpot from 'stewpot/app';
 
 const first = stewpot({ port: 8081 });
 const second = stewpot({ port: 8082 });

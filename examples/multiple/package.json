@@ -1,7 +1,6 @@
 {
-  "type": "module",
   "scripts": {
-    "start": "nodemon apps.js"
+    "start": "nodemon apps.mjs"
   },
   "devDependencies": {
     "nodemon": "^2.0.15",
