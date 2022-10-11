@@ -22,8 +22,8 @@ This project is not currently available on npm, but you can install it as a npm 
 # from main branch
 npm i carlrafting/stewpot
 
-# a specific version (currently 0.0.0)
-npm i carlrafting/stewpot@0.0.0
+# a specific version (currently 0.1.0)
+npm i carlrafting/stewpot@0.1.0
 ```
 
 ## Quick Start
@@ -31,19 +31,18 @@ npm i carlrafting/stewpot@0.0.0
 Get up and running with stewpot by following these steps.
 
 ```js
-// app.js
+// app.mjs
 
-import { stewpot } from 'stewpot';
+import stewpot from 'stewpot/app';
 
 const app = stewpot();
 app.run();
 ```
 
 ```json
-// package.json
 {
     "scripts": {
-        "start": "node app.js"
+        "start": "node app.mjs"
     }
 }
 ```
