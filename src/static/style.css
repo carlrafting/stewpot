@@ -12,6 +12,8 @@ p {
   --background-color: #fff;
   --color: #333;
   --border-color: #ddd;
+  --pre-color: #fff;
+  --pre-bg: rgba(0, 0, 0, .75);
 }
 
 html {
@@ -30,6 +32,7 @@ html {
     --background-color: #333;
     --color: #eee;
     --border-color: #444;
+    --pre-bg: rgba(0, 0, 0, .1)
   }
 }
 
@@ -68,14 +71,39 @@ pre {
   font-size: 1.125rem;
   font-family: Cascadia Code, monospace;
   word-break: break-all;
-  background-color: rgba(0, 0, 0, .1);
+  color: var(--pre-color, --color);
+  background-color: var(--pre-bg);
   padding: 2rem;
   border-radius: .25rem;
   white-space: pre-wrap;
 }
 
+pre > .keyword {
+    color: orange;
+}
+
+pre > .constant {
+    color: chocolate;
+}
+
+pre > .function {
+    color:deeppink;
+}
+
+pre > .string {
+    color: lightcoral;
+}
+
+pre > .number {
+    color:violet;
+}
+
+pre > .param {
+    color: bisque;
+}
+
 pre > .comment {
-  color: green;
+  color: deepskyblue;
 }
 
 header > pre {
