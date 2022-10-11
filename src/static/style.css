@@ -84,6 +84,8 @@ header > pre {
   overflow-x: auto;
   margin-bottom: 2.5rem;
   text-align: left;
+  width: max-content;
+  margin-inline: auto;
 }
 
 header > h1 {
