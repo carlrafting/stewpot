@@ -28,7 +28,7 @@ export function resolve(from, to) {
     return resolvedUrl.toString();
 }
 
-export function parse(req) {
+export function parse(req, protocol = 'http://') {
     // console.log(req);
-    return new URL(req.url, `http://${req.headers.host}`);
+    return new URL(req.url, `${protocol}${req.headers.host}`);
 }
