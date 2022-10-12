@@ -10,7 +10,8 @@
   "exports": {
     "./app": "./src/server/application.js",
     "./router": "./src/server/router.js",
-    "./url": "./src/server/url.js"
+    "./url": "./src/server/url.js",
+    "./middleware": "./src/middleware/index.js"
   },
   "directories": {
     "example": "examples"
