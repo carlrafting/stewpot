@@ -41,8 +41,12 @@ app.run();
 
 ```json
 {
+    "//": "package.json",
     "scripts": {
         "start": "node app.mjs"
+    },
+    "dependencies": {
+        "stewpot": "github:carlrafting/stewpot"
     }
 }
 ```
