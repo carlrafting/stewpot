@@ -100,7 +100,11 @@ export default function stewpot(config = {}) {
                           console.log(
                               `=> Started web server at ${
                                   https ? 'https://' : 'http://'
-                              }${host}:${port}`
+                              }${host}${
+                                  [80, 443].includes(port) === false
+                                      ? `:${port}`
+                                      : ''
+                              }`
                           );
                       }
             );
