@@ -1,6 +1,8 @@
+import stewpot from 'stewpot/app';
 import defaultHandler from './server/default_handler.js';
-import http from 'node:http';
 
-const app = defaultHandler();
+const app = stewpot({ port: 80 });
+const { handler } = defaultHandler();
 
-http.createServer().listen(80, 'localhost').on('request', app.handler);
+app.use(handler);
+app.listen();
