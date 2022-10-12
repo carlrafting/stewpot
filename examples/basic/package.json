@@ -1,6 +1,6 @@
 {
-  "type": "module",
-  "scripts": {
-    "start": "node app.mjs"
-  }
+    "name": "basic-example",
+    "scripts": {
+        "start": "node app.mjs"
+    }
 }

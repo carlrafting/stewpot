@@ -1,8 +1,9 @@
 {
-  "scripts": {
-    "start": "nodemon app.mjs"
-  },
-  "devDependencies": {
-    "nodemon": "^2.0.15"
-  }
+    "name": "nodemon-example",
+    "scripts": {
+        "start": "nodemon app.mjs"
+    },
+    "devDependencies": {
+        "nodemon": "^2.0.15"
+    }
 }

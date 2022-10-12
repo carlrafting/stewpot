@@ -1,11 +1,12 @@
 {
-  "scripts": {
-    "start": "node app.mjs"
-  },
-  "dependencies": {
-    "nunjucks": "^3.2.3"
-  },
-  "devDependencies": {
-    "chokidar": "^3.5.2"
-  }
+    "name": "nunjucks-example",
+    "scripts": {
+        "start": "node app.mjs"
+    },
+    "dependencies": {
+        "nunjucks": "^3.2.3"
+    },
+    "devDependencies": {
+        "chokidar": "^3.5.2"
+    }
 }

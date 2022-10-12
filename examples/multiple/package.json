@@ -1,9 +1,10 @@
 {
-  "scripts": {
-    "start": "nodemon apps.mjs"
-  },
-  "devDependencies": {
-    "nodemon": "^2.0.15",
-    "stewpot": "file:../.."
-  }
+    "name": "multiple-example",
+    "scripts": {
+        "start": "nodemon apps.mjs"
+    },
+    "devDependencies": {
+        "nodemon": "^2.0.15",
+        "stewpot": "file:../.."
+    }
 }

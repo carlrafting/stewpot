@@ -12,6 +12,9 @@
     "license": "MIT",
     "type": "module",
     "bin": "src/cli.js",
+    "workspaces": [
+        "examples/*"
+    ],
     "exports": {
         "./app": "./src/server/application.js",
         "./router": "./src/server/router.js",
