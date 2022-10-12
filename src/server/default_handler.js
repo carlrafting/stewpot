@@ -1,5 +1,5 @@
-import { logger } from '../middleware/logger.js';
-import r from './router.js';
+import { logger } from 'stewpot/middleware';
+import r from 'stewpot/router';
 import nunjucks from 'nunjucks';
 import path from 'node:path';
 import { fileURLToPath, URL } from 'node:url';
