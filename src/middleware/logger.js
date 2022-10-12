@@ -6,6 +6,10 @@ export function logger(req, res) {
     console.log(
         `[${chalk.cyan(pkg.name)}][${chalk.dim(timestamp)}] - ${chalk.blue(
             req.method
-        )} - ${chalk.white(req.url)} - ${chalk.bold(res.statusCode)}`
+        )} - ${chalk.dim(req.url)} - ${chalk.bold(
+            res.statusCode === 200
+                ? chalk.green(res.statusCode)
+                : res.statusCode
+        )}`
     );
 }
