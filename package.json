@@ -1,51 +1,48 @@
 {
-  "name": "stewpot",
-  "version": "0.1.0",
-  "description": "A delicious serving of http/https!",
-  "repository": "github:carlrafting/stewpot",
-  "author": "Carl Räfting",
-  "license": "MIT",
-  "type": "module",
-  "bin": "src/cli.js",
-  "exports": {
-    "./app": "./src/server/application.js",
-    "./router": "./src/server/router.js",
-    "./url": "./src/server/url.js",
-    "./middleware": "./src/middleware/index.js"
-  },
-  "directories": {
-    "example": "examples"
-  },
-  "scripts": {
-    "start": "nodemon src/app.js",
-    "check": "prettier -c .",
-    "format": "prettier -w .",
-    "test": "uvu test",
-    "test:coverage": "c8 --include=src npm test",
-    "test:report": "c8 report --reporter=text-lcov > coverage.lcov",
-    "ava:server": "ava src/server/*.test.js",
-    "ava:server:coverage": "c8 npm run ava:server"
-  },
-  "keywords": [],
-  "bugs": {
-    "url": "https://github.com/carlrafting/stewpot/issues"
-  },
-  "homepage": "https://github.com/carlrafting/stewpot#readme",
-  "devDependencies": {
-    "ava": "^4.3.3",
-    "c8": "^7.12.0",
-    "eslint": "^8.3.0",
-    "eslint-config-prettier": "^8.3.0",
-    "eslint-plugin-prettier": "^4.0.0",
-    "nodemon": "^2.0.15",
-    "prettier": "^2.5.0",
-    "uvu": "^0.5.1"
-  },
-  "dependencies": {
-    "chalk": "^5.0.0",
-    "chokidar": "^3.5.2",
-    "lodash": "^4.17.21",
-    "nunjucks": "^3.2.3",
-    "regexparam": "^2.0.1"
-  }
+    "name": "stewpot",
+    "version": "0.1.0",
+    "description": "A delicious serving of http/https!",
+    "repository": "github:carlrafting/stewpot",
+    "author": "Carl Räfting",
+    "homepage": "https://github.com/carlrafting/stewpot#readme",
+    "bugs": {
+        "url": "https://github.com/carlrafting/stewpot/issues"
+    },
+    "keywords": [],
+    "license": "MIT",
+    "type": "module",
+    "bin": "src/cli.js",
+    "exports": {
+        "./app": "./src/server/application.js",
+        "./router": "./src/server/router.js",
+        "./url": "./src/server/url.js",
+        "./middleware": "./src/middleware/index.js"
+    },
+    "scripts": {
+        "start": "nodemon src/app.js",
+        "check": "prettier -c .",
+        "format": "prettier -w .",
+        "test": "uvu test",
+        "test:coverage": "c8 --include=src npm test",
+        "test:report": "c8 report --reporter=text-lcov > coverage.lcov",
+        "ava:server": "ava src/server/*.test.js",
+        "ava:server:coverage": "c8 npm run ava:server"
+    },
+    "devDependencies": {
+        "ava": "^4.3.3",
+        "c8": "^7.12.0",
+        "eslint": "^8.3.0",
+        "eslint-config-prettier": "^8.3.0",
+        "eslint-plugin-prettier": "^4.0.0",
+        "nodemon": "^2.0.15",
+        "prettier": "^2.5.0",
+        "uvu": "^0.5.1"
+    },
+    "dependencies": {
+        "chalk": "^5.0.0",
+        "chokidar": "^3.5.2",
+        "lodash": "^4.17.21",
+        "nunjucks": "^3.2.3",
+        "regexparam": "^2.0.1"
+    }
 }
