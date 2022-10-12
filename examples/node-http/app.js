@@ -4,7 +4,8 @@ import router from 'stewpot/router';
 const controller = new AbortController();
 const host = '127.0.0.1';
 const port = 80;
-const protocol = http !== undefined ? 'http://' : 'https://';
+const protocol = 'http://';
+// const protocol = 'https://'; // set to https protocol if using node.js https module.
 
 const r = router()
     .use('/', function mw(_, res) {
