@@ -13,8 +13,6 @@ const methods = [
     'PATCH',
 ];
 
-const addSlash = (str) => (str.charAt(0) === '/' ? str : `/${str}`);
-
 const notFound = (code, message) => {
     return new Error(`${code} ${message}`);
 };
