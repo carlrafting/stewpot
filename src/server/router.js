@@ -1,7 +1,7 @@
 import { parse } from 'regexparam';
 import * as url from './url.js';
 
-const methods = [
+export const methods = [
     'GET',
     'HEAD',
     'POST',
