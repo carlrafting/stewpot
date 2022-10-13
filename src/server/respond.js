@@ -1,6 +1,7 @@
 import { join } from 'node:path';
 import { readFile } from 'node:fs/promises';
 import mime from './mime.js';
+import { OutgoingMessage } from 'node:http';
 
 // export function headers(res, code = 200, headers = {}, format = 'default') {
 //     res.writeHead(code, { 'Content-Type': mime[format], ...headers });
@@ -37,6 +38,21 @@ export function headers(res, ...args) {
     }
 
     res.writeHead(code, { [TYPE]: mime[format], ...headers });
+}
+
+/**
+ * @example
+ *
+ * redirect(res, '/foo');
+ *
+ * redirect(res, '/foo', 302);
+ *
+ * @param {OutgoingMessage} res
+ * @param {string} location
+ * @param  {number} code
+ */
+export function redirect(res, location = '/', code = 301) {
+    headers(res, code, { location });
 }
 
 export function notFound(_, res) {
