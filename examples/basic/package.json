@@ -1,9 +1,6 @@
 {
-  "type": "module",
-  "scripts": {
-    "start": "node app.js"
-  },
-  "dependencies": {
-    "stewpot": "file:../.."
-  }
+    "name": "basic-example",
+    "scripts": {
+        "start": "node app.mjs"
+    }
 }

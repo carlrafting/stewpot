@@ -1,9 +1,0 @@
-{
-  "type": "module",
-  "scripts": {
-    "start": "node app.js"
-  },
-  "devDependencies": {
-    "stewpot": "file:../.."
-  }
-}

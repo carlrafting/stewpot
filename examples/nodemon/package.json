@@ -1,10 +1,9 @@
 {
-  "type": "module",
-  "scripts": {
-    "start": "nodemon app.js"
-  },
-  "devDependencies": {
-    "nodemon": "^2.0.15",
-    "stewpot": "file:../.."
-  }
+    "name": "nodemon-example",
+    "scripts": {
+        "start": "nodemon app.mjs"
+    },
+    "devDependencies": {
+        "nodemon": "^2.0.15"
+    }
 }

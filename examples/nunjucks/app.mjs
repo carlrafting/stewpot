@@ -1,4 +1,4 @@
-import { stewpot } from 'stewpot';
+import stewpot from 'stewpot/app';
 import nunjucks from 'nunjucks';
 import path from 'node:path';
 

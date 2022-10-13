@@ -1,10 +1,7 @@
 import { parse } from 'regexparam';
+import * as url from './url.js';
 
-const defaultConfig = {
-    trailingSlashes: false,
-};
-
-const methods = [
+export const methods = [
     'GET',
     'HEAD',
     'POST',
@@ -16,16 +13,12 @@ const methods = [
     'PATCH',
 ];
 
-const addSlash = (str) => (str.charAt(0) === '/' ? str : `/${str}`);
-/*
-console.log('foo', addSlash('foo'));
-console.log('/foo', addSlash('/foo'));
-console.log('/', addSlash('/'));
-// */
-export default function router(config = { ...defaultConfig }) {
-    const routes = [];
+const notFound = (code, message) => {
+    return new Error(`${code} ${message}`);
+};
 
-    // console.log({ config });
+export default function router() {
+    const routes = [];
 
     const api = {
         add(method = 'GET', route = '/', ...handlers) {
@@ -43,8 +36,6 @@ export default function router(config = { ...defaultConfig }) {
             const [base] = args;
             const handlers = [...args.slice(1)];
 
-            console.log(base, handlers);
-
             if (typeof base === 'string') {
                 routes.push({
                     route: base,
@@ -52,14 +43,16 @@ export default function router(config = { ...defaultConfig }) {
                     method: '',
                     type: 'middleware',
                 });
-            } else {
-                routes.push({
-                    route: '/',
-                    handlers: [base, ...handlers],
-                    method: '',
-                    type: 'middleware',
-                });
+
+                return api;
             }
+
+            routes.push({
+                route: '/',
+                handlers: [base, ...handlers],
+                method: '',
+                type: 'middleware',
+            });
 
             return api;
         },
@@ -80,13 +73,8 @@ export default function router(config = { ...defaultConfig }) {
                     }
                 })();
 
-                // console.log({
-                //     keys,
-                //     pattern,
-                // });
-
                 if (
-                    item.method.length === 0 ||
+                    // item.method.length === 0 ||
                     item.method === method ||
                     item.method === 'GET'
                 ) {
@@ -117,21 +105,64 @@ export default function router(config = { ...defaultConfig }) {
                 }
             }
 
+            if (handlers.length === 0) {
+                throw notFound(404, 'Not Found');
+            }
+
             return { params, handlers };
         },
 
-        route(request, response) {
-            const { method, url } = request;
-            const match = find(method, url);
-            // console.log({match});
-            if (match) {
-                return match.callback(request, response);
-            }
-        },
+        handler(req, res) {
+            const { method } = req;
+            const _url = url.parse(req);
 
-        clear() {
-            routes.clear();
-            return api;
+            try {
+                const { params, handlers } = api.find(method, _url.pathname);
+
+                const middleware = [];
+
+                // loop through handlers
+                for (const handler of handlers) {
+                    // filter stack for middleware
+                    const mws = routes.filter((item) => item.method === '');
+                    // loop through middleware
+                    for (const mw of mws) {
+                        // parse middleware route
+                        const route = parse(mw.route, true);
+                        // does middleware route match current url?
+                        const match = _url.pathname.match(route.pattern);
+                        if (match) {
+                            // if we find a match push middleware to temporary middleware array.
+                            middleware.push(mw);
+                        }
+                    }
+                    const applyHandler = () => {
+                        // loop through and execute middleware if there are any
+                        middleware.length > 0 &&
+                            middleware.map((item) => {
+                                Array.isArray(item.handlers)
+                                    ? item.handlers.map((h) => h(req, res))
+                                    : item.handlers(req, res);
+                            });
+                        // execute route handler
+                        handler && handler(req, res);
+                    };
+                    applyHandler();
+                }
+            } catch (err) {
+                res.statusCode = 404;
+                res.setHeader('Content-Type', 'text/html');
+                res.end(
+                    `
+                <!doctype html>
+                <html lang="en">
+                <meta charset="utf-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>${err.message}</title>
+                <h1>${err.message}</h1>
+                `.trim()
+                );
+            }
         },
 
         get routes() {
@@ -159,32 +190,3 @@ export default function router(config = { ...defaultConfig }) {
         ...api,
     };
 }
-/*
-const routes = router();
-routes.get('root', () => {});
-routes.post('root', () => {});
-routes.get('foo', () => {});
-routes.post('foo', () => {});
-routes.get('welcome');
-routes.post('welcome');
-routes.get('foo/bar', () => {});
-routes.post('foo/bar', () => {});
-routes.get('posts/:id', () => {});
-routes.get('posts/:id', () => {});
-
-routes.addMiddleware(
-    '/foo',
-    function first() {},
-    function second() {}
-);
-
-routes.addMiddleware(
-    function one() {},
-    function two() {}
-);
-console.log('register', routes.register());
-
-console.log('routes', ...routes.routes());
-*/
-// const rootPath = routes.pathname('root', 'get');
-// console.log({ rootPath });

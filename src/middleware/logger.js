@@ -1,11 +1,15 @@
 import chalk from 'chalk';
+import pkg from '../../package.json' assert { type: 'json' };
 
-export function logger(response, request, next) {
+export function logger(req, res) {
     const timestamp = new Date().toLocaleTimeString();
     console.log(
-        `[${timestamp}] - ${chalk.bold(response.statusCode)} - ${chalk.blue(
-            request.method
-        )} - ${chalk.white(request.url)}`
+        `[${chalk.cyan(pkg.name)}][${chalk.dim(timestamp)}] - ${chalk.blue(
+            req.method
+        )} - ${chalk.dim(req.url)} - ${chalk.bold(
+            res.statusCode === 200
+                ? chalk.green(res.statusCode)
+                : res.statusCode
+        )}`
     );
-    next && next();
 }

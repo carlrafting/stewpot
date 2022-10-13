@@ -22,8 +22,8 @@ This project is not currently available on npm, but you can install it as a npm 
 # from main branch
 npm i carlrafting/stewpot
 
-# a specific version (currently 0.0.0)
-npm i carlrafting/stewpot@0.0.0
+# a specific version (currently 0.1.0)
+npm i carlrafting/stewpot@0.1.0
 ```
 
 ## Quick Start
@@ -31,19 +31,22 @@ npm i carlrafting/stewpot@0.0.0
 Get up and running with stewpot by following these steps.
 
 ```js
-// app.js
+// app.mjs
 
-import { stewpot } from 'stewpot';
+import stewpot from 'stewpot/app';
 
 const app = stewpot();
 app.run();
 ```
 
 ```json
-// package.json
 {
+    "//": "package.json",
     "scripts": {
-        "start": "node app.js"
+        "start": "node app.mjs"
+    },
+    "dependencies": {
+        "stewpot": "github:carlrafting/stewpot"
     }
 }
 ```
@@ -65,7 +68,7 @@ In order to run stewpot development server with HTTPS enabled, you'll have to ma
 Linux doesn't allow for processes to bind to that port without root access. One way to get around that is by running this command:
 
 ```bash
-sudo sysctl -w net.ipv4.ip_unprivileged_port_start=0
+sudo sysctl -w net.ipv4.ip_unprivileged_port_start=80
 ```
 
 Here are some useful resources you can read for more information about privileged ports on Linux:

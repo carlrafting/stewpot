@@ -1,4 +1,8 @@
-import { stewpot as application } from './index.js';
+import stewpot from 'stewpot/app';
+import defaultHandler from './server/default_handler.js';
 
-const app = application();
-app.run();
+const app = stewpot({ port: 80 });
+const { handler } = defaultHandler();
+
+app.use(handler);
+app.listen();
