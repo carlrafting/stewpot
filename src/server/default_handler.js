@@ -4,6 +4,9 @@ import nunjucks from 'nunjucks';
 import path from 'node:path';
 import { fileURLToPath, URL } from 'node:url';
 import { createReadStream } from 'node:fs';
+import { headers } from './respond.js';
+import mime from './mime.js';
+import { parse } from './url.js';
 
 const url = new URL(import.meta.url);
 const dirname = path.dirname(fileURLToPath(url.href));
@@ -31,13 +34,20 @@ export default function defaultHandler() {
 
     router.use(logger);
 
-    router.get('/style.css', (_, res) => {
-        res.setHeader('Content-Type', 'text/css');
-        createReadStream(path.join(srcPath, 'static', 'style.css')).pipe(res);
+    router.get('/styles.css', (req, res) => {
+        const _url = parse(req);
+        try {
+            headers(res, { 'Content-Type': mime.css });
+            createReadStream(path.join(srcPath, 'static', _url.pathname)).pipe(
+                res
+            );
+        } catch (_) {
+            console.log(_);
+        }
     });
 
     router.get('/', (_, res) => {
-        res.setHeader('Content-Type', 'text/html; charset=utf-8');
+        headers(res, { 'Content-Type': mime.html });
         render(_, res);
     });
 
