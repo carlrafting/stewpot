@@ -1,5 +1,6 @@
 export default {
     default: 'application/octet-stream',
+    txt: 'text/plain',
     html: 'text/html; charset=UTF-8',
     js: 'application/javascript; charset=UTF-8',
     css: 'text/css',

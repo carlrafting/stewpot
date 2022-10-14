@@ -75,7 +75,7 @@ export function json(req, res, data = {}) {
 
 export function text(req, res, text = '') {
     // res.writeHead(200, { 'Content-Type': 'text/plain' });
-    headers(res, 200, 'html');
+    headers(res, 200, 'txt');
     res.end(text);
 }
 
