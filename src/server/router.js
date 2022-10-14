@@ -112,12 +112,29 @@ export default function router() {
             return { params, handlers };
         },
 
+        params(req) {
+            const { method } = req;
+            const _url = url.parse(req);
+
+            try {
+                const { params } = api.find(method, _url.pathname);
+
+                if (Object.keys(params).length > 0) {
+                    return {
+                        ...params,
+                    };
+                }
+            } catch (err) {}
+
+            return {};
+        },
+
         handler(req, res) {
             const { method } = req;
             const _url = url.parse(req);
 
             try {
-                const { params, handlers } = api.find(method, _url.pathname);
+                const { handlers } = api.find(method, _url.pathname);
 
                 const middleware = [];
 
