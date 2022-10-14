@@ -18,8 +18,8 @@
 <span class="keyword">const</span> <span class="constant">app</span> = <span class="function">stewpot</span>();
 
 <span class="comment">// 2. register request handler</span>
-<span class="constant">app</span>.<span class="function">use</span>((<span class="param">_</span>, <span class="param">response</span>) => {
-  <span class="param">response</span>.<span class="function">writeHead</span>(<span class="number">200</span>, { <span class="string">'Content-Type'</span>: <span class="string">'text/html'</span> });
+<span class="constant">app</span>.<span class="function">use</span>((<span class="param">_</span>, <span class="param">response</span>) <span class="keyword">=></span> {
+  <span class="param">response</span>.<span class="function">writeHead</span>(<span class="number">200</span>, { <span class="string">'Content-Type'</span>: <span class="string">'text/plain'</span> });
   <span class="param">reponse</span>.<span class="function">end</span>(<span class="string">'Hello World!'</span>);
 });
 
@@ -29,27 +29,20 @@
 <h2>Next Steps</h2>
 <pre>
 <span class="keyword">import</span> stewpot <span class="keyword">from</span> <span class="string">'stewpot/app'</span>;
-<span class="keyword">import</span> _router <span class="keyword">from</span> <span class="string">stewpot/router</span>;
+<span class="keyword">import</span> _router <span class="keyword">from</span> <span class="string">'stewpot/router'</span>;
 
 <span class="comment">// 1. create app and router instances</span>
 <span class="keyword">const</span> <span class="constant">app</span> = <span class="function">stewpot</span>();
 <span class="keyword">const</span> <span class="constant">router</span> = <span class="function">_router</span>();
 
 <span class="comment">// 2. define root (/) path</span>
-<span class="constant">router</span>.<span class="function">get</span>(<span class="string">'root'</span>, (<span class="param">_</span>, <span class="param">response</span>) <span class="keyword">=></span> {
+<span class="constant">router</span>.<span class="function">get</span>(<span class="string">'/'</span>, (<span class="param">_</span>, <span class="param">response</span>) <span class="keyword">=></span> {
   <span class="param">response</span>.<span class="function">writeHead</span>(<span class="number">200</span>, { <span class="string">'Content-Type'</span>: <span class="string">'text/html'</span> });
   <span class="param">response</span>.<span class="function">end</span>(<span class="string">'&lt;h1&gt;Hello World!&lt;/h1&gt;'</span>);
 });
 
 <span class="comment">// 3. register request handler</span>
-<span class="constant">app</span>.<span class="function">use</span>((<span class="param">_</span>, <span class="param">response</span>) <span class="keyword">=></span> {
-  <span class="keyword">try</span> {
-    <span class="keyword">return</span> <span class="constant">router</span>.<span class="function">route</span>(<span class="param">_</span>, <span class="param">response</span>);
-  } <span class="keyword">catch</span>(err) {
-    <span class="constant">console</span>.<span class="function">log</span>(err);
-    <span class="param">response</span>.<span class="function">end</span>();
-  }
-});
+<span class="constant">app</span>.<span class="function">use</span>(<span class="constant">router</span>.<span class="function">handler</span>);
 
 <span class="comment">// 4. run app!</span>
 <span class="constant">app</span>.<span class="function">run</span>();
