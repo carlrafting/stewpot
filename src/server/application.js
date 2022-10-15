@@ -22,11 +22,6 @@ export default function stewpot(config = {}) {
 
     const server = createServer({ https });
 
-    server.on('close', () => {
-        console.log('Shutting down web server...');
-        process.exit(0);
-    });
-
     function signalHandler(signal) {
         console.log(`Recieved ${signal}`);
         server.close(() => console.log('Closing server connection...'));
@@ -49,10 +44,13 @@ export default function stewpot(config = {}) {
         server,
 
         use(...args) {
-            if (args.length > 0) {
-                const base = typeof args[0] === 'string' ? args[0] : '/';
+            const l = args.length;
 
+            if (l > 0) {
                 for (const arg of args) {
+                    const base = typeof arg === 'string' ? arg : '/';
+                    // const fns = args.slice(1);
+                    /*
                     if (typeof arg === 'object') {
                         const { method, route, handler, handlers, type } = arg;
                         middleware.push({
@@ -63,8 +61,11 @@ export default function stewpot(config = {}) {
                             type,
                         });
                     }
+                    */
                     if (typeof arg === 'function') {
-                        handlers.push(base, arg);
+                        const handler = arg;
+                        // handlers.push(base, arg);
+                        handlers.push({ base, handler });
                     }
                 }
             }
@@ -78,7 +79,7 @@ export default function stewpot(config = {}) {
 
         run(callback) {
             if (handlers.length > 0) {
-                for (const handler of handlers) {
+                for (const { handler } of handlers) {
                     if (typeof handler === 'function') {
                         server.on('request', handler);
                     }
