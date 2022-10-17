@@ -41,9 +41,10 @@
     },
     "dependencies": {
         "chalk": "^5.0.0",
-        "chokidar": "^3.5.2",
-        "lodash": "^4.17.21",
-        "nunjucks": "^3.2.3",
         "regexparam": "^2.0.1"
+    },
+    "peerDependencies": {
+        "chokidar": "^3.5.3",
+        "nunjucks": "^3.2.3"
     }
 }
