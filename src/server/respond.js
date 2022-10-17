@@ -133,7 +133,8 @@ export async function html(req, res, html, data = {}) {
 
     if (Object.keys(data).length > 0) {
         for (const [key, value] of Object.entries(data)) {
-            template = template.replaceAll(`{${key}}`, value);
+            console.log(key, value);
+            template = template.replaceAll(`{{ ${key} }}`, value);
         }
     }
 

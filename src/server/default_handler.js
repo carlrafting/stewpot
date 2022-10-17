@@ -1,10 +1,9 @@
 import { logger } from 'stewpot/middleware';
 import r from 'stewpot/router';
-import nunjucks from 'nunjucks';
 import path from 'node:path';
 import { fileURLToPath, URL } from 'node:url';
 import { createReadStream } from 'node:fs';
-import { headers } from './respond.js';
+import { headers, html } from './respond.js';
 import mime from './mime.js';
 import { parse } from './url.js';
 
@@ -15,21 +14,8 @@ const srcPath = path.join(dirname, '..');
 export default function defaultHandler() {
     const router = r();
 
-    nunjucks.configure(path.join(srcPath, 'templates'), {
-        watch: true,
-    });
-
-    async function render(_, res) {
-        return nunjucks.render(
-            'index.html',
-            { title: 'Stewpot' },
-            (err, template) => {
-                if (err) {
-                    console.error({ err });
-                }
-                return res.end(template);
-            }
-        );
+    function render(_, res) {
+        html(_, res, { template: 'index.html' }, { title: 'Stewpot' });
     }
 
     router.use(logger);

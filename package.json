@@ -42,9 +42,5 @@
     "dependencies": {
         "chalk": "^5.0.0",
         "regexparam": "^2.0.1"
-    },
-    "peerDependencies": {
-        "chokidar": "^3.5.3",
-        "nunjucks": "^3.2.3"
     }
 }
