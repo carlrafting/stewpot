@@ -1,5 +1,9 @@
+const APP_ENV = process.env.NODE_ENV || 'development';
 import { parse } from 'regexparam';
-import * as url from './url.js';
+import * as url from 'stewpot/url';
+import { headers } from './respond.js';
+import { notFound, createError } from './error.js';
+import { STATUS_CODES } from 'node:http';
 
 export const methods = [
     'GET',
@@ -12,10 +16,6 @@ export const methods = [
     'TRACE',
     'PATCH',
 ];
-
-const notFound = (code, message) => {
-    return new Error(`${code} ${message}`);
-};
 
 export default function router() {
     const routes = [];
@@ -61,6 +61,7 @@ export default function router() {
             let matches = [],
                 params = {},
                 handlers = [],
+                middleware = [],
                 i = 0;
 
             for (const item of routes) {
@@ -74,7 +75,7 @@ export default function router() {
                 })();
 
                 if (
-                    // item.method.length === 0 ||
+                    item.method === '' ||
                     item.method === method ||
                     item.method === 'GET'
                 ) {
@@ -98,18 +99,33 @@ export default function router() {
                         }
                     }
 
-                    (matches || pattern.test(url)) &&
+                    if (matches || pattern.test(url)) {
+                        if (item.method === '') {
+                            item.handlers.length > 1
+                                ? (middleware = [...item.handlers])
+                                : middleware.push(...item.handlers);
+                            // return;
+                        } else {
+                            item.handlers.length > 1
+                                ? (handlers = [...item.handlers])
+                                : handlers.push(...item.handlers);
+                        }
+                    }
+
+                    /*(matches || pattern.test(url)) &&
                         (item.handlers.length > 1
                             ? (handlers = [...item.handlers])
-                            : handlers.push(...item.handlers));
+                            : handlers.push(...item.handlers));*/
                 }
             }
 
             if (handlers.length === 0) {
-                throw notFound(404, 'Not Found');
+                // throw notFound('Not Found!');
+                const statusCode = 404;
+                throw createError(statusCode, STATUS_CODES[statusCode]);
             }
 
-            return { params, handlers };
+            return { params, handlers, middleware };
         },
 
         params(req) {
@@ -167,18 +183,24 @@ export default function router() {
                     applyHandler();
                 }
             } catch (err) {
-                res.statusCode = 404;
-                res.setHeader('Content-Type', 'text/html');
+                console.error(err.stack);
+                headers(res, err.statusCode, 'html');
                 res.end(
                     `
-                <!doctype html>
-                <html lang="en">
-                <meta charset="utf-8">
-                <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                <title>${err.message}</title>
-                <h1>${err.message}</h1>
-                `.trim()
+                        <!doctype html>
+                        <html lang="en">
+                        <meta charset="utf-8">
+                        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                        <title>${err.message}</title>
+                        <h1>${err.statusCode} ${err.message}</h1>
+                        ${
+                            APP_ENV === 'development'
+                                ? `<pre>${err.stack}</pre>`
+                                : ''
+                        }
+                    `.trim()
                 );
+                return;
             }
         },
 

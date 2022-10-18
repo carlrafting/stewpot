@@ -1,3 +1,5 @@
+import { STATUS_CODES } from 'node:http';
+
 export class HttpError extends Error {
     statusCode;
 
@@ -7,9 +9,13 @@ export class HttpError extends Error {
     }
 }
 
-export function createError(code, message) {
+export function createError(code = 500, message = STATUS_CODES[code]) {
     return new HttpError(code, message);
 }
 
 export const isError = (err) =>
     err instanceof Error || err instanceof HttpError;
+
+export const notFound = (message) => {
+    return new createError(404, message);
+};

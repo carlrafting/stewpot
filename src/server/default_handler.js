@@ -4,7 +4,6 @@ import path from 'node:path';
 import { fileURLToPath, URL } from 'node:url';
 import { createReadStream } from 'node:fs';
 import { headers, html } from './respond.js';
-import mime from './mime.js';
 import { parse } from './url.js';
 
 const url = new URL(import.meta.url);
@@ -23,7 +22,7 @@ export default function defaultHandler() {
     router.get('/styles.css', (req, res) => {
         const _url = parse(req);
         try {
-            headers(res, { 'Content-Type': mime.css });
+            headers(res, 'css');
             createReadStream(path.join(srcPath, 'static', _url.pathname)).pipe(
                 res
             );
@@ -33,7 +32,7 @@ export default function defaultHandler() {
     });
 
     router.get('/', (_, res) => {
-        headers(res, { 'Content-Type': mime.html });
+        headers(res, 'html');
         render(_, res);
     });
 

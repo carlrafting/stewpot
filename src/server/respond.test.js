@@ -24,7 +24,7 @@ function mock() {
     };
 }
 
-test('html - template string should render as expected when input is valid', (t) => {
+test('html - template string - should render as expected when input is valid', (t) => {
     const { req, res, results } = mock();
     const str = '<h1>Hello World</h1>';
 
@@ -35,7 +35,7 @@ test('html - template string should render as expected when input is valid', (t)
     t.is(results.end.content, str);
 });
 
-test('html - template string should render empty when input is invalid', (t) => {
+test('html - template string - should render empty when input is invalid', (t) => {
     const { req, res, results } = mock();
     const str = undefined;
 
@@ -46,7 +46,7 @@ test('html - template string should render empty when input is invalid', (t) => 
     t.is(results.end.content, '');
 });
 
-test('html - template file should render file when it exists inside template directory', async (t) => {
+test('html - template file - should render file when it exists inside template directory', async (t) => {
     const { req, res, results } = mock();
     const options = {
         template: 'index.html',
@@ -59,7 +59,7 @@ test('html - template file should render file when it exists inside template dir
     t.assert(results.end.content.length > 0);
 });
 
-test('html - template file should set status code to 500 when file does not exist in template directory', async (t) => {
+test('html - template file - should set status code to 500 when file does not exist in template directory', async (t) => {
     const { req, res, results } = mock();
     const options = {
         template: 'foo.html',
@@ -72,7 +72,8 @@ test('html - template file should set status code to 500 when file does not exis
     t.is(results.writeHead.headers[TYPE], mime.html);
 });
 
-test('html - template file should render empty when given invalid options', async (t) => {
+test('html - template file - should render empty when given invalid options', async (t) => {
+    // this should probably set some other http status code than 200
     const { req, res, results } = mock();
     const options = {
         invalid: 'foo.html',

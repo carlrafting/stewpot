@@ -14,6 +14,42 @@ const defaultServerConfig =
 const createServer = (config) =>
     config.https ? https.createServer() : http.createServer();
 
+async function run(req, res, fn) {
+    try {
+        const module = await fn(req, res);
+
+        if (module === null) {
+            res.statusCode = 204;
+            res.end();
+            return;
+        }
+
+        if (typeof module === 'string') {
+            const code = res.statusCode || 200;
+            res.statusCode = code;
+            res.setHeader('Content-Length', Buffer.byteLength(module));
+            res.end(module);
+        }
+    } catch (err) {
+        if (err && err.stack) {
+            if (err.statusCode) {
+                res.statusCode = err.statusCode;
+                res.end(err.message);
+                return;
+            }
+
+            res.statusCode = 500;
+            res.end('Internal Server Error!');
+
+            console.error(err.stack);
+        }
+    }
+}
+
+export function mount(fn) {
+    return (req, res) => run(req, res, fn);
+}
+
 export default function stewpot(config = {}) {
     const { http, https, port, host } = {
         ...defaultServerConfig,

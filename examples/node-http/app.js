@@ -8,17 +8,17 @@ const protocol = 'http://';
 // const protocol = 'https://'; // set to https protocol if using node.js https module.
 
 const r = router()
-    .use('/', function mw(_, res) {
-        res.write('hello from mw \n');
+    .use('/', function middleware(_, res) {
+        res.write('hello from middleware \n');
     })
-    .get('/', function first(_, res) {
-        res.end('hello world');
+    .get('/', function home(_, res) {
+        res.end('hello from /');
     })
-    .get('/foo', function second(_, res) {
-        res.end('hello /foo');
+    .get('/posts', function posts(_, res) {
+        res.end('hello from /posts');
     })
-    .get('/foo/:id/:title', function third(_, res) {
-        res.end('hello with id');
+    .get('/posts/:title', function post(_, res) {
+        res.end('hello from /posts/:id');
     });
 
 const server = http.createServer(r.handler);
