@@ -4,7 +4,7 @@ import process from 'node:process';
 import defaultConfig from '../config/default.config.js';
 import defaultHandler from './default_handler.js';
 
-const portCheck = (config) => config.port === 80 || config.port === 443;
+// const portCheck = (config) => config.port === 80 || config.port === 443;
 
 const defaultServerConfig =
     typeof defaultConfig === 'function'
