@@ -76,7 +76,7 @@ export async function notFound(err, _, res) {
 <style>${styles}</style>
 <header>
 <h1>${err.statusCode} ${err.message}</h1>
-<p>stewpot wasn't able to find any matches for <code>${_.url}</code>
+<p>Stewpot wasn't able to find any matches for <code>${_.url}</code>.
 </header>
 <main>
 ${APP_ENV === 'development' ? `<pre>${err.stack}</pre>` : ''}

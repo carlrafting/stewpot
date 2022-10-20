@@ -169,7 +169,7 @@ export default function router() {
         },
 
         /**
-         * 
+         *
          * @param {IncomingMessage} req - node.js request object
          * @param {ServerResponse} res - node.js response object
          * @returns {undefined}

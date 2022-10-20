@@ -76,14 +76,18 @@ p {
 pre, code {
     font-size: 1.125rem;
     font-family: Cascadia Code, monospace;
+    color: var(--pre-color, --color);
+    background-color: var(--pre-bg);
+    border-radius: .25rem;
+}
+
+code {
+    padding: .5rem;
 }
 
 pre {
   word-break: break-all;
-  color: var(--pre-color, --color);
-  background-color: var(--pre-bg);
   padding: 2rem;
-  border-radius: .25rem;
   white-space: pre-wrap;
 }
 
@@ -138,7 +142,6 @@ body > main {
   border-block-end: 1px solid var(--border-color);
   padding-block-start: 2rem;
   padding-block-end: 2rem;
-  margin-block-end: 2.5rem;
 }
 
 body > header,
