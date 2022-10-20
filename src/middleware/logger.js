@@ -1,5 +1,8 @@
 import chalk from 'chalk';
-import pkg from '../../package.json' assert { type: 'json' };
+// import pkg from '../../package.json' assert { type: 'json' }; // eslint-disable-line
+import importJSON from '../utils/importJSON.js';
+
+const pkg = await importJSON('../../package.json');
 
 export function logger(req, res) {
     const timestamp = new Date().toLocaleTimeString();

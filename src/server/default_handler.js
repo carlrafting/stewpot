@@ -5,8 +5,10 @@ import { fileURLToPath, URL } from 'node:url';
 import { createReadStream } from 'node:fs';
 import { headers, html } from './respond.js';
 import { parse } from './url.js';
-import pkg from '../../package.json' assert { type: 'json' };
+// import pkg from '../../package.json' assert { type: 'json' }; // eslint-disable-line
+import importJSON from '../utils/importJSON.js';
 
+const pkg = await importJSON('../../package.json');
 const url = new URL(import.meta.url);
 const dirname = path.dirname(fileURLToPath(url.href));
 const srcPath = path.join(dirname, '..');
