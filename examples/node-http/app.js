@@ -18,7 +18,7 @@ const r = router()
         res.end('hello from /posts');
     })
     .get('/posts/:title', function post(_, res) {
-        res.end('hello from /posts/:id');
+        res.end('hello from /posts/:title');
     });
 
 const server = http.createServer(r.handler);

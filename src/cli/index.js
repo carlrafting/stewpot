@@ -4,7 +4,7 @@ import importJSON from '../utils/importJSON.js';
 import fs from 'fs';
 import * as os from 'os';
 import { constants as FS_CONSTANTS } from 'fs';
-import { projectConfigPath, templateConfigPath } from '../utils/paths.js';
+import { projectConfigPath, templateConfigPath } from '../config/paths.js';
 
 const args = process.argv.slice(2);
 const [command, flags] = args;

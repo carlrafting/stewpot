@@ -67,9 +67,12 @@ p {
   margin-bottom: 1rem;
 }
 
+pre, code {
+    font-size: 1.125rem;
+    font-family: Cascadia Code, monospace;
+}
+
 pre {
-  font-size: 1.125rem;
-  font-family: Cascadia Code, monospace;
   word-break: break-all;
   color: var(--pre-color, --color);
   background-color: var(--pre-bg);
@@ -110,10 +113,14 @@ header > pre {
   font-size: 2rem;
   line-height: 1;
   overflow-x: auto;
-  margin-bottom: 2.5rem;
+  margin-block-end: 1.5rem;
   text-align: left;
   width: max-content;
   margin-inline: auto;
+}
+
+.version {
+    margin-block-end: 1rem;
 }
 
 header > h1 {

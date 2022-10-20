@@ -1,7 +1,7 @@
 import http from 'node:http';
 import https from 'node:https';
 import process from 'node:process';
-import defaultConfig from '../config/stewpot.config.js';
+import defaultConfig from '../config/default.config.js';
 import defaultHandler from './default_handler.js';
 
 const portCheck = (config) => config.port === 80 || config.port === 443;

@@ -5,6 +5,7 @@ import { fileURLToPath, URL } from 'node:url';
 import { createReadStream } from 'node:fs';
 import { headers, html } from './respond.js';
 import { parse } from './url.js';
+import pkg from '../../package.json' assert { type: 'json' };
 
 const url = new URL(import.meta.url);
 const dirname = path.dirname(fileURLToPath(url.href));
@@ -13,8 +14,8 @@ const srcPath = path.join(dirname, '..');
 export default function defaultHandler() {
     const router = r();
 
-    function render(_, res) {
-        html(_, res, { template: 'index.html' }, { title: 'Stewpot' });
+    function render(_, res, template = 'index.html') {
+        html(_, res, { template }, { title: 'Stewpot', version: pkg.version });
     }
 
     router.use(logger);

@@ -2,7 +2,7 @@ const APP_ENV = process.env.NODE_ENV || 'development';
 import { parse } from 'regexparam';
 import * as url from 'stewpot/url';
 import { headers } from './respond.js';
-import { notFound, createError } from './error.js';
+import { createError } from './error.js';
 import { STATUS_CODES } from 'node:http';
 
 export const methods = [
