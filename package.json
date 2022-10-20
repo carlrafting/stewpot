@@ -24,6 +24,7 @@
     "scripts": {
         "start": "node src/app.js",
         "dev": "nodemon src/app.js",
+        "lint": "eslint .",
         "check": "prettier -c .",
         "format": "prettier -w .",
         "test": "ava src/**/*.test.js",
