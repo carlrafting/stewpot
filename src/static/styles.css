@@ -27,6 +27,12 @@ html {
   color: var(--color);
 }
 
+@media (min-width: 50rem) {
+    body {
+        font-size: 125%;
+    }
+}
+
 @media (prefers-color-scheme: dark) {
   :root {
     --background-color: #333;
@@ -38,7 +44,7 @@ html {
 
 body {
   margin: auto;
-  max-width: 45rem;
+  max-width: 50rem;
   padding: 1rem;
 }
 
@@ -115,7 +121,7 @@ header > pre {
   overflow-x: auto;
   margin-block-end: 1.5rem;
   text-align: left;
-  width: max-content;
+  max-width: max-content;
   margin-inline: auto;
 }
 

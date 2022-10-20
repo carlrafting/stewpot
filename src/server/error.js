@@ -16,6 +16,6 @@ export function createError(code = 500, message = STATUS_CODES[code]) {
 export const isError = (err) =>
     err instanceof Error || err instanceof HttpError;
 
-export const notFound = (message) => {
+export const notFoundError = (message) => {
     return new createError(404, message);
 };

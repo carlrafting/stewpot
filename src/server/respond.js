@@ -1,3 +1,4 @@
+const APP_ENV = process.env.NODE_ENV || 'development';
 import { join } from 'node:path';
 import { readFile } from 'node:fs/promises';
 import mime from './mime.js';
@@ -55,11 +56,19 @@ export function redirect(res, location = '/', code = 301) {
     headers(res, code, { location });
 }
 
-export function notFound(_, res) {
-    res.writeHead(404, {
-        'Content-Type': 'text/plain',
-    });
-    res.end('404 Not Found!');
+export function notFound(err, _, res) {
+    headers(res, err.code || 404, 'html');
+    res.end(
+        `
+            <!doctype html>
+            <html lang="en">
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>${err.message}</title>
+            <h1>${err.statusCode} ${err.message}</h1>
+            ${APP_ENV === 'development' ? `<pre>${err.stack}</pre>` : ''}
+        `.trim()
+    );
 }
 
 export function onError(err, req, res) {

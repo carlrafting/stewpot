@@ -1,9 +1,7 @@
-const APP_ENV = process.env.NODE_ENV || 'development';
 import { parse } from 'regexparam';
 import * as url from 'stewpot/url';
-import { headers } from './respond.js';
-import { createError } from './error.js';
-import { STATUS_CODES } from 'node:http';
+import { notFound } from './respond.js';
+import { notFoundError } from './error.js';
 
 export const methods = [
     'GET',
@@ -141,9 +139,7 @@ export default function router() {
             }
 
             if (handlers.length === 0) {
-                // throw notFound('Not Found!');
-                const statusCode = 404;
-                throw createError(statusCode, STATUS_CODES[statusCode]);
+                throw notFoundError('Not Found!');
             }
 
             return { params, handlers, middleware };
@@ -217,22 +213,7 @@ export default function router() {
                 }
             } catch (err) {
                 console.error(err.stack);
-                headers(res, err.statusCode, 'html');
-                res.end(
-                    `
-                        <!doctype html>
-                        <html lang="en">
-                        <meta charset="utf-8">
-                        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                        <title>${err.message}</title>
-                        <h1>${err.statusCode} ${err.message}</h1>
-                        ${
-                            APP_ENV === 'development'
-                                ? `<pre>${err.stack}</pre>`
-                                : ''
-                        }
-                    `.trim()
-                );
+                notFound(err, req, res);
                 return;
             }
         },
