@@ -21,6 +21,14 @@ export default function router() {
     const routes = [];
 
     const api = {
+        /**
+         * add
+         *
+         * @param {string} method - http method string
+         * @param {string} route - route url pattern
+         * @param  {...function} handlers - request handlers for route
+         * @returns {api}
+         */
         add(method = 'GET', route = '/', ...handlers) {
             routes.push({
                 method,
@@ -32,6 +40,12 @@ export default function router() {
             return api;
         },
 
+        /**
+         * addMiddleware
+         *
+         * @param  {...function|string} args - base path or middleware request handlers
+         * @returns {api}
+         */
         addMiddleware(...args) {
             const [base] = args;
             const handlers = [...args.slice(1)];
@@ -57,6 +71,13 @@ export default function router() {
             return api;
         },
 
+        /**
+         * find
+         *
+         * @param {string} method - http method string
+         * @param {string} url - request url
+         * @returns {undefined}
+         */
         find(method, url) {
             let matches = [],
                 params = {},
@@ -128,6 +149,12 @@ export default function router() {
             return { params, handlers, middleware };
         },
 
+        /**
+         * params
+         *
+         * @param {IncomingMessage} req - request object
+         * @returns {object} params
+         */
         params(req) {
             const { method } = req;
             const _url = url.parse(req);
@@ -140,11 +167,17 @@ export default function router() {
                         ...params,
                     };
                 }
-            } catch (err) {}
+            } catch (err) {} // eslint-disable-line
 
             return {};
         },
 
+        /**
+         * 
+         * @param {IncomingMessage} req - node.js request object
+         * @param {ServerResponse} res - node.js response object
+         * @returns {undefined}
+         */
         handler(req, res) {
             const { method } = req;
             const _url = url.parse(req);
@@ -221,9 +254,6 @@ export default function router() {
             };
         }
     }
-
-    // console.log({ api });
-    // console.log(routes);
 
     return {
         ...api,

@@ -1,3 +1,4 @@
+/* eslint-disable */
 import { red, bold } from '../../deps.js';
 
 export default async (context, next) => {

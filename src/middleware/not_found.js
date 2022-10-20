@@ -1,3 +1,4 @@
+/* eslint-disable */
 import { Status } from '../../deps.js';
 
 export default function notFound(context) {

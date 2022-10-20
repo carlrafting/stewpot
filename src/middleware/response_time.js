@@ -1,3 +1,4 @@
+/* eslint-disable */
 export default async (context, next) => {
     const start = Date.now();
     await next();

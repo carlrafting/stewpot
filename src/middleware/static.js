@@ -1,3 +1,4 @@
+/* eslint-disable */
 // TODO: pass in root path dynamically
 
 export default async (context) => {

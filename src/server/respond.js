@@ -1,11 +1,6 @@
 import { join } from 'node:path';
 import { readFile } from 'node:fs/promises';
 import mime from './mime.js';
-import { OutgoingMessage } from 'node:http';
-
-// export function headers(res, code = 200, headers = {}, format = 'default') {
-//     res.writeHead(code, { 'Content-Type': mime[format], ...headers });
-// }
 
 export const TYPE = 'Content-Type';
 
@@ -21,8 +16,12 @@ export const TYPE = 'Content-Type';
  * // set header content type to html with 301 status code and with additional location header
  * headers(res, 301, 'html', { Location: '/' })
  *
- * @param {OutgoingMessage} res
- * @param  {...any} args
+ * @param {ServerResponse} res
+ * @param {array} args - code, headers or format
+ * @param {number} args.code - response status code
+ * @param {object} args.headers - response headers
+ * @param {string} args.format - response mime type
+ * @returns {undefined}
  */
 export function headers(res, ...args) {
     let code = 200,
@@ -50,6 +49,7 @@ export function headers(res, ...args) {
  * @param {OutgoingMessage} res
  * @param {string} location
  * @param  {number} code
+ * @returns {undefined}
  */
 export function redirect(res, location = '/', code = 301) {
     headers(res, code, { location });
@@ -62,7 +62,7 @@ export function notFound(_, res) {
     res.end('404 Not Found!');
 }
 
-export function onError(err, req, res, next) {
+export function onError(err, req, res) {
     console.log(err);
     res.end();
 }
@@ -105,11 +105,13 @@ export function text(req, res, text = '') {
         template: 'index.html'
     });
  
- * @param {IncomingMessage} req 
- * @param {ServerResponse} res 
+ * @param {IncomingMessage} req - node.js request object
+ * @param {ServerResponse} res - node.js response object
  * @param {string|object} html 
- * @param {object} data
- * @returns
+ * @param {string} html - template html string
+ * @param {string} html.template - path to template file (relative to template directory)
+ * @param {object} data - data for html template file or string
+ * @returns {undefined}
  */
 export async function html(req, res, html, data = {}) {
     // res.writeHead(200, { 'Content-Type': 'text/html' });
