@@ -56,17 +56,30 @@ export function redirect(res, location = '/', code = 301) {
     headers(res, code, { location });
 }
 
-export function notFound(err, _, res) {
+export async function notFound(err, _, res) {
+    let styles;
+
+    try {
+        styles = await readFile('src/static/styles.css', 'utf-8');
+    } catch (err) {
+        styles = '';
+    }
+
     headers(res, err.code || 404, 'html');
     res.end(
         `
-            <!doctype html>
-            <html lang="en">
-            <meta charset="utf-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>${err.message}</title>
-            <h1>${err.statusCode} ${err.message}</h1>
-            ${APP_ENV === 'development' ? `<pre>${err.stack}</pre>` : ''}
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>${err.message}</title>
+<style>${styles}</style>
+<header>
+<h1>${err.statusCode} ${err.message}</h1>
+<p>stewpot wasn't able to find any matches for <code>${_.url}</code>
+</header>
+<main>
+${APP_ENV === 'development' ? `<pre>${err.stack}</pre>` : ''}
         `.trim()
     );
 }
