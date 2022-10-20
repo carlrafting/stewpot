@@ -135,9 +135,10 @@ header > h1 {
 
 body > header,
 body > main {
-  border-bottom: 1px solid var(--border-color);
-  padding-bottom: 2rem;
-  margin-bottom: 2.5rem;
+  border-block-end: 1px solid var(--border-color);
+  padding-block-start: 2rem;
+  padding-block-end: 2rem;
+  margin-block-end: 2.5rem;
 }
 
 body > header,
