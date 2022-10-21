@@ -22,8 +22,8 @@ This project is not currently available on npm, but you can install it as a npm 
 # from main branch
 npm i carlrafting/stewpot
 
-# a specific version (currently 0.2.0)
-npm i carlrafting/stewpot@0.2.0
+# a specific version (currently 0.2.2)
+npm i carlrafting/stewpot@0.2.2
 ```
 
 ## Quick Start
