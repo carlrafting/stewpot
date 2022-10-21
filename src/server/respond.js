@@ -149,7 +149,7 @@ export async function html(req, res, html, data = {}) {
 
     if (typeof html === 'object') {
         if (html.path) {
-            path = html.path;
+            path = join(process.cwd(), html.path);
         }
 
         if (html.template) {
