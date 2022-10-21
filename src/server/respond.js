@@ -1,7 +1,8 @@
 const APP_ENV = process.env.NODE_ENV || 'development';
-import { join } from 'node:path';
+import { join, dirname } from 'node:path';
 import { readFile } from 'node:fs/promises';
 import mime from './mime.js';
+import { fileURLToPath } from 'node:url';
 
 export const TYPE = 'Content-Type';
 
@@ -57,10 +58,15 @@ export function redirect(res, location = '/', code = 301) {
 }
 
 export async function notFound(err, _, res) {
+    const __dirname = dirname(fileURLToPath(import.meta.url));
+
     let styles;
 
     try {
-        styles = await readFile('src/static/styles.css', 'utf-8');
+        styles = await readFile(
+            join(__dirname, '..', 'static', 'styles.css'),
+            'utf-8'
+        );
     } catch (err) {
         styles = '';
     }
@@ -136,22 +142,26 @@ export function text(req, res, text = '') {
  * @returns {undefined}
  */
 export async function html(req, res, html, data = {}) {
-    // res.writeHead(200, { 'Content-Type': 'text/html' });
     headers(res, 'html');
 
     let template = typeof html === 'string' ? html : '';
+    let path = join(dirname(fileURLToPath(import.meta.url)), '..', 'templates');
 
-    if (typeof html === 'object' && html.template) {
-        try {
-            template = await readFile(
-                join(process.cwd(), 'src', 'templates', html.template),
-                { encoding: 'utf-8' }
-            );
-        } catch (err) {
-            // res.writeHead(500, { 'Content-Type': mime.html });
-            headers(res, 500, 'html');
-            res.end(err.message);
-            return;
+    if (typeof html === 'object') {
+        if (html.path) {
+            path = html.path;
+        }
+
+        if (html.template) {
+            try {
+                template = await readFile(join(path, html.template), {
+                    encoding: 'utf-8',
+                });
+            } catch (err) {
+                headers(res, 500, 'html');
+                res.end(err.message);
+                return;
+            }
         }
     }
 
