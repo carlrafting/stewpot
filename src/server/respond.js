@@ -1,4 +1,4 @@
-const APP_ENV = process.env.NODE_ENV || 'development';
+const APP_ENV = process.env.NODE_ENV || 'production';
 import { join, dirname } from 'node:path';
 import { readFile } from 'node:fs/promises';
 import mime from './mime.js';
