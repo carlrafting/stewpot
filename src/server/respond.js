@@ -84,8 +84,15 @@ export async function notFound(err, _, res) {
 <h1>${err.statusCode} ${err.message}</h1>
 <p>Stewpot wasn't able to find any matches for <code>${_.url}</code>.
 </header>
+${
+    APP_ENV === 'development'
+        ? `
 <main>
-${APP_ENV === 'development' ? `<pre>${err.stack}</pre>` : ''}
+<pre>${err.stack}</pre>
+</main>
+`
+        : ''
+}
         `.trim()
     );
 }
