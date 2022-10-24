@@ -2,6 +2,7 @@ import { parse } from 'regexparam';
 import * as url from 'stewpot/url';
 import { notFound } from './respond.js';
 import { notFoundError } from './error.js';
+import { mount } from './application.js';
 
 export const methods = [
     'GET',
@@ -207,9 +208,10 @@ export default function router() {
                                     : item.handlers(req, res);
                             });
                         // execute route handler
-                        handler && handler(req, res);
+                        return handler ? mount(handler) : () => {};
                     };
-                    applyHandler();
+
+                    applyHandler()(req, res);
                 }
             } catch (err) {
                 console.error(err.stack);
