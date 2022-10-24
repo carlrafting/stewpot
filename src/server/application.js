@@ -16,7 +16,7 @@ const createServer = (config) =>
 
 async function run(req, res, fn) {
     try {
-        const module = await fn(req, res);
+        const module = (await fn(req, res)) || fn(req, res);
 
         if (module === null) {
             res.statusCode = 204;
@@ -29,6 +29,13 @@ async function run(req, res, fn) {
             res.statusCode = code;
             res.setHeader('Content-Length', Buffer.byteLength(module));
             res.end(module);
+            return;
+        }
+
+        if (typeof module === 'object') {
+            const json = JSON.stringify(module);
+            res.setHeader('Content-Type', 'application/json; charset=utf-8');
+            res.end(json);
         }
     } catch (err) {
         if (err && err.stack) {
@@ -50,21 +57,21 @@ export function mount(fn) {
     return (req, res) => run(req, res, fn);
 }
 
+function signalHandler(fn) {
+    return (signal) => {
+        console.log(`=> Signal: ${signal}`);
+        fn && fn();
+    };
+}
+
 export default function stewpot(config = {}) {
     const { http, https, port, host } = {
         ...defaultServerConfig,
         ...config,
     };
 
-    const server = createServer({ https });
-
-    function signalHandler(signal) {
-        console.log(`Recieved ${signal}`);
-        server.close(() => console.log('Closing server connection...'));
-        process.exit(0);
-    }
-
-    process.on('SIGINT', signalHandler).on('SIGTERM', signalHandler);
+    const server = config.server || createServer({ https });
+    const controller = config.controller || new AbortController();
 
     const handlers = [];
     const middleware = [];
@@ -114,6 +121,8 @@ export default function stewpot(config = {}) {
         render() {},
 
         run(callback) {
+            const shutdown = () => server.close();
+
             if (handlers.length > 0) {
                 for (const { handler } of handlers) {
                     if (typeof handler === 'function') {
@@ -122,15 +131,29 @@ export default function stewpot(config = {}) {
                 }
             }
 
-            // register default request handler if none were defined with use(...fns)
             if (handlers.length === 0 && middleware.length === 0) {
                 const { handler } = defaultHandler();
                 server.on('request', handler);
             }
 
+            server.on('error', (err) => console.log(err));
+
+            server.on('close', () => {
+                console.log('=> Closing web server connection...');
+                process.exit();
+            });
+
+            process
+                .on('SIGINT', signalHandler(shutdown))
+                .on('SIGTERM', signalHandler(shutdown))
+                .on('exit', signalHandler(shutdown));
+
             return server.listen(
-                port,
-                host,
+                {
+                    port,
+                    host,
+                    signal: controller.signal,
+                },
                 callback
                     ? callback
                     : () => {
