@@ -20,7 +20,8 @@
         "./respond": "./src/server/respond.js",
         "./router": "./src/server/router.js",
         "./url": "./src/server/url.js",
-        "./middleware": "./src/middleware/index.js"
+        "./middleware": "./src/middleware/index.js",
+        "./error": "./src/server/error.js"
     },
     "scripts": {
         "start": "node src/app.js",
