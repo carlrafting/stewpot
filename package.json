@@ -24,8 +24,8 @@
         "./error": "./src/server/error.js"
     },
     "scripts": {
-        "start": "node src/app.js",
-        "dev": "nodemon src/app.js",
+        "start": "node src/app",
+        "dev": "nodemon src/app",
         "lint": "eslint .",
         "check": "prettier -c .",
         "format": "prettier -w .",
