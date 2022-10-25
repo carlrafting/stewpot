@@ -22,6 +22,10 @@ export default function defaultHandler() {
 
     router.use(logger);
 
+    /**
+     * TODO: fix this route handler to only output file contents once.
+     * now it outputs twice, probably because two requests are always fired for a request (path and favicon)
+     */
     router.get('/styles.css', (req, res) => {
         const _url = parse(req);
         try {
