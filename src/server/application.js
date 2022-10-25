@@ -3,6 +3,7 @@ import https from 'node:https';
 import process from 'node:process';
 import defaultConfig from '../config/default.config.js';
 import defaultHandler from './default_handler.js';
+import { headers, json, text, empty, onError } from './respond.js';
 
 // const portCheck = (config) => config.port === 80 || config.port === 443;
 
@@ -19,35 +20,30 @@ async function run(req, res, fn) {
         const module = (await fn(req, res)) || fn(req, res);
 
         if (module === null) {
-            res.statusCode = 204;
-            res.end();
+            empty(req, res);
             return;
         }
 
         if (typeof module === 'string') {
-            const code = res.statusCode || 200;
-            res.statusCode = code;
-            res.setHeader('Content-Length', Buffer.byteLength(module));
-            res.end(module);
+            headers(res, {
+                'Content-Length': Buffer.byteLength(module),
+            });
+            text(req, res, module);
             return;
         }
 
         if (typeof module === 'object') {
-            const json = JSON.stringify(module);
-            res.setHeader('Content-Type', 'application/json; charset=utf-8');
-            res.end(json);
+            json(req, res, module);
         }
     } catch (err) {
         if (err && err.stack) {
-            if (err.statusCode) {
-                res.statusCode = err.statusCode;
-                res.end(err.message);
-                return;
-            }
+            // if (err.statusCode) {
+            //     res.statusCode = err.statusCode;
+            //     res.end(err.message);
+            //     return;
+            // }
 
-            res.statusCode = 500;
-            res.end('Internal Server Error!');
-
+            onError(err, req, res, 500, 'Something went wrong!');
             console.error(err.stack);
         }
     }

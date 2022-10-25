@@ -57,6 +57,42 @@ export function redirect(res, location = '/', code = 301) {
     headers(res, code, { location });
 }
 
+const errorTemplate = async (err, message) => {
+    const __dirname = dirname(fileURLToPath(import.meta.url));
+    let styles;
+
+    try {
+        styles = await readFile(
+            join(__dirname, '..', 'static', 'styles.css'),
+            'utf-8'
+        );
+    } catch (err) {
+        styles = '';
+    }
+
+    return `
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>${err.message}</title>
+<style>${styles}</style>
+<header>
+<h1>${err.statusCode} ${err.message}</h1>
+<p>${message}</p>
+</header>
+${
+    APP_ENV === 'development'
+        ? `
+<main>
+<pre>${err.stack}</pre>
+</main>
+`
+        : ''
+}
+    `.trim();
+};
+
 export async function notFound(err, _, res) {
     const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -97,21 +133,29 @@ ${
     );
 }
 
-export function onError(err, req, res) {
-    console.log(err);
-    res.end();
+export async function onError(err, req, res, statusCode, message) {
+    const code = statusCode || 500;
+    headers(res, code, 'html');
+    // res.end(`
+    //     ${statusCodes[code]}
+    //     ${err.message}
+    // `);
+    res.end(await errorTemplate(err, message));
 }
 
-export function json(req, res, data = {}) {
-    // res.writeHead(200, { 'Content-Type': 'application/json' });
+export function json(_req, res, data = {}) {
     headers(res, 200, 'json');
     res.end(JSON.stringify(data));
 }
 
-export function text(req, res, text = '') {
-    // res.writeHead(200, { 'Content-Type': 'text/plain' });
+export function text(_req, res, text = '') {
     headers(res, 200, 'txt');
     res.end(text);
+}
+
+export function empty(_req, res) {
+    res.statusCode = 204;
+    res.end();
 }
 
 /**
