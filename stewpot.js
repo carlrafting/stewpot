@@ -48,7 +48,6 @@ async function handler({ state, request, module }) {
   if (!useRouter) {
     try {
       const path = join(state.directory, "public", pathname);
-      console.log({ path });
       const { isDirectory } = await Deno.stat(path);
 
       if (isDirectory) {

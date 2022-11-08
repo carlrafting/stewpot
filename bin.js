@@ -1,5 +1,5 @@
 import { resolve, toFileUrl } from "path/mod.ts";
-import stewpot from "./stewpot.js";
+import stewpot from "stewpot";
 
 if (import.meta.main) {
   let [directory, module] = Deno.args;

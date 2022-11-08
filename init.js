@@ -2,7 +2,7 @@ import {
   fromFileUrl,
   join,
   resolve,
-} from "https://deno.land/std@0.162.0/path/mod.ts";
+} from "path/mod.ts";
 
 const HELP = `stewpot`;
 const DENO_JSON_NAME = "deno.json";
