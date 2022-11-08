@@ -1,6 +1,15 @@
 import { dirname, join, resolve } from "path/mod.ts";
 
-const HELP = `stewpot`;
+const HELP = `
+┌─┐┌┬┐┌─┐┬ ┬┌─┐┌─┐┌┬┐
+└─┐ │ ├┤ │││├─┘│ │ │
+└─┘ ┴ └─┘└┴┘┴  └─┘ ┴
+
+USAGE:
+
+  $ deno run ${import.meta.url} /path/to/project
+
+`.trim();
 const DENO_JSON_NAME = "deno.json";
 const DENO_JSON_CONTENT = `{
   "importMap": "import_map.json",
@@ -89,7 +98,7 @@ if (import.meta.main) {
 
   const [directory] = Deno.args;
 
-  if (directory === null) {
+  if (!directory || directory === null) {
     printHelp();
   }
 
