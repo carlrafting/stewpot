@@ -1,5 +1,5 @@
 import { resolve, toFileUrl } from "path/mod.ts";
-import stewpot from "stewpot";
+import stewpot from "stewpot/stewpot.js";
 
 if (import.meta.main) {
   let [directory, module] = Deno.args;
@@ -26,9 +26,12 @@ if (import.meta.main) {
     toFileUrl(resolve(directory, module))
   );
 
-  stewpot({
-    port: 8080,
-    directory,
-    module,
-  });
+  try {
+    stewpot({
+      directory,
+      module,
+    });
+  } catch (error) {
+    throw error;
+  }
 }
