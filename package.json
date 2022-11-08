@@ -1,5 +1,5 @@
 {
   "workspaces": [
-    "./node"
+    "./packages/node"
   ]
 }
