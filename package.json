@@ -1,50 +1,5 @@
 {
-    "name": "stewpot",
-    "version": "0.2.2",
-    "description": "A delicious serving of http/https!",
-    "repository": "github:carlrafting/stewpot",
-    "author": "Carl Räfting",
-    "homepage": "https://github.com/carlrafting/stewpot#readme",
-    "bugs": {
-        "url": "https://github.com/carlrafting/stewpot/issues"
-    },
-    "keywords": [],
-    "license": "MIT",
-    "type": "module",
-    "bin": "src/cli.js",
-    "workspaces": [
-        "examples/*"
-    ],
-    "exports": {
-        "./app": "./src/server/application.js",
-        "./respond": "./src/server/respond.js",
-        "./router": "./src/server/router.js",
-        "./url": "./src/server/url.js",
-        "./middleware": "./src/middleware/index.js",
-        "./error": "./src/server/error.js"
-    },
-    "scripts": {
-        "start": "node src/app",
-        "dev": "nodemon src/app",
-        "lint": "eslint .",
-        "check": "prettier -c .",
-        "format": "prettier -w .",
-        "test": "ava src/**/*.test.js",
-        "test:coverage": "c8 npm t",
-        "test:report": "c8 report --reporter=text-lcov > coverage.lcov"
-    },
-    "devDependencies": {
-        "ava": "^4.3.3",
-        "c8": "^7.12.0",
-        "eslint": "^8.3.0",
-        "eslint-config-prettier": "^8.3.0",
-        "eslint-plugin-prettier": "^4.0.0",
-        "nodemon": "^2.0.15",
-        "prettier": "^2.5.0",
-        "uvu": "^0.5.1"
-    },
-    "dependencies": {
-        "chalk": "^5.0.0",
-        "regexparam": "^2.0.1"
-    }
+  "workspaces": [
+    "./node"
+  ]
 }
