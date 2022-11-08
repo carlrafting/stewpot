@@ -1,4 +1,19 @@
 {
+  "lint": {
+    "files": {
+      "exclude": ["node_modules", "packages/node"]
+    }
+  },
+  "fmt": {
+    "files": {
+      "exclude": [
+        "package.json",
+        "package-lock.json",
+        "node_modules",
+        "packages/node"
+      ]
+    }
+  },
   "importMap": "import_map.json",
   "tasks": {
     "dev:router": "deno run --watch --allow-net --allow-read bin.js test/app examples/router --dev",

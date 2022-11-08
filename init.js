@@ -1,12 +1,37 @@
-import {
-  fromFileUrl,
-  join,
-  resolve,
-} from "path/mod.ts";
+import { dirname, join, resolve } from "path/mod.ts";
 
 const HELP = `stewpot`;
 const DENO_JSON_NAME = "deno.json";
-const DENO_IMPORT_MAP_NAME = "import_map.json";
+const DENO_JSON_CONTENT = `{
+  "importMap": "import_map.json",
+  "tasks": {
+    "bin": "deno run ${import.meta.resolve("./bin.js")}",
+    "dev": "deno run --watch --allow-net --allow-read main.js --dev"
+  }
+}`;
+const IMPORT_MAP_NAME = "import_map.json";
+const IMPORT_MAP_CONTENT = `{
+  "imports": {
+    "stewpot/": "${dirname(import.meta.url)}/",
+    "http/": "https://deno.land/std@0.162.0/http/",
+    "path/": "https://deno.land/std@0.162.0/path/"
+  }
+}`;
+const MAIN_NAME = "main.js";
+const MAIN_CONTENT = `
+import stewpot from "stewpot/stewpot.js";
+import { dirname, fromFileUrl } from "path/mod.ts";
+
+const directory = dirname(fromFileUrl(import.meta.url));
+
+function handler() {
+  return new Response("Hello World!");
+}
+
+stewpot({
+  directory,
+  handler,
+});`.trim();
 
 async function init(directory) {
   directory = resolve(directory);
@@ -32,18 +57,21 @@ async function init(directory) {
   await Deno.mkdir(join(directory, "public"), { recursive: true });
   await Deno.mkdir(join(directory, "templates"), { recursive: true });
   await Deno.writeTextFile(
+    join(directory, MAIN_NAME),
+    MAIN_CONTENT,
+  );
+  await Deno.writeTextFile(
     join(directory, "templates/index.html"),
     "<h1>Hello Stewpot</h1>",
   );
-  await Deno.copyFile(
-    fromFileUrl(import.meta.resolve(`./${DENO_JSON_NAME}`)),
+  await Deno.writeTextFile(
     join(directory, DENO_JSON_NAME),
+    DENO_JSON_CONTENT,
   );
-  await Deno.copyFile(
-    fromFileUrl(import.meta.resolve(`./${DENO_IMPORT_MAP_NAME}`)),
-    join(directory, DENO_IMPORT_MAP_NAME),
+  await Deno.writeTextFile(
+    join(directory, IMPORT_MAP_NAME),
+    IMPORT_MAP_CONTENT,
   );
-  // await Deno.writeTextFile(join(directory, DENO_JSON_NAME), DENO_JSON_CONTENTS);
   console.log(
     "Initialized new stewpot project, run `deno task dev` to get started!",
   );
