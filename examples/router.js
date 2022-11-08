@@ -5,5 +5,5 @@ const directory = "test/app";
 
 stewpot({
   directory,
-  module: main(),
+  module: main,
 });
