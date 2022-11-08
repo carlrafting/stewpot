@@ -1,4 +1,4 @@
-import stewpot from "stewpot";
+import stewpot from "stewpot/stewpot.js";
 import { dirname, fromFileUrl } from "path/mod.ts";
 
 const directory = dirname(fromFileUrl(import.meta.url));

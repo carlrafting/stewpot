@@ -1,6 +1,6 @@
 {
   "imports": {
-    "stewpot": "./stewpot.js",
+    "stewpot/": "./",
     "http/": "https://deno.land/std@0.162.0/http/",
     "path/": "https://deno.land/std@0.162.0/path/"
   }

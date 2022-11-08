@@ -1,4 +1,4 @@
-import { Router } from "stewpot";
+import { Router } from "stewpot/stewpot.js";
 
 export default () => {
   const router = new Router();
