@@ -91,10 +91,24 @@ function errorHandler(err) {
   });
 }
 
+function initializeModule(module) {
+  return typeof module === "function"
+    ? module()
+    : module || typeof state.module === "object"
+    ? Object.hasOwn(module, "default") && module.default()
+    : null;
+}
+
 export default function stewpot(settings = {}) {
   const state = configureApp(IS_DEV, settings);
 
-  serve(configureHandler({ state, module: state.module }), {
+  const module = initializeModule(state.module);
+
+  if (!module) {
+    throw new Error('Could not initalize module, does it export a default method?');
+  }
+
+  serve(configureHandler({ state, module }), {
     port: state.port,
     signal: state.controller.signal,
     onListen(params) {

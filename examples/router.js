@@ -1,15 +1,9 @@
 import stewpot from 'stewpot';
-import { toFileUrl, resolve } from 'path/mod.ts';
+import main from "../test/app/examples/router.js";
 
-// paths are relative to examples directory
-const directory = "../test/app";
-const module = async () => {
-  return (await import(
-    toFileUrl(resolve(directory, 'examples/router.js'))
-  ));
-}
+const directory = "test/app";
 
 stewpot({
   directory,
-  module: await module()
+  module: main(),
 });
