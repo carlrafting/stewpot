@@ -39,7 +39,9 @@ async function handler({ state, request, module }) {
   }
 
   // continue if pathname is added route path, otherwise we'll serve public/
-  if (module.router && module.router.find(request.method, request.url)) {
+  if (
+    module && module.router && module.router.find(request.method, request.url)
+  ) {
     useRouter = true;
   }
 
@@ -92,21 +94,27 @@ function errorHandler(err) {
 }
 
 function initializeModule(module) {
-  return typeof module === "function"
-    ? module()
-    : module || typeof state.module === "object"
-    ? Object.hasOwn(module, "default") && module.default()
-    : null;
+  if (typeof module === "function") {
+    return module();
+  }
+  if (typeof module === "object") {
+    if (Object.hasOwn(module, "default")) {
+      return module.default();
+    }
+    if (Object.hasOwn(module, "handler")) {
+      return module.handler;
+    }
+  }
 }
 
 export default function stewpot(settings = {}) {
   const state = configureApp(IS_DEV, settings);
 
   const module = initializeModule(state.module);
-
-  if (!module) {
+  /*
+  if (module === undefined || typeof module !== 'string') {
     throw new Error('Could not initalize module, does it export a default method?');
-  }
+  } */
 
   serve(configureHandler({ state, module }), {
     port: state.port,
