@@ -1,6 +1,7 @@
 {
   "importMap": "import_map.json",
   "tasks": {
-    "dev": "deno run --watch --allow-net --allow-read server.js"
+    "dev:router": "deno run --watch --allow-net --allow-read bin.js test/app examples/router --dev",
+    "dev:handler": "deno run --watch --allow-net --allow-read test/app/examples/handler.js --dev"
   }
 }
