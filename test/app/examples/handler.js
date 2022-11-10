@@ -1,13 +1,9 @@
-import stewpot from "stewpot/stewpot.js";
-import { dirname, fromFileUrl } from "path/mod.ts";
-
-const directory = dirname(fromFileUrl(import.meta.url));
+import stewpot from "../../../stewpot.js";
 
 function handler() {
   return new Response("Hello there from handler.js!");
 }
 
 stewpot({
-  directory,
   handler,
 });

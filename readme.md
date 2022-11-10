@@ -25,11 +25,17 @@ Deno platform.
 
 ## Install
 
-To get started with a new project, you can use stewpot's bin.js module to
+Stewpot provides a CLI module for running and initializing projects. Instead of writing urls everytime you invoke a certain command, you can install it locally. 
+
+```bash
+$ deno install --name=stewpot $URL/bin.js
+```
+
+To get started with a new project, you can use stewpot's init.js module to
 initialize the project.
 
 ```bash
-$ deno run --allow-write --allow-read $URL/bin.js path/to/project
+$ stewpot init path/to/project
 ```
 
 ## Quick Start

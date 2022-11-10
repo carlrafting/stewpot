@@ -1,30 +1,37 @@
-import { resolve, toFileUrl } from "path/mod.ts";
-import stewpot from "stewpot/stewpot.js";
+import { resolve, toFileUrl } from "./deps.js";
+import stewpot from "./stewpot.js";
+import { init } from './init.js';
 
-if (import.meta.main) {
-  let [directory, module] = Deno.args;
+async function serve(directory, module) {
+  if (!directory) {
+    directory = '.';
+    /* throw new Error(
+      `No directory provided, try 'deno run ${import.meta.url} path/to/directory'`,
+    ); */
+  }
+
+  directory = resolve(directory);
+
+  if (directory.endsWith(".js")) {
+    throw new Error(
+      `Not necessary to provide a file extension, try 'deno run ${import.meta.url} path/to/directory path/to/module'`,
+    );
+  }
 
   if (!module) {
     module = "main";
   }
 
-  module = `${module}.js`;
-
-  if (!directory) {
-    throw new Error(
-      `No directory provided, try 'deno run ${import.meta.url} path/to/directory'`,
-    );
+  if (!module.endsWith(".js")) {
+    module = `${module}.js`;
   }
 
-  if (directory.endsWith(".js")) {
-    throw new Error(
-      `Not necessary to provide a file extension, try 'deno run ${import.meta.url} path/to/directory'`,
-    );
-  }
+  const path = toFileUrl(resolve(directory, module));
+  // const path = resolve(directory, module);
 
-  module = await import(
-    toFileUrl(resolve(directory, module))
-  );
+  console.log(path);
+
+  module = await import(path);
 
   try {
     stewpot({
@@ -34,4 +41,27 @@ if (import.meta.main) {
   } catch (error) {
     throw error;
   }
+}
+
+function main(args) {
+  const [command, directory, module] = args;
+  // const isDev = args.includes("--dev");
+
+  console.log(args)
+
+  if (
+    !command ||
+    command === '' ||
+    command === 'serve'
+  ) {
+    serve(directory, module);
+  }
+
+  if (command === 'init') {
+    init(directory);
+  }
+}
+
+if (import.meta.main) {
+  main(Deno.args);
 }

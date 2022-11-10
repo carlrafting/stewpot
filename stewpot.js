@@ -1,6 +1,11 @@
-import { serve } from "http/server.ts";
-import { serveDir, serveFile } from "http/file_server.ts";
-import { dirname, fromFileUrl, join } from "path/mod.ts";
+import {
+  // dirname,
+  // fromFileUrl,
+  join,
+  serve,
+  serveDir,
+  serveFile,
+} from "./deps.js";
 export { Router } from "./lib/Router.js";
 
 const port = 80;
@@ -22,6 +27,7 @@ async function handler({ state, request, module }) {
   let useRouter = false;
 
   /* console.log({
+    module,
     state,
     pathname,
     url: request.url,
@@ -142,7 +148,8 @@ function configureApp(isDev, settings = {}) {
     port,
     controller,
     environment: isDev ? "development" : "production",
-    directory: dirname(fromFileUrl(import.meta.url)),
+    // directory: dirname(fromFileUrl(import.meta.url)),
+    directory: Deno.cwd(),
     module: "main.js",
   };
 

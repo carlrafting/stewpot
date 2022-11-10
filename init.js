@@ -1,4 +1,4 @@
-import { dirname, join, resolve } from "path/mod.ts";
+import { dirname, join, resolve } from "./deps.js";
 
 const HELP = `
 ┌─┐┌┬┐┌─┐┬ ┬┌─┐┌─┐┌┬┐
@@ -29,20 +29,16 @@ const IMPORT_MAP_CONTENT = `{
 const MAIN_NAME = "main.js";
 const MAIN_CONTENT = `
 import stewpot from "stewpot/stewpot.js";
-import { dirname, fromFileUrl } from "path/mod.ts";
-
-const directory = dirname(fromFileUrl(import.meta.url));
 
 function handler() {
   return new Response("Hello World!");
 }
 
 stewpot({
-  directory,
   handler,
 });`.trim();
 
-async function init(directory) {
+export async function init(directory) {
   directory = resolve(directory);
 
   console.log(`Intializing new stewpot project at ${directory}...`);
