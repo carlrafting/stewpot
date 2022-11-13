@@ -1,10 +1,10 @@
 import { resolve, toFileUrl } from "./deps.js";
 import stewpot from "./stewpot.js";
-import { init } from './init.js';
+import { init } from "./init.js";
 
 async function serve(directory, module) {
   if (!directory) {
-    directory = '.';
+    directory = ".";
     /* throw new Error(
       `No directory provided, try 'deno run ${import.meta.url} path/to/directory'`,
     ); */
@@ -47,17 +47,17 @@ function main(args) {
   const [command, directory, module] = args;
   // const isDev = args.includes("--dev");
 
-  console.log(args)
+  console.log(args);
 
   if (
     !command ||
-    command === '' ||
-    command === 'serve'
+    command === "" ||
+    command === "serve"
   ) {
     serve(directory, module);
   }
 
-  if (command === 'init') {
+  if (command === "init") {
     init(directory);
   }
 }

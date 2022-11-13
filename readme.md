@@ -25,7 +25,8 @@ Deno platform.
 
 ## Install
 
-Stewpot provides a CLI module for running and initializing projects. Instead of writing urls everytime you invoke a certain command, you can install it locally. 
+Stewpot provides a CLI module for running and initializing projects. Instead of
+writing urls everytime you invoke a certain command, you can install it locally.
 
 ```bash
 $ deno install -A --name=stewpot $URL/bin.js
