@@ -28,10 +28,10 @@ Deno platform.
 Stewpot provides a CLI module for running and initializing projects. Instead of writing urls everytime you invoke a certain command, you can install it locally. 
 
 ```bash
-$ deno install --name=stewpot $URL/bin.js
+$ deno install -A --name=stewpot $URL/bin.js
 ```
 
-To get started with a new project, you can use stewpot's init.js module to
+To get started with a new project, you can use stewpot's init command to
 initialize the project.
 
 ```bash
