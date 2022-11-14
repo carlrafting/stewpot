@@ -13,10 +13,20 @@ const controller = new AbortController();
 const IS_DEV = Deno.args.includes("--dev") && "watchFs" in Deno;
 
 export function render(state) {
-  return async (template = "index") =>
-    await Deno.readTextFile(
+  return async (template = "index") => {
+    const _template = await Deno.readTextFile(
       join(state.directory, `templates/${template}.html`),
     );
+    
+    if (_template) {
+      return new Response(_template, {
+        status: 200,
+        headers: {
+          'content-type': 'text/html'
+        }
+      })
+    }
+  }
 }
 
 async function handler({ state, request, module }) {
