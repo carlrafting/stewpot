@@ -1,0 +1,7 @@
+{
+    "tasks": {
+        "test": "deno test --watch ./packages/deno",
+        "check": "deno fmt --check ./packages/deno",
+        "fmt": "deno fmt ./packages/deno"
+    }
+}
