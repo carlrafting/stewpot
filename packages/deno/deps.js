@@ -4,13 +4,13 @@ export {
   join,
   resolve,
   toFileUrl,
-} from "https://deno.land/std@0.163.0/path/mod.ts";
-export { serve } from "https://deno.land/std@0.163.0/http/server.ts";
-export { parse } from "https://deno.land/std@0.163.0/flags/mod.ts";
-export * as colors from "https://deno.land/std@0.163.0/fmt/colors.ts";
+} from "https://deno.land/std@0.164.0/path/mod.ts";
+export { serve } from "https://deno.land/std@0.164.0/http/server.ts";
+export { parse } from "https://deno.land/std@0.164.0/flags/mod.ts";
+export * as colors from "https://deno.land/std@0.164.0/fmt/colors.ts";
 export {
   serveDir,
   serveFile,
-} from "https://deno.land/std@0.163.0/http/file_server.ts";
+} from "https://deno.land/std@0.164.0/http/file_server.ts";
 export { Router } from "./lib/Router.js";
 export { default as stewpot } from "./stewpot.js";

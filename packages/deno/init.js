@@ -1,5 +1,6 @@
 import { dirname, join, resolve } from "./deps.js";
 
+const STD_VERSION = "0.164.0";
 const HELP = `
 ┌─┐┌┬┐┌─┐┬ ┬┌─┐┌─┐┌┬┐
 └─┐ │ ├┤ │││├─┘│ │ │
@@ -22,8 +23,8 @@ const IMPORT_MAP_NAME = "import_map.json";
 const IMPORT_MAP_CONTENT = `{
   "imports": {
     "stewpot/": "${dirname(import.meta.url)}/",
-    "http/": "https://deno.land/std@0.162.0/http/",
-    "path/": "https://deno.land/std@0.162.0/path/"
+    "http/": "https://deno.land/std@${STD_VERSION}/http/",
+    "path/": "https://deno.land/std@${STD_VERSION}/path/"
   }
 }`;
 const MAIN_NAME = "main.js";
