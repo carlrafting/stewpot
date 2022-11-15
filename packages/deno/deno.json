@@ -1,0 +1,6 @@
+{
+  "tasks": {
+    "dev:router": "deno run --watch --allow-net --allow-read bin.js serve examples/router main --dev",
+    "dev:handler": "deno run --watch --allow-net --allow-read examples/handler/main.js --dev"
+  }
+}
