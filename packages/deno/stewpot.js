@@ -1,6 +1,7 @@
 import {
   // dirname,
   // fromFileUrl,
+  // resolve,
   join,
   serve,
   serveDir,
@@ -20,16 +21,16 @@ export function render(state) {
     const _template = await Deno.readTextFile(
       join(state.directory, `templates/${template}.html`),
     );
-    
+
     if (_template) {
       return new Response(_template, {
         status: 200,
         headers: {
-          'content-type': 'text/html'
-        }
-      })
+          "content-type": "text/html",
+        },
+      });
     }
-  }
+  };
 }
 
 async function handler({ state, request, module }) {
@@ -164,7 +165,7 @@ function configureApp(isDev, settings = {}) {
     // directory: dirname(fromFileUrl(import.meta.url)),
     directory: Deno.cwd(),
     module: "main.js",
-    meta
+    meta,
   };
 
   return {
