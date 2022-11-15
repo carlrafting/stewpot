@@ -6,6 +6,7 @@ import {
   serve,
   serveDir,
   serveFile,
+  eta,
 } from "./deps.js";
 import meta from "./stewpot.json" assert { type: "json" };
 
@@ -17,16 +18,55 @@ const controller = new AbortController();
 const IS_DEV = Deno.args.includes("--dev") && "watchFs" in Deno;
 
 export function render(state) {
-  return async (template = "index") => {
-    const _template = await Deno.readTextFile(
-      join(state.directory, `templates/${template}.html`),
+  const supportedTemplateFormats = ["html", "eta"];
+  const { templateFormat } = state;
+
+  if (!supportedTemplateFormats.includes(templateFormat)) {
+    throw new Error(
+      `templateFormat ${templateFormat} is not supported, try one of these instead: ${
+        supportedTemplateFormats.join(", ")
+      }`,
     );
+  }
+
+  async function renderFile(template, data = {}) {
+    const templateDir = join(state.directory, 'templates');
+    const templatePath = join(templateDir, `${template}.${state.templateFormat}`);
+
+    if (templateFormat === "html") {
+      template = await Deno.readTextFile(templatePath);
+
+      if (Object.keys(data).length > 0) {
+        for (const [key, value] of Object.entries(data)) {
+            template = template.replaceAll(`{{ ${key} }}`, value);
+        }
+      }
+
+      return template;
+    }
+
+    if (templateFormat === "eta") {
+      eta.configure({
+        views: templateDir
+      });
+
+      return await eta.renderFile(`/${template}`, { ...data });
+    }
+  }
+
+  return async (template = "index", { code, data, headers } = {
+    code: 200, 
+    headers: {},
+    data: {}
+  }) => {
+    const _template = await renderFile(template, data);
 
     if (_template) {
       return new Response(_template, {
-        status: 200,
+        status: code,
         headers: {
           "content-type": "text/html",
+          ...headers,
         },
       });
     }
@@ -165,6 +205,7 @@ function configureApp(isDev, settings = {}) {
     // directory: dirname(fromFileUrl(import.meta.url)),
     directory: Deno.cwd(),
     module: "main.js",
+    templateFormat: "html",
     meta,
   };
 
