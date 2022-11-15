@@ -1,5 +1,5 @@
 import { resolve, toFileUrl } from "./deps.js";
-import stewpot from "./stewpot.js";
+import stewpot, { meta } from "./stewpot.js";
 import { init } from "./init.js";
 
 async function serve(directory, module) {
@@ -29,7 +29,7 @@ async function serve(directory, module) {
   const path = toFileUrl(resolve(directory, module));
   // const path = resolve(directory, module);
 
-  console.log(path);
+  // console.log(path);
 
   module = await import(path);
 
@@ -47,7 +47,11 @@ function main(args) {
   const [command, directory, module] = args;
   // const isDev = args.includes("--dev");
 
-  console.log(args);
+  // console.log(args);
+
+  if (args[0] === "--version" || args[0] === "-v") {
+    console.log(meta.version);
+  }
 
   if (
     !command ||

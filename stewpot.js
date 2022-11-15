@@ -6,6 +6,9 @@ import {
   serveDir,
   serveFile,
 } from "./deps.js";
+import meta from "./stewpot.json" assert { type: "json" };
+
+export { meta };
 export { Router } from "./lib/Router.js";
 
 const port = 80;
@@ -161,6 +164,7 @@ function configureApp(isDev, settings = {}) {
     // directory: dirname(fromFileUrl(import.meta.url)),
     directory: Deno.cwd(),
     module: "main.js",
+    meta
   };
 
   return {

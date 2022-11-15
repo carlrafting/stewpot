@@ -1,7 +1,7 @@
 {
   "lint": {
     "files": {
-      "exclude": ["node_modules", "packages/node"]
+      "exclude": ["node_modules/", "packages/node/"]
     }
   },
   "fmt": {
@@ -9,9 +9,14 @@
       "exclude": [
         "package.json",
         "package-lock.json",
-        "node_modules",
-        "packages/node"
+        "node_modules/",
+        "packages/node/"
       ]
+    }
+  },
+  "test": {
+    "files": {
+      "exclude": ["node_modules", "packages/node/"]
     }
   },
   "tasks": {
