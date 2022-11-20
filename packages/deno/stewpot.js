@@ -65,6 +65,7 @@ export function render(state) {
     const _template = await renderFile(template, data);
 
     if (_template) {
+      // should render be responsible for returning reponses? probably no, should do one thing. render...
       return new Response(_template, {
         status: code,
         headers: {
@@ -89,6 +90,7 @@ async function handler({ state, request, module }) {
     state,
     request,
     pathname,
+    render: render(state),
   };
 
   let match = false;
@@ -165,10 +167,7 @@ async function handler({ state, request, module }) {
   // if module exports a router, we initialize it here...
   if (useRouter) {
     try {
-      return await module.router.route({
-        ...CONTEXT,
-        render: render(state),
-      });
+      return await module.router.route(CONTEXT);
     } catch (error) {
       throw error;
     }
