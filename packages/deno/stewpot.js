@@ -30,15 +30,18 @@ export function render(state) {
   }
 
   async function renderFile(template, data = {}) {
-    const templateDir = join(state.directory, 'templates');
-    const templatePath = join(templateDir, `${template}.${state.templateFormat}`);
+    const templateDir = join(state.directory, "templates");
+    const templatePath = join(
+      templateDir,
+      `${template}.${state.templateFormat}`,
+    );
 
     if (templateFormat === "html") {
       template = await Deno.readTextFile(templatePath);
 
       if (Object.keys(data).length > 0) {
         for (const [key, value] of Object.entries(data)) {
-            template = template.replaceAll(`{{ ${key} }}`, value);
+          template = template.replaceAll(`{{ ${key} }}`, value);
         }
       }
 
@@ -47,7 +50,7 @@ export function render(state) {
 
     if (templateFormat === "eta") {
       eta.configure({
-        views: templateDir
+        views: templateDir,
       });
 
       return await eta.renderFile(`/${template}`, { ...data });
@@ -55,9 +58,9 @@ export function render(state) {
   }
 
   return async (template = "index", { code, data, headers } = {
-    code: 200, 
+    code: 200,
     headers: {},
-    data: {}
+    data: {},
   }) => {
     const _template = await renderFile(template, data);
 
@@ -76,12 +79,21 @@ export function render(state) {
 async function handler({ state, request, module }) {
   const { pathname } = new URL(request.url);
 
+  const CONTEXT = { 
+    state,
+    request,
+    pathname,
+  };
+
   let match = false;
   let hasFileExt = false;
   let useRouter = false;
 
+  const handler = state.handler || module.handler;
+
   /* console.log({
     module,
+    handler,
     state,
     pathname,
     url: request.url,
@@ -90,12 +102,16 @@ async function handler({ state, request, module }) {
   // check pathname contains file extension
   if (pathname.includes(".")) {
     hasFileExt = true;
-    match = true;
-  }
+    
+    try {
+      const file = await Deno.readFile(join(state.directory, "public", pathname));
 
-  // if a handler is defined we only serve that handler
-  if (state.handler) {
-    return state.handler(request);
+      if (file) {
+        match = true;      
+      }
+    } catch (error) {
+      console.log(error);
+    }
   }
 
   // continue if pathname is added route path, otherwise we'll serve public/
@@ -105,8 +121,15 @@ async function handler({ state, request, module }) {
     useRouter = true;
   }
 
+  if (handler) {
+    const initializedHandler = handler(CONTEXT);
+
+    if (initializedHandler && Object.hasOwn(initializedHandler, "run")) {
+      return initializedHandler.run();
+    }
+  }
+
   // check for existing directory mathing pathname
-  // otherwise return 404 Not Found
   if (!useRouter) {
     try {
       const path = join(state.directory, "public", pathname);
@@ -115,8 +138,8 @@ async function handler({ state, request, module }) {
       if (isDirectory) {
         match = true;
       }
-    } catch (_) {
-      return new Response(null, { status: 404 });
+    } catch (error) {
+      console.log(error);
     }
   }
 
@@ -134,17 +157,19 @@ async function handler({ state, request, module }) {
   }
 
   // if module exports a router, we initialize it here...
-  if (module.router) {
+  if (useRouter) {
     try {
       return await module.router.route({
-        state,
-        request,
+        ...CONTEXT,
         render: render(state),
       });
     } catch (error) {
       throw error;
     }
   }
+
+  // if no matches, return 404 Not Found
+  return new Response("404 Not Found", { status: 404 });
 }
 
 function errorHandler(err) {
@@ -167,7 +192,7 @@ function initializeModule(module) {
   }
 }
 
-export default function stewpot(settings = {}) {
+export default async function stewpot(settings = {}) {
   const state = configureApp(IS_DEV, settings);
 
   const module = initializeModule(state.module);
@@ -176,16 +201,21 @@ export default function stewpot(settings = {}) {
     throw new Error('Could not initalize module, does it export a default method?');
   } */
 
-  serve(configureHandler({ state, module }), {
-    port: state.port,
-    signal: state.controller.signal,
-    onListen(params) {
-      console.log(
-        `=> Started Web Server at ${params.hostname}:${params.port}!`,
-      );
-    },
-    onError: errorHandler,
-  });
+  try {
+    await serve(configureHandler({ state, module }), {
+      port: state.port,
+      signal: state.controller.signal,
+      onListen(params) {
+        console.log(
+          `=> Started Web Server at ${params.hostname}:${params.port}!`,
+        );
+      },
+      onError: errorHandler,
+    });
+  } catch (error) {
+    // await stewpot({ ...state, port: state.port++ })
+    throw error;
+  }
 }
 
 function configureHandler({ state, module }) {
