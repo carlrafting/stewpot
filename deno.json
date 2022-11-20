@@ -7,6 +7,22 @@
       ]
     }
   },
+  "test": {
+    "files": {
+      "exclude": [
+        "node_modules/",
+        "packages/node"
+      ]
+    }
+  },
+  "lint": {
+    "files": {
+      "exclude": [
+        "node_modules/",
+        "packages/node"
+      ]
+    }
+  },
   "tasks": {
     "test": "deno test --watch ./packages/deno",
     "check": "deno fmt --check ./packages/deno",

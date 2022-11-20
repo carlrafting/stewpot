@@ -1,16 +1,6 @@
 import { dirname, join, resolve } from "./deps.js";
 
-const STD_VERSION = "0.164.0";
-const HELP = `
-┌─┐┌┬┐┌─┐┬ ┬┌─┐┌─┐┌┬┐
-└─┐ │ ├┤ │││├─┘│ │ │
-└─┘ ┴ └─┘└┴┘┴  └─┘ ┴
-
-USAGE:
-
-  $ deno run ${import.meta.url} /path/to/project
-
-`.trim();
+const STD_VERSION = "0.165.0";
 const DENO_JSON_NAME = "deno.json";
 const DENO_JSON_CONTENT = `{
   "importMap": "import_map.json",
@@ -83,16 +73,7 @@ export async function init(directory) {
   );
 }
 
-function printHelp() {
-  console.log(HELP);
-  Deno.exit(0);
-}
-
 if (import.meta.main) {
-  if (Deno.args.includes("-h") || Deno.args.includes("--help")) {
-    printHelp();
-  }
-
   const [directory] = Deno.args;
 
   if (!directory || directory === null) {

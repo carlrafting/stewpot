@@ -76,6 +76,12 @@ export function render(state) {
   };
 }
 
+function logNotFound(error, pathname) {
+  if (error instanceof Deno.errors.NotFound) {
+    console.log(`Couldn't find any mathes for ${pathname}`)
+  }
+}
+
 async function handler({ state, request, module }) {
   const { pathname } = new URL(request.url);
 
@@ -110,7 +116,7 @@ async function handler({ state, request, module }) {
         match = true;      
       }
     } catch (error) {
-      console.log(error);
+      logNotFound(error, pathname);
     }
   }
 
@@ -139,7 +145,7 @@ async function handler({ state, request, module }) {
         match = true;
       }
     } catch (error) {
-      console.log(error);
+      logNotFound(error, pathname);
     }
   }
 
