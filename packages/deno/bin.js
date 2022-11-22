@@ -1,7 +1,6 @@
-import { parse, resolve, toFileUrl } from "./deps.js";
+import { parse, resolve, toFileUrl, colors } from "./deps.js";
 import stewpot, { meta } from "./stewpot.js";
 import { init } from "./init.js";
-import * as colors from "https://deno.land/std@0.165.0/fmt/colors.ts";
 
 const BANNER = `
 ${colors.brightBlue(`

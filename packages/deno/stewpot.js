@@ -7,10 +7,12 @@ import {
   serveDir,
   serveFile,
   eta,
+  colors,
 } from "./deps.js";
 import meta from "./stewpot.json" assert { type: "json" };
+import mime from "../node/src/server/mime.js";
 
-export { meta };
+export { meta, mime };
 export { Router } from "./lib/Router.js";
 
 const port = 80;
@@ -79,7 +81,7 @@ export function render(state) {
 
 function logNotFound(error, pathname) {
   if (error instanceof Deno.errors.NotFound) {
-    console.log(`Couldn't find any mathes for ${pathname}`)
+    console.log(`${colors.red("404")} - ${pathname}`)
   }
 }
 
@@ -99,13 +101,15 @@ async function handler({ state, request, module }) {
 
   const handler = state.handler || module.handler;
 
-  /* console.log({
-    module,
-    handler,
-    state,
-    pathname,
-    url: request.url,
-  }); */
+  /* if (IS_DEV) {
+    console.log({
+      module,
+      handler,
+      state,
+      pathname,
+      url: request.url,
+    });
+  } */
 
   // check pathname contains file extension
   if (pathname.includes(".")) {
