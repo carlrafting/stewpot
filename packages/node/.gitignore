@@ -2,8 +2,5 @@ src/config/*.pem
 src/config/*.key
 src/config/*.crt
 src/sandbox
-.vscode
 examples/foobar
-coverage
-*.lcov
 *.esproj
