@@ -137,7 +137,15 @@ async function handler({ state, request, module }) {
     const initializedHandler = handler(CONTEXT);
 
     if (initializedHandler && Object.hasOwn(initializedHandler, "run")) {
-      return initializedHandler.run();
+      return (
+        initializedHandler.run()
+      );
+    }
+
+    if (initializedHandler && Object.hasOwn(initializedHandler, "respond")) {
+      return (
+        initializedHandler.respond()
+      );
     }
   }
 

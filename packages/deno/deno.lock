@@ -167,6 +167,8 @@
     "https://deno.land/x/eta@v1.12.3/polyfills.ts": "048f697fdf0ef002cc59cf7a69cf370e11877c3b7f9c0b68dd84ab4762e0ffdc",
     "https://deno.land/x/eta@v1.12.3/render.ts": "9173e99002a4169aeae45315bdd07cf4664c8dd9e39ce86d5c7daa989982f90c",
     "https://deno.land/x/eta@v1.12.3/storage.ts": "46f762d1c04d9095ed6fb694c0d993e9ae507a69bab469a5a3bd23a5a9a79983",
-    "https://deno.land/x/eta@v1.12.3/utils.ts": "77ba806398590f4aff0ca1ea9485e769ba578eeb8776b4f2386067c9735b96c1"
+    "https://deno.land/x/eta@v1.12.3/utils.ts": "77ba806398590f4aff0ca1ea9485e769ba578eeb8776b4f2386067c9735b96c1",
+    "https://unpkg.com/preact-render-to-string@5.2.6/dist/index.mjs": "0a434e1489343db3ece22a23ab156e9a41df1eda472c3872d0c63e4b9dfd7af2",
+    "https://unpkg.com/preact@10.11.3/dist/preact.mjs": "846efd95b5dedaa411558c4c328b29b29b915d9612b1b5b5e1fad40c9f1d30a4"
   }
 }
