@@ -31,5 +31,6 @@
   "compilerOptions": {
     "jsx": "react-jsx",
     "jsxImportSource": "preact"
-  }
+  },
+  "importMap": "./.vscode/import_map.json"
 }
