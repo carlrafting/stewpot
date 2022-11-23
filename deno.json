@@ -23,7 +23,6 @@
       ]
     }
   },
-  "importMap": "./.vscode/import_map.json",
   "tasks": {
     "test": "deno test --watch ./packages/deno",
     "check": "deno fmt --check ./packages/deno",
