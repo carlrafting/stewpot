@@ -147,6 +147,10 @@ async function handler({ state, request, module }) {
         initializedHandler.respond()
       );
     }
+
+    if (initializedHandler && typeof initializedHandler === "function") {
+      return initializedHandler();
+    }
   }
 
   // check for existing directory mathing pathname
