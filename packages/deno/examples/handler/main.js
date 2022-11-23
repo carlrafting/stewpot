@@ -2,10 +2,8 @@ import stewpot from "../../stewpot.js";
 
 function handler({ pathname }) {
   if (pathname === '/') {
-    return {
-      run() {
-        return new Response("Hello there from handler.js!")
-      }
+    return () => {
+        return new Response("Hello there from handler.js!");
     };
   }
 }

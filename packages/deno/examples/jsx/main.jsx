@@ -1,5 +1,5 @@
 import stewpot from "stewpot/stewpot.js";
-import { renderToString } from "preact-render-to-string";
+import { renderToString } from "$preact-render-to-string";
 
 function page() {
   return (
@@ -10,24 +10,20 @@ function page() {
   );
 }
 
-const message = 'hello'
-
 function handler({ pathname }) {
   if (pathname === "/") {
-    return {
-      respond() {
-        const html = renderToString(page());
-        // console.log(page,html)
-        return new Response(html, {
-          headers: {
-            "content-type": "text/html"
-          }
-        })
-      }
-    }
+    return () => {
+      const html = renderToString(page());
+      // console.log(page,html)
+      return new Response(html, {
+        headers: {
+          "content-type": "text/html",
+        },
+      });
+    };
   }
 }
 
 stewpot({
-  handler
+  handler,
 });
