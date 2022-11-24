@@ -1,5 +1,4 @@
 import stewpot from "stewpot/stewpot.js";
-import { renderToString } from "preact-render-to-string";
 import { home } from "./pages/home.jsx";
 import { about } from "./pages/about.jsx";
 import jsxPlugin from "stewpot/plugins/jsx.js";
