@@ -6,11 +6,11 @@ import {
   serve,
   serveDir,
   serveFile,
-  eta,
   colors,
 } from "./deps.js";
 import meta from "./stewpot.json" assert { type: "json" };
 import mime from "../node/src/server/mime.js";
+import etaPlugin from "stewpot/plugins/eta.js";
 
 export { meta, mime };
 export { Router } from "./lib/Router.js";
@@ -18,27 +18,58 @@ export { Router } from "./lib/Router.js";
 const port = 80;
 const controller = new AbortController();
 const IS_DEV = Deno.args.includes("--dev") && "watchFs" in Deno;
+const supportedTemplateFormats = ["html"];
+const mergePlugins = true;
+
+const defaultPlugins = [
+  etaPlugin(),
+];
+
+const pluginInstances = [];
 
 export function render(state) {
-  const supportedTemplateFormats = ["html", "eta"];
-  const { templateFormat } = state;
+  const { templateFormat, templateFormats } = state;
 
-  if (!supportedTemplateFormats.includes(templateFormat)) {
+  const templatePlugins = pluginInstances.filter(plugin => plugin.type === "template");
+
+  console.log({ state, templatePlugins, pluginInstances, templateFormat, templateFormats })
+
+  if (!templateFormats.includes(templateFormat)) {
     throw new Error(
       `templateFormat ${templateFormat} is not supported, try one of these instead: ${
-        supportedTemplateFormats.join(", ")
+        templateFormats.join(", ")
       }`,
     );
   }
 
-  async function renderFile(template, data = {}) {
+  function renderInline(template, format, data) {
+    for (const templatePlugin of templatePlugins) {
+      // console.log({templatePlugin})
+      if (format === templatePlugin.name) {
+        if (templatePlugin.renderInline) {
+          return templatePlugin.renderInline(template, data)
+        }
+      }
+    }
+  }
+
+  async function renderFile(template, format, data = {}) {
     const templateDir = join(state.directory, "templates");
     const templatePath = join(
       templateDir,
-      `${template}.${state.templateFormat}`,
+      `${template}.${format}`,
     );
 
-    if (templateFormat === "html") {
+    for (const templatePlugin of templatePlugins) {
+      // console.log({templatePlugin})
+      if (format === templatePlugin.name) {
+        if (templatePlugin.renderFile) {
+          return templatePlugin.renderFile(templateDir, template, data)
+        }
+      }
+    }
+
+    if (format === "html") {
       template = await Deno.readTextFile(templatePath);
 
       if (Object.keys(data).length > 0) {
@@ -49,22 +80,16 @@ export function render(state) {
 
       return template;
     }
-
-    if (templateFormat === "eta") {
-      eta.configure({
-        views: templateDir,
-      });
-
-      return await eta.renderFile(`/${template}`, { ...data });
-    }
   }
 
-  return async (template = "index", { code, data, headers } = {
+  return async (template = "index", { format = templateFormat, inline = false, code, data, headers } = {
     code: 200,
     headers: {},
     data: {},
   }) => {
-    const _template = await renderFile(template, data);
+    const _template = !inline ? await renderFile(template, format, data) : renderInline(template, format, data);
+
+    console.log("_template", _template);
 
     if (_template) {
       // should render be responsible for returning reponses? probably no, should do one thing. render...
@@ -216,6 +241,10 @@ function initializeModule(module) {
 export default async function stewpot(settings = {}) {
   const state = configureApp(IS_DEV, settings);
 
+  if (state.plugins.length > 0) {
+    registerPlugins({ state, settings });
+  }
+
   const module = initializeModule(state.module);
   /*
   if (module === undefined || typeof module !== 'string') {
@@ -248,6 +277,24 @@ function configureHandler({ state, module }) {
     });
 }
 
+function registerPlugins({ state, settings }) {
+  // console.log("mergePlugins", state.mergePlugins);
+  if (state.mergePlugins && settings.plugins) {
+    state.plugins = [
+      ...defaultPlugins,
+      ...settings.plugins
+    ];
+  }
+  // console.log("registerPlugins", state.plugins)
+  for (const plugin of state.plugins) {
+    if (typeof plugin === "function") {
+      const pluginInstance = plugin({ state });
+      pluginInstances.push(pluginInstance);
+    }
+  }
+}
+
+// is this method even necessary?
 function configureApp(isDev, settings = {}) {
   const defaultSettings = {
     port,
@@ -257,6 +304,9 @@ function configureApp(isDev, settings = {}) {
     directory: Deno.cwd(),
     module: "main.js",
     templateFormat: "html",
+    templateFormats: supportedTemplateFormats,
+    plugins: defaultPlugins,
+    mergePlugins,
     meta,
   };
 

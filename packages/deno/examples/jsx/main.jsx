@@ -1,29 +1,24 @@
 import stewpot from "stewpot/stewpot.js";
-import { renderToString } from "$preact-render-to-string";
+import { renderToString } from "preact-render-to-string";
+import { home } from "./pages/home.jsx";
+import { about } from "./pages/about.jsx";
+import jsxPlugin from "stewpot/plugins/jsx.js";
 
-function page() {
-  return (
-    <div>
-      <h1>Current time</h1>
-      <p>{new Date().toLocaleString()}</p>
-    </div>
-  );
-}
-
-function handler({ pathname }) {
+function handler({ pathname, render }) {
   if (pathname === "/") {
     return () => {
-      const html = renderToString(page());
-      // console.log(page,html)
-      return new Response(html, {
-        headers: {
-          "content-type": "text/html",
-        },
-      });
+      return render(home, { inline: true });
+    };
+  }
+  if (pathname === "/about") {
+    return () => {
+      return render(about, { inline: true });
     };
   }
 }
 
 stewpot({
   handler,
+  plugins: [jsxPlugin()],
+  templateFormat: "jsx"
 });
