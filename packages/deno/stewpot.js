@@ -32,7 +32,7 @@ export function render(state) {
 
   const templatePlugins = pluginInstances.filter(plugin => plugin.type === "template");
 
-  console.log({ state, templatePlugins, pluginInstances, templateFormat, templateFormats })
+  // console.log({ state, templatePlugins, pluginInstances, templateFormat, templateFormats })
 
   if (!templateFormats.includes(templateFormat)) {
     throw new Error(
@@ -88,8 +88,6 @@ export function render(state) {
     data: {},
   }) => {
     const _template = !inline ? await renderFile(template, format, data) : renderInline(template, format, data);
-
-    console.log("_template", _template);
 
     if (_template) {
       // should render be responsible for returning reponses? probably no, should do one thing. render...
