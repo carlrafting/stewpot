@@ -1,12 +1,14 @@
-import { parse, resolve, toFileUrl, colors } from "./deps.js";
+import { colors, parse, resolve, toFileUrl } from "./deps.js";
 import stewpot, { meta } from "./stewpot.js";
 import { init } from "./init.js";
 
 const BANNER = `
-${colors.brightBlue(`
+${
+  colors.brightBlue(`
   ┌─┐┌┬┐┌─┐┬ ┬┌─┐┌─┐┌┬┐
   └─┐ │ ├┤ │││├─┘│ │ │ 
-  └─┘ ┴ └─┘└┴┘┴  └─┘ ┴ `)}
+  └─┘ ┴ └─┘└┴┘┴  └─┘ ┴ `)
+}
 
   🍲 ${meta.name}@v${meta.version}
 
@@ -17,12 +19,18 @@ const HELP = `
 
   ${colors.bold("COMMANDS:")}
 
-    ${colors.dim("$")} stewpot init ${colors.brightGreen("<location>")} ${colors.dim("intialize new project at <location>")}
-    ${colors.dim("$")} stewpot serve ${colors.brightGreen("<directory>")} ${colors.brightGreen("<module>")} ${colors.dim("serve module from <directory>")}
+    ${colors.dim("$")} stewpot init ${colors.brightGreen("<location>")} ${
+  colors.dim("intialize new project at <location>")
+}
+    ${colors.dim("$")} stewpot serve ${colors.brightGreen("<directory>")} ${
+  colors.brightGreen("<module>")
+} ${colors.dim("serve module from <directory>")}
 
   ${colors.bold("FLAGS:")}
 
-    ${colors.dim("$")} stewpot --version (-v) ${colors.dim("display installed version")}
+    ${colors.dim("$")} stewpot --version (-v) ${
+  colors.dim("display installed version")
+}
     ${colors.dim("$")} stewpot --help (-h) ${colors.dim("display this help")}
 `;
 
@@ -77,14 +85,13 @@ function main(args) {
     "--": true,
     alias: {
       "version": "v",
-      "help": "h"
-    }
+      "help": "h",
+    },
   });
-  
-  
+
   const [command, directory, module] = args._;
   // const isDev = args.dev;
-  
+
   // console.log(args);
   // console.log('--dev', isDev);
 

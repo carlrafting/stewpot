@@ -20,5 +20,5 @@ function handler({ pathname, render }) {
 stewpot({
   handler,
   plugins: [jsxPlugin()],
-  templateFormat: "jsx"
+  templateFormat: "jsx",
 });

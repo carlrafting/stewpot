@@ -11,11 +11,11 @@ export default () => {
     return {
       type: "template",
       name: "jsx",
-      renderInline(template, /* data */) {
+      renderInline(template /* data */) {
         return renderToString(template);
       },
       /* async renderFile(templateDir, template, data) {
-        
+
       }, */
     };
   };

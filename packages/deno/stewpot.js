@@ -1,4 +1,5 @@
 import {
+  colors,
   // dirname,
   // fromFileUrl,
   // resolve,
@@ -6,7 +7,6 @@ import {
   serve,
   serveDir,
   serveFile,
-  colors,
 } from "./deps.js";
 import meta from "./stewpot.json" assert { type: "json" };
 import mime from "../node/src/server/mime.js";
@@ -30,7 +30,9 @@ const pluginInstances = [];
 export function render(state) {
   const { templateFormat, templateFormats } = state;
 
-  const templatePlugins = pluginInstances.filter(plugin => plugin.type === "template");
+  const templatePlugins = pluginInstances.filter((plugin) =>
+    plugin.type === "template"
+  );
 
   // console.log({ state, templatePlugins, pluginInstances, templateFormat, templateFormats })
 
@@ -47,7 +49,7 @@ export function render(state) {
       // console.log({templatePlugin})
       if (format === templatePlugin.name) {
         if (templatePlugin.renderInline) {
-          return templatePlugin.renderInline(template, data)
+          return templatePlugin.renderInline(template, data);
         }
       }
     }
@@ -64,7 +66,7 @@ export function render(state) {
       // console.log({templatePlugin})
       if (format === templatePlugin.name) {
         if (templatePlugin.renderFile) {
-          return templatePlugin.renderFile(templateDir, template, data)
+          return templatePlugin.renderFile(templateDir, template, data);
         }
       }
     }
@@ -82,12 +84,17 @@ export function render(state) {
     }
   }
 
-  return async (template = "index", { format = templateFormat, inline = false, code, data, headers } = {
-    code: 200,
-    headers: {},
-    data: {},
-  }) => {
-    const _template = !inline ? await renderFile(template, format, data) : renderInline(template, format, data);
+  return async (
+    template = "index",
+    { format = templateFormat, inline = false, code, data, headers } = {
+      code: 200,
+      headers: {},
+      data: {},
+    },
+  ) => {
+    const _template = !inline
+      ? await renderFile(template, format, data)
+      : renderInline(template, format, data);
 
     if (_template) {
       // should render be responsible for returning reponses? probably no, should do one thing. render...
@@ -104,14 +111,14 @@ export function render(state) {
 
 function logNotFound(error, pathname) {
   if (error instanceof Deno.errors.NotFound) {
-    console.log(`${colors.red("404")} - ${pathname}`)
+    console.log(`${colors.red("404")} - ${pathname}`);
   }
 }
 
 async function handler({ state, request, module }) {
   const { pathname } = new URL(request.url);
 
-  const CONTEXT = { 
+  const CONTEXT = {
     state,
     request,
     pathname,
@@ -137,12 +144,14 @@ async function handler({ state, request, module }) {
   // check pathname contains file extension
   if (pathname.includes(".")) {
     hasFileExt = true;
-    
+
     try {
-      const file = await Deno.readFile(join(state.directory, "public", pathname));
+      const file = await Deno.readFile(
+        join(state.directory, "public", pathname),
+      );
 
       if (file) {
-        match = true;      
+        match = true;
       }
     } catch (error) {
       logNotFound(error, pathname);
@@ -280,7 +289,7 @@ function registerPlugins({ state, settings }) {
   if (state.mergePlugins && settings.plugins) {
     state.plugins = [
       ...defaultPlugins,
-      ...settings.plugins
+      ...settings.plugins,
     ];
   }
   // console.log("registerPlugins", state.plugins)
