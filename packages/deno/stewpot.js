@@ -89,27 +89,19 @@ export function render(state) {
     }
   }
 
-  const defaultRenderOptions = {
-    format: templateFormat,
-    inline: false,
-    status: 200,
-    statusText: null,
-    headers: {},
-    data: {},
-  };
-
   return async (
     template = "index",
     {
       format = templateFormat,
       inline = false,
       status = 200,
-      statusText,
+      statusText = null,
       data = {},
       headers = {},
-    } = defaultRenderOptions,
+    } = {},
   ) => {
     // console.log({ format, inline, status, statusText, data, headers });
+
     const _template = !inline
       ? await renderFile(template, format, data)
       : renderInline(template, format, data);
