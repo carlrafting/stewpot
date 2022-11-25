@@ -286,6 +286,7 @@
     "https://deno.land/std@0.166.0/flags/mod.ts": "3b459daf581e047819b6b799c92b96c81b4eecbd5ea025643d54dc0abc6ac923",
     "https://deno.land/std@0.166.0/fmt/colors.ts": "9e36a716611dcd2e4865adea9c4bec916b5c60caad4cdcdc630d4974e6bb8bd4",
     "https://deno.land/std@0.166.0/http/file_server.ts": "b4c5bad224899fc2489d94237bc1e7654c06994f37246c37ea53a347ae72ea59",
+    "https://deno.land/std@0.166.0/http/http_errors.ts": "fe9b7f95f7ee0592c3306f8c7aed03ba53d55d1ef81e00041c1171b9588f46d9",
     "https://deno.land/std@0.166.0/http/http_status.ts": "897575a7d6bc2b9123f6a38ecbc0f03d95a532c5d92029315dc9f508e12526b8",
     "https://deno.land/std@0.166.0/http/server.ts": "e99c1bee8a3f6571ee4cdeb2966efad465b8f6fe62bec1bdb59c1f007cc4d155",
     "https://deno.land/std@0.166.0/http/util.ts": "759a2b57b44b722d2033d0dfe077f7e9a257f431db6d0319b78dcfebed0adb1e",

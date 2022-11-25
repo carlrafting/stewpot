@@ -7,6 +7,10 @@ import {
   serve,
   serveDir,
   serveFile,
+  Status,
+  STATUS_TEXT,
+  errors, 
+  isHttpError
 } from "./deps.js";
 import meta from "./stewpot.json" assert { type: "json" };
 import mime from "../node/src/server/mime.js";
@@ -241,11 +245,25 @@ async function handler({ state, request, module }) {
   }
 
   // if no matches, return 404 Not Found
-  return new Response("404 Not Found", { status: 404 });
+  // return new Response("404 Not Found", { status: 404 });
+  throw new errors.NotFound();
 }
 
 function errorHandler(err) {
-  return new Response(`Internal Server Error! \n${err}`, {
+  if (isHttpError(err)) {
+    if (err.status === 404) {
+      return new Response(`${STATUS_TEXT[Status.NotFound]}`, {
+        status: err.status,
+      });
+    } 
+    if (err.status === 500) {
+      return new Response(`${STATUS_TEXT[Status.InternalServerError]}`, {
+        status: err.status,
+      });
+    }
+  } 
+
+  return new Response(err, {
     status: 500,
   });
 }
