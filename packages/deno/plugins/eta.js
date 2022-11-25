@@ -15,6 +15,10 @@ export default () => {
     return {
       type: "template",
       name: "eta",
+      templateFormat,
+      renderString(template, data) {
+        return eta.render(template, data);
+      },
       async renderFile(templateDir, template, data) {
         configure(templateDir);
         return await eta.renderFile(`/${template}`, { ...data });

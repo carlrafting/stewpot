@@ -11,6 +11,7 @@ export default () => {
     return {
       type: "template",
       name: "jsx",
+      templateFormat,
       renderInline(template /* data */) {
         return renderToString(template);
       },
