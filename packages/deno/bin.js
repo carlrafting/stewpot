@@ -22,9 +22,9 @@ const HELP = `
     ${colors.dim("$")} stewpot init ${colors.brightGreen("<location>")} ${
   colors.dim("intialize new project at <location>")
 }
-    ${colors.dim("$")} stewpot serve ${colors.brightGreen("<directory>")} ${
+    ${colors.dim("$")} stewpot serve ${colors.brightGreen("<root>")} ${
   colors.brightGreen("<module>")
-} ${colors.dim("serve module from <directory>")}
+} ${colors.dim("serve module from <root>")}
 
   ${colors.bold("FLAGS:")}
 
@@ -34,19 +34,19 @@ const HELP = `
     ${colors.dim("$")} stewpot --help (-h) ${colors.dim("display this help")}
 `;
 
-async function serve(directory, module) {
-  if (!directory) {
-    directory = ".";
+async function serve(root, module) {
+  if (!root) {
+    root = ".";
     /* throw new Error(
-      `No directory provided, try 'deno run ${import.meta.url} path/to/directory'`,
+      `No root provided, try 'deno run ${import.meta.url} path/to/root'`,
     ); */
   }
 
-  directory = resolve(directory);
+  root = resolve(root);
 
-  if (directory.endsWith(".js")) {
+  if (root.endsWith(".js")) {
     throw new Error(
-      `Not necessary to provide a file extension, try 'deno run ${import.meta.url} path/to/directory path/to/module'`,
+      `Not necessary to provide a file extension, try 'deno run ${import.meta.url} path/to/root path/to/module'`,
     );
   }
 
@@ -58,8 +58,8 @@ async function serve(directory, module) {
     module = `${module}.js`;
   }
 
-  const path = toFileUrl(resolve(directory, module));
-  // const path = resolve(directory, module);
+  const path = toFileUrl(resolve(root, module));
+  // const path = resolve(root, module);
 
   // console.log(path);
 
@@ -67,7 +67,7 @@ async function serve(directory, module) {
 
   try {
     stewpot({
-      directory,
+      root,
       module,
     });
   } catch (error) {
@@ -89,7 +89,7 @@ function main(args) {
     },
   });
 
-  const [command, directory, module] = args._;
+  const [command, root, module] = args._;
   // const isDev = args.dev;
 
   // console.log(args);
@@ -108,11 +108,11 @@ function main(args) {
   if (
     command === "serve"
   ) {
-    serve(directory, module);
+    serve(root, module);
   }
 
   if (command === "init") {
-    init(directory);
+    init(root);
   }
 }
 

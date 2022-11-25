@@ -20,6 +20,7 @@ const controller = new AbortController();
 const IS_DEV = Deno.args.includes("--dev") && "watchFs" in Deno;
 const supportedTemplateFormats = ["html"];
 const mergePlugins = true;
+const root = Deno.cwd();
 
 const defaultPlugins = [
   etaPlugin(),
@@ -47,16 +48,19 @@ export function render(state) {
   function renderInline(template, format, data) {
     for (const templatePlugin of templatePlugins) {
       // console.log({templatePlugin})
-      if (format === templatePlugin.name) {
+      if (format === templatePlugin.templateFormat) {
         if (templatePlugin.renderInline) {
           return templatePlugin.renderInline(template, data);
+        }
+        if (templatePlugin.renderString) {
+          return templatePlugin.renderString(template, data);
         }
       }
     }
   }
 
   async function renderFile(template, format, data = {}) {
-    const templateDir = join(state.directory, "templates");
+    const templateDir = join(state.root, "templates");
     const templatePath = join(
       templateDir,
       `${template}.${format}`,
@@ -64,9 +68,9 @@ export function render(state) {
 
     for (const templatePlugin of templatePlugins) {
       // console.log({templatePlugin})
-      if (format === templatePlugin.name) {
+      if (format === templatePlugin.templateFormat) {
         if (templatePlugin.renderFile) {
-          return templatePlugin.renderFile(templateDir, template, data);
+          return templatePlugin.renderFile(templateDir, templatePath, data);
         }
       }
     }
@@ -84,14 +88,20 @@ export function render(state) {
     }
   }
 
+  const defaultRenderOptions = {
+    format: templateFormat,
+    inline: false,
+    status: 200,
+    statusText: null,
+    headers: {},
+    data: {},
+  }
+
   return async (
     template = "index",
-    { format = templateFormat, inline = false, code, data, headers } = {
-      code: 200,
-      headers: {},
-      data: {},
-    },
+    { format=templateFormat, inline=false, status=200, statusText, data={}, headers={} } = defaultRenderOptions,
   ) => {
+    // console.log({ format, inline, status, statusText, data, headers });
     const _template = !inline
       ? await renderFile(template, format, data)
       : renderInline(template, format, data);
@@ -99,7 +109,8 @@ export function render(state) {
     if (_template) {
       // should render be responsible for returning reponses? probably no, should do one thing. render...
       return new Response(_template, {
-        status: code,
+        status,
+        statusText,
         headers: {
           "content-type": "text/html",
           ...headers,
@@ -147,7 +158,7 @@ async function handler({ state, request, module }) {
 
     try {
       const file = await Deno.readFile(
-        join(state.directory, "public", pathname),
+        join(state.root, "public", pathname),
       );
 
       if (file) {
@@ -166,29 +177,37 @@ async function handler({ state, request, module }) {
   }
 
   if (handler) {
-    const initializedHandler = handler(CONTEXT);
+    const handlerInstance = handler(CONTEXT);
 
-    if (initializedHandler && Object.hasOwn(initializedHandler, "run")) {
+    for (const method of ["run", "respond"]) {
+      if (handlerInstance && Object.hasOwn(handlerInstance, method)) {
+        return (
+          handlerInstance[method]()
+        );
+      }
+    }
+
+    /* if (handlerInstance && Object.hasOwn(handlerInstance, "run")) {
       return (
-        initializedHandler.run()
+        handlerInstance.run()
       );
     }
 
-    if (initializedHandler && Object.hasOwn(initializedHandler, "respond")) {
+    if (handlerInstance && Object.hasOwn(handlerInstance, "respond")) {
       return (
-        initializedHandler.respond()
+        handlerInstance.respond()
       );
-    }
+    } */
 
-    if (initializedHandler && typeof initializedHandler === "function") {
-      return initializedHandler();
+    if (handlerInstance && typeof handlerInstance === "function") {
+      return handlerInstance();
     }
   }
 
   // check for existing directory mathing pathname
   if (!useRouter) {
     try {
-      const path = join(state.directory, "public", pathname);
+      const path = join(state.root, "public", pathname);
       const { isDirectory } = await Deno.stat(path);
 
       if (isDirectory) {
@@ -200,12 +219,12 @@ async function handler({ state, request, module }) {
   }
 
   if (match && hasFileExt) {
-    const path = join(state.directory, "public", pathname);
+    const path = join(state.root, "public", pathname);
     return serveFile(request, path);
   }
 
   if (match && !hasFileExt) {
-    const path = join(state.directory, "public");
+    const path = join(state.root, "public");
     return serveDir(request, {
       fsRoot: path,
       showIndex: true,
@@ -308,7 +327,8 @@ function configureApp(isDev, settings = {}) {
     controller,
     environment: isDev ? "development" : "production",
     // directory: dirname(fromFileUrl(import.meta.url)),
-    directory: Deno.cwd(),
+    directory: root, // TODO: deprecate config option `directory`, replace with `root`
+    root,
     module: "main.js",
     templateFormat: "html",
     templateFormats: supportedTemplateFormats,

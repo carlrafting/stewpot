@@ -24,7 +24,7 @@ export default function main() {
 if (import.meta.main) {
   try {
     stewpot({
-      directory: join(Deno.cwd(), "packages/deno/examples/router"),
+      root: join(Deno.cwd(), "packages/deno/examples/router"),
       module: main,
     });
   } catch (error) {

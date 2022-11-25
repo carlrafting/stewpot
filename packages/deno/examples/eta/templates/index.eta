@@ -1,1 +1,1 @@
-<h1>Hello eta!</h1>
+<h1>Hello from <%= it.message %>!</h1>
