@@ -61,21 +61,22 @@ export function render(state) {
 
   async function renderFile(template, format, data = {}) {
     const templateDir = join(state.root, "templates");
-    const templatePath = join(
-      templateDir,
-      `${template}.${format}`,
-    );
 
     for (const templatePlugin of templatePlugins) {
       // console.log({templatePlugin})
       if (format === templatePlugin.templateFormat) {
         if (templatePlugin.renderFile) {
-          return templatePlugin.renderFile(templateDir, templatePath, data);
+          return templatePlugin.renderFile(templateDir, template, data);
         }
       }
     }
 
     if (format === "html") {
+      const templatePath = join(
+        templateDir,
+        `${template}.${format}`,
+      );
+
       template = await Deno.readTextFile(templatePath);
 
       if (Object.keys(data).length > 0) {
@@ -95,11 +96,18 @@ export function render(state) {
     statusText: null,
     headers: {},
     data: {},
-  }
+  };
 
   return async (
     template = "index",
-    { format=templateFormat, inline=false, status=200, statusText, data={}, headers={} } = defaultRenderOptions,
+    {
+      format = templateFormat,
+      inline = false,
+      status = 200,
+      statusText,
+      data = {},
+      headers = {},
+    } = defaultRenderOptions,
   ) => {
     // console.log({ format, inline, status, statusText, data, headers });
     const _template = !inline

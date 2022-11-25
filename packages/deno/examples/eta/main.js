@@ -9,7 +9,10 @@ function handler({ pathname, render }) {
   }
   if (pathname === "/string") {
     return async () => {
-      return await render("<h1>Hello from <%= it.message %>!</h1>", { inline: true, data: { message: "eta" } });
+      return await render("<h1>Hello from <%= it.message %>!</h1>", {
+        inline: true,
+        data: { message: "eta" },
+      });
     };
   }
 }

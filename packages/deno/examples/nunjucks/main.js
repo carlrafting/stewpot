@@ -10,7 +10,10 @@ function handler({ pathname, render }) {
   }
   if (pathname === "/string") {
     return async () => {
-      return await render("<h1>Hello from {{ message }}!</h1>", { inline: true, data: { message: "Nunjucks" } });
+      return await render("<h1>Hello from {{ message }}!</h1>", {
+        inline: true,
+        data: { message: "Nunjucks" },
+      });
     };
   }
 }
@@ -20,7 +23,7 @@ if (import.meta.main) {
     root: join(Deno.cwd(), "packages/deno/examples/nunjucks"),
     handler,
     plugins: [
-      nunjucksPlugin()
+      nunjucksPlugin(),
     ],
     templateFormat: "njk",
   });

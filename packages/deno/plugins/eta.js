@@ -7,7 +7,7 @@ export default () => {
     state.templateFormats.push(templateFormat);
 
     function configure(templateDir) {
-      eta.configure({
+      return eta.configure({
         views: templateDir,
       });
     }
@@ -21,7 +21,7 @@ export default () => {
       },
       async renderFile(templateDir, template, data) {
         configure(templateDir);
-        return await eta.renderFile(`/${template}`, { ...data });
+        return await eta.renderFile(`${template}`, { ...data });
       },
     };
   };
