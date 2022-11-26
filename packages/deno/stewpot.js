@@ -1,7 +1,9 @@
 import {
   colors,
+  errors,
   // dirname,
-  // fromFileUrl,
+  fromFileUrl,
+  isHttpError,
   // resolve,
   join,
   serve,
@@ -9,8 +11,6 @@ import {
   serveFile,
   Status,
   STATUS_TEXT,
-  errors, 
-  isHttpError
 } from "./deps.js";
 import meta from "./stewpot.json" assert { type: "json" };
 import mime from "../node/src/server/mime.js";
@@ -249,19 +249,52 @@ async function handler({ state, request, module }) {
   throw new errors.NotFound();
 }
 
-function errorHandler(err) {
+const notFoundTemplate = (err, styles) =>
+  `
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>${err.message}</title>
+<style>${styles}</style>
+<header>
+<h1>${err.status} ${err.message}</h1>
+<p>Stewpot wasn't able to find any matches for <code>${location}</code>.
+</header>
+${
+    IS_DEV
+      ? `
+<main>
+<pre>${err.stack}</pre>
+</main>
+`
+      : ""
+  }
+        `.trim();
+
+const styles = async (path) =>
+  await Deno.readTextFile(fromFileUrl(import.meta.resolve(path)));
+
+async function errorHandler(err) {
   if (isHttpError(err)) {
     if (err.status === 404) {
-      return new Response(`${STATUS_TEXT[Status.NotFound]}`, {
-        status: err.status,
-      });
-    } 
+      // `${STATUS_TEXT[Status.NotFound]}`
+      return new Response(
+        notFoundTemplate(err, await styles("../node/src/static/styles.css")),
+        {
+          headers: {
+            "content-type": "text/html",
+          },
+          status: err.status,
+        },
+      );
+    }
     if (err.status === 500) {
       return new Response(`${STATUS_TEXT[Status.InternalServerError]}`, {
         status: err.status,
       });
     }
-  } 
+  }
 
   return new Response(err, {
     status: 500,

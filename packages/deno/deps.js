@@ -8,7 +8,10 @@ export {
 export { serve } from "https://deno.land/std@0.166.0/http/server.ts";
 export { parse } from "https://deno.land/std@0.166.0/flags/mod.ts";
 export * as colors from "https://deno.land/std@0.166.0/fmt/colors.ts";
-export { errors, isHttpError } from "https://deno.land/std@0.166.0/http/http_errors.ts";
+export {
+  errors,
+  isHttpError,
+} from "https://deno.land/std@0.166.0/http/http_errors.ts";
 export {
   Status,
   STATUS_TEXT,
