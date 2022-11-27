@@ -246,20 +246,21 @@ async function handler({ state, request, module }) {
 
   // if no matches, return 404 Not Found
   // return new Response("404 Not Found", { status: 404 });
-  throw new errors.NotFound();
+  throw new errors.NotFound(
+    `Stewpot wasn't able to find any matches for ${pathname}.`,
+  );
 }
 
-const notFoundTemplate = (err, styles) =>
+const errorTemplate = async (err, title) =>
   `
 <!doctype html>
 <html lang="en">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>${err.message}</title>
-<style>${styles}</style>
+<title>${title}</title>
+<style>${await styles()}</style>
 <header>
-<h1>${err.status} ${err.message}</h1>
-<p>Stewpot wasn't able to find any matches for <code>${location}</code>.
+<h1>${err.message}</h1>
 </header>
 ${
     IS_DEV
@@ -272,15 +273,18 @@ ${
   }
         `.trim();
 
-const styles = async (path) =>
+const styles = async (path = "../node/src/static/styles.css") =>
   await Deno.readTextFile(fromFileUrl(import.meta.resolve(path)));
 
 async function errorHandler(err) {
+  console.log(err);
   if (isHttpError(err)) {
     if (err.status === 404) {
-      // `${STATUS_TEXT[Status.NotFound]}`
       return new Response(
-        notFoundTemplate(err, await styles("../node/src/static/styles.css")),
+        await errorTemplate(
+          err,
+          `${Status.NotFound} ${STATUS_TEXT[Status.NotFound]}`,
+        ),
         {
           headers: {
             "content-type": "text/html",
@@ -289,16 +293,38 @@ async function errorHandler(err) {
         },
       );
     }
-    if (err.status === 500) {
-      return new Response(`${STATUS_TEXT[Status.InternalServerError]}`, {
-        status: err.status,
-      });
-    }
+    /* if (err.status === 500) {
+      return new Response(
+        await errorTemplate(
+          err,
+          `${Status.InternalServerError} ${
+            STATUS_TEXT[Status.InternalServerError]
+          }`,
+        ),
+        { 
+          headers: {
+            "content-type": "text/html",
+          },
+          status: err.status,
+        },
+      );
+    } */
   }
 
-  return new Response(err, {
-    status: 500,
-  });
+  return new Response(
+    await errorTemplate(
+      err,
+      `${Status.InternalServerError} ${
+        STATUS_TEXT[Status.InternalServerError]
+      }`,
+    ),
+    {
+      headers: {
+        "content-type": "text/html",
+      },
+      status: 500,
+    },
+  );
 }
 
 function initializeModule(module) {
