@@ -1,5 +1,5 @@
 import stewpot, { Router } from "../../stewpot.js";
-import { join } from "../../deps.js";
+import { join, errors } from "../../deps.js";
 
 export default function main() {
   const router = new Router();
@@ -14,6 +14,10 @@ export default function main() {
 
   router.add("GET", "/boom", () => {
     throw Error("BOOM!");
+  });
+
+  router.add("GET", "/error", () => {
+    throw new errors.InternalServerError("Something went wrong!");
   });
 
   return {
