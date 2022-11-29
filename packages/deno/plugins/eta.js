@@ -14,7 +14,7 @@ export default () => {
 
     return {
       type: "template",
-      name: "eta",
+      name: "etaPlugin",
       templateFormat,
       renderString(template, data) {
         return eta.render(template, data);

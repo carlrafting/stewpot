@@ -30,12 +30,12 @@ const defaultPlugins = [
   etaPlugin(),
 ];
 
-const pluginInstances = [];
+const pluginInstances = new Map();
 
 export function render(state) {
   const { templateFormat, templateFormats } = state;
 
-  const templatePlugins = pluginInstances.filter((plugin) =>
+  const templatePlugins = [...pluginInstances.values()].filter((plugin) =>
     plugin.type === "template"
   );
 
@@ -392,7 +392,7 @@ function registerPlugins({ state, settings }) {
   for (const plugin of state.plugins) {
     if (typeof plugin === "function") {
       const pluginInstance = plugin({ state });
-      pluginInstances.push(pluginInstance);
+      pluginInstances.set(pluginInstance.name, pluginInstance);
     }
   }
 }

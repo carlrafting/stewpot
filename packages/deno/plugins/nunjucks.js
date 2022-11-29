@@ -12,7 +12,7 @@ export default () => {
 
     return {
       type: "template",
-      name: "nunjucks",
+      name: "nunjucksPlugin",
       templateFormat,
       renderString(template, data) {
         return nunjucks.renderString(template, data);
