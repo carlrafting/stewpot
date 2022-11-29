@@ -6,12 +6,12 @@ import jsxPlugin from "stewpot/plugins/jsx.js";
 function handler({ pathname, render }) {
   if (pathname === "/") {
     return () => {
-      return render(home, { inline: true });
+      return render(home, { inline: true, data: { title: "Welcome Home!"} });
     };
   }
   if (pathname === "/about") {
     return () => {
-      return render(about, { inline: true });
+      return render(about, { inline: true, data: { title: "Welcome to About" } });
     };
   }
 }
