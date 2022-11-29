@@ -209,7 +209,7 @@ async function handler({ state, request, module }) {
   }
 
   // check for existing directory mathing pathname
-  if (!useRouter) {
+  if (!useRouter && !hasFileExt) {
     try {
       const path = join(state.root, "public", pathname);
       const { isDirectory } = await Deno.stat(path);
