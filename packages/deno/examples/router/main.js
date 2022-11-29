@@ -1,5 +1,5 @@
 import stewpot, { Router } from "../../stewpot.js";
-import { join, errors } from "../../deps.js";
+import { errors, join } from "../../deps.js";
 
 export default function main() {
   const router = new Router();
