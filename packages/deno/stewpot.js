@@ -39,7 +39,13 @@ export function render(state) {
     plugin.type === "template"
   );
 
-  // console.log({ state, templatePlugins, pluginInstances, templateFormat, templateFormats })
+  /* console.log({
+    state,
+    templatePlugins,
+    pluginInstances,
+    templateFormat,
+    templateFormats,
+  }); */
 
   if (!templateFormats.includes(templateFormat)) {
     throw new Error(
@@ -181,7 +187,7 @@ async function handler({ state, request, module }) {
   }
 
   if (handler) {
-    const handlerInstance = handler(CONTEXT);
+    const handlerInstance = await handler(CONTEXT);
 
     for (const method of ["run", "respond"]) {
       if (handlerInstance && Object.hasOwn(handlerInstance, method)) {
@@ -247,7 +253,7 @@ async function handler({ state, request, module }) {
   // if no matches, return 404 Not Found
   // return new Response("404 Not Found", { status: 404 });
   throw new errors.NotFound(
-    `Stewpot wasn't able to find any matches for ${pathname}.`,
+    `Stewpot wasn't able to find any matches for ${pathname}`,
   );
 }
 
@@ -257,10 +263,11 @@ const errorTemplate = async (err, title) =>
 <html lang="en">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>${title}</title>
+<title>${err.message} - ${title}</title>
 <style>${await styles()}</style>
 <header>
 <h1>${err.message}</h1>
+<h2>${title}</h2>
 </header>
 ${
     IS_DEV
@@ -277,7 +284,7 @@ const styles = async (path = "../node/src/static/styles.css") =>
   await Deno.readTextFile(fromFileUrl(import.meta.resolve(path)));
 
 async function errorHandler(err) {
-  console.log(err);
+  // console.log(err);
   if (isHttpError(err)) {
     if (err.status === 404) {
       return new Response(
@@ -301,7 +308,7 @@ async function errorHandler(err) {
             STATUS_TEXT[Status.InternalServerError]
           }`,
         ),
-        { 
+        {
           headers: {
             "content-type": "text/html",
           },
