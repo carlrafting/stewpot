@@ -1,18 +1,18 @@
-import stewpot from "stewpot/stewpot.js";
+import stewpot, { send } from "stewpot/stewpot.js";
 import { join } from "../../deps.js";
 
 function handler({ pathname, render }) {
   if (pathname === "/") {
     return async () => {
-      return await render("index", { data: { message: "eta" } });
+      return send(await render("index", { data: { message: "eta" } }));
     };
   }
   if (pathname === "/string") {
     return async () => {
-      return await render("<h1>Hello from <%= it.message %>!</h1>", {
+      return send(await render("<h1>Hello from <%= it.message %>!</h1>", {
         inline: true,
         data: { message: "eta" },
-      });
+      }));
     };
   }
 }

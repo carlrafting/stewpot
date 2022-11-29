@@ -1,10 +1,10 @@
 import {
+  // resolve,
+  // dirname,
   colors,
   errors,
-  // dirname,
   fromFileUrl,
   isHttpError,
-  // resolve,
   join,
   serve,
   serveDir,
@@ -31,6 +31,29 @@ const defaultPlugins = [
 ];
 
 const pluginInstances = new Map();
+
+const html = {
+  injectData(data, template) {
+    if (Object.keys(data).length > 0) {
+      for (const [key, value] of Object.entries(data)) {
+        template = template.replaceAll(`{{ ${key} }}`, value);
+      }
+    }
+    return template;
+  },
+  async renderFile(templateDir, template) {
+    const templatePath = join(
+      templateDir,
+      `${template}.html`,
+    );
+
+    try {
+      return template = await Deno.readTextFile(templatePath);
+    } catch (error) {
+      console.log(error);
+    }
+  },
+};
 
 export function render(state) {
   const { templateFormat, templateFormats } = state;
@@ -67,6 +90,9 @@ export function render(state) {
         }
       }
     }
+    if (format === "html") {
+      return html.injectData(data, template);
+    }
   }
 
   async function renderFile(template, format, data = {}) {
@@ -82,19 +108,8 @@ export function render(state) {
     }
 
     if (format === "html") {
-      const templatePath = join(
-        templateDir,
-        `${template}.${format}`,
-      );
-
-      template = await Deno.readTextFile(templatePath);
-
-      if (Object.keys(data).length > 0) {
-        for (const [key, value] of Object.entries(data)) {
-          template = template.replaceAll(`{{ ${key} }}`, value);
-        }
-      }
-
+      template = await html.renderFile(templateDir, template);
+      template = html.injectData(data, template);
       return template;
     }
   }
@@ -104,30 +119,57 @@ export function render(state) {
     {
       format = templateFormat,
       inline = false,
-      status = 200,
-      statusText = null,
       data = {},
-      headers = {},
     } = {},
   ) => {
-    // console.log({ format, inline, status, statusText, data, headers });
+    // console.log({ format, inline, data });
 
     const _template = !inline
       ? await renderFile(template, format, data)
       : renderInline(template, format, data);
 
     if (_template) {
-      // should render be responsible for returning reponses? probably no, should do one thing. render...
-      return new Response(_template, {
-        status,
-        statusText,
-        headers: {
-          "content-type": "text/html",
-          ...headers,
-        },
-      });
+      return _template;
     }
   };
+}
+
+export function send(body, status = 200, statusText, headers = {}) {
+  return new Response(body, {
+    status,
+    statusText,
+    headers: {
+      "content-type": "text/html",
+      ...headers,
+    },
+  });
+}
+
+function defaultHandler({ pathname, render }) {
+  if (pathname === "/") {
+    return async () => {
+      const template = await Deno.readTextFile(
+        fromFileUrl(import.meta.resolve("./templates/index.html")),
+      );
+      return send(
+        await render(
+          template,
+          {
+            inline: true,
+            data: {
+              ...meta,
+              title: "Stewpot",
+            },
+          },
+        ),
+      );
+    };
+  }
+
+  if (pathname === "/styles.css") {
+    return async () =>
+      send(await styles(), 200, null, { "content-type": "text/css" });
+  }
 }
 
 function logNotFound(error, pathname) {
@@ -146,11 +188,9 @@ async function handler({ state, request, module }) {
     render: render(state),
   };
 
-  let match = false;
+  let serveStatic = false;
   let hasFileExt = false;
   let useRouter = false;
-
-  const handler = state.handler || module.handler;
 
   /* if (IS_DEV) {
     console.log({
@@ -172,7 +212,7 @@ async function handler({ state, request, module }) {
       );
 
       if (file) {
-        match = true;
+        serveStatic = true;
       }
     } catch (error) {
       logNotFound(error, pathname);
@@ -186,54 +226,29 @@ async function handler({ state, request, module }) {
     useRouter = true;
   }
 
-  if (handler) {
-    const handlerInstance = await handler(CONTEXT);
-
-    for (const method of ["run", "respond"]) {
-      if (handlerInstance && Object.hasOwn(handlerInstance, method)) {
-        return (
-          handlerInstance[method]()
-        );
-      }
-    }
-
-    /* if (handlerInstance && Object.hasOwn(handlerInstance, "run")) {
-      return (
-        handlerInstance.run()
-      );
-    }
-
-    if (handlerInstance && Object.hasOwn(handlerInstance, "respond")) {
-      return (
-        handlerInstance.respond()
-      );
-    } */
-
-    if (handlerInstance && typeof handlerInstance === "function") {
-      return handlerInstance();
-    }
-  }
-
   // check for existing directory mathing pathname
-  if (!useRouter && !hasFileExt) {
+  if (!useRouter && !hasFileExt && pathname !== "/") {
     try {
       const path = join(state.root, "public", pathname);
       const { isDirectory } = await Deno.stat(path);
 
       if (isDirectory) {
-        match = true;
+        serveStatic = true;
       }
     } catch (error) {
       logNotFound(error, pathname);
     }
   }
 
-  if (match && hasFileExt) {
+  const handler = state?.handler || module?.handler ||
+    (IS_DEV && !useRouter && !serveStatic) && defaultHandler;
+
+  if (serveStatic && hasFileExt) {
     const path = join(state.root, "public", pathname);
     return serveFile(request, path);
   }
 
-  if (match && !hasFileExt) {
+  if (serveStatic && !hasFileExt) {
     const path = join(state.root, "public");
     return serveDir(request, {
       fsRoot: path,
@@ -247,6 +262,22 @@ async function handler({ state, request, module }) {
       return await module.router.route(CONTEXT);
     } catch (error) {
       throw error;
+    }
+  }
+
+  if (handler) {
+    const handlerInstance = await handler(CONTEXT);
+
+    for (const method of ["run", "respond"]) {
+      if (handlerInstance && Object.hasOwn(handlerInstance, method)) {
+        return (
+          handlerInstance[method]()
+        );
+      }
+    }
+
+    if (handlerInstance && typeof handlerInstance === "function") {
+      return handlerInstance();
     }
   }
 
@@ -280,7 +311,7 @@ ${
   }
         `.trim();
 
-const styles = async (path = "../node/src/static/styles.css") =>
+const styles = async (path = "./templates/styles.css") =>
   await Deno.readTextFile(fromFileUrl(import.meta.resolve(path)));
 
 async function errorHandler(err) {

@@ -1,15 +1,15 @@
-import stewpot, { Router } from "../../stewpot.js";
+import stewpot, { Router, send } from "../../stewpot.js";
 import { errors, join } from "../../deps.js";
 
 export default function main() {
   const router = new Router();
 
   router.add("GET", "/", async ({ render }) => {
-    return await render("index");
+    return send(await render("index"));
   });
 
   router.add("GET", "/posts", async ({ render }) => {
-    return await render("posts/index");
+    return send(await render("posts/index"));
   });
 
   router.add("GET", "/boom", () => {

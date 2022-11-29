@@ -1,33 +1,28 @@
-import { dirname, join, resolve } from "./deps.js";
+import { dirname, join, resolve, fromFileUrl } from "./deps.js";
 
-const STD_VERSION = "0.165.0";
+const STD_VERSION = "0.166.0";
 const DENO_JSON_NAME = "deno.json";
-const DENO_JSON_CONTENT = `{
-  "importMap": "import_map.json",
+const DENO_JSON_CONTENT = {
+  "importMap": "./import_map.json",
   "tasks": {
-    "bin": "deno run ${import.meta.resolve("./bin.js")}",
     "dev": "deno run --watch --allow-net --allow-read main.js --dev"
   }
-}`;
+};
 const IMPORT_MAP_NAME = "import_map.json";
-const IMPORT_MAP_CONTENT = `{
+const IMPORT_MAP = {
   "imports": {
-    "stewpot/": "${dirname(import.meta.url)}/",
-    "http/": "https://deno.land/std@${STD_VERSION}/http/",
-    "path/": "https://deno.land/std@${STD_VERSION}/path/"
+    "stewpot/": `${dirname(import.meta.url)}/`,
+    "http/": `https://deno.land/std@${STD_VERSION}/http/`,
+    "path/": `https://deno.land/std@${STD_VERSION}/path/`
   }
-}`;
-const MAIN_NAME = "main.js";
-const MAIN_CONTENT = `
+};
+const MAIN_FILE = {
+  name: "main.js",
+  content: `
 import stewpot from "stewpot/stewpot.js";
 
-function handler() {
-  return new Response("Hello World!");
-}
-
-stewpot({
-  handler,
-});`.trim();
+stewpot();`.trim()
+};
 
 export async function init(directory) {
   directory = resolve(directory);
@@ -50,26 +45,59 @@ export async function init(directory) {
     }
   }
 
+  if (confirm("Does your project require JSX?")) {
+    IMPORT_MAP.imports = {
+      ...IMPORT_MAP.imports,
+      "preact": "https://esm.sh/preact@10.11.3",
+      "preact/": "https://esm.sh/preact@10.11.3/",
+      "preact-render-to-string": "https://esm.sh/preact-render-to-string@5.2.6?external=preact"
+    }
+    MAIN_FILE.name = "main.jsx";
+    MAIN_FILE.content = `
+  import stewpot, { send } from "stewpot/stewpot.js";
+  import jsxPlugin from "stewpot/plugins/jsx.js";
+  
+  function handler({ pathname, render }) {
+    if (pathname === "/") {
+      return async () => {
+        return send(await render(<h1>Hello Stewpot</h1>, { inline: true, data: { title: "Welcome Home!"} }));
+      };
+    }
+  }
+  
+  stewpot({
+    handler,
+    plugins: [jsxPlugin()],
+    templateFormat: "jsx",
+  });`.trim();
+    DENO_JSON_CONTENT["tasks"] = {"dev": `deno run --watch --allow-net --allow-read ${MAIN_FILE.name} --dev`}
+    DENO_JSON_CONTENT["compilerOptions"] = {
+      "jsx": "react-jsx",
+      "jsxImportSource": "preact"
+    }
+  }
+
   await Deno.mkdir(join(directory, "public"), { recursive: true });
   await Deno.mkdir(join(directory, "templates"), { recursive: true });
   await Deno.writeTextFile(
-    join(directory, MAIN_NAME),
-    MAIN_CONTENT,
+    join(directory, MAIN_FILE.name),
+    MAIN_FILE.content,
   );
+  // await Deno.copyFile(fromFileUrl(import.meta.resolve("./templates/main.js")), join(directory, MAIN_FILE.name));
   await Deno.writeTextFile(
     join(directory, "templates/index.html"),
     "<h1>Hello Stewpot</h1>",
   );
   await Deno.writeTextFile(
     join(directory, DENO_JSON_NAME),
-    DENO_JSON_CONTENT,
+    JSON.stringify(DENO_JSON_CONTENT, null, 2),
   );
   await Deno.writeTextFile(
     join(directory, IMPORT_MAP_NAME),
-    IMPORT_MAP_CONTENT,
+    JSON.stringify(IMPORT_MAP, null, 2),
   );
   console.log(
-    "Initialized new stewpot project, run `deno task dev` to get started!",
+    "Initialized new project with stewpot, run `deno task dev` to get started!",
   );
 }
 
