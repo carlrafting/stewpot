@@ -1,27 +1,27 @@
-import { dirname, join, resolve, fromFileUrl } from "./deps.js";
+import { dirname, /* fromFileUrl, */ join, resolve } from "./deps.js";
 
 const STD_VERSION = "0.167.0";
 const DENO_JSON_NAME = "deno.json";
 const DENO_JSON_CONTENT = {
   "importMap": "./import_map.json",
   "tasks": {
-    "dev": "deno run --watch --allow-net --allow-read main.js --dev"
-  }
+    "dev": "deno run --watch --allow-net --allow-read main.js --dev",
+  },
 };
 const IMPORT_MAP_NAME = "import_map.json";
 const IMPORT_MAP = {
   "imports": {
     "stewpot/": `${dirname(import.meta.url)}/`,
     "http/": `https://deno.land/std@${STD_VERSION}/http/`,
-    "path/": `https://deno.land/std@${STD_VERSION}/path/`
-  }
+    "path/": `https://deno.land/std@${STD_VERSION}/path/`,
+  },
 };
 const MAIN_FILE = {
   name: "main.js",
   content: `
 import stewpot from "stewpot/stewpot.js";
 
-stewpot();`.trim()
+stewpot();`.trim(),
 };
 
 export async function init(directory) {
@@ -50,8 +50,9 @@ export async function init(directory) {
       ...IMPORT_MAP.imports,
       "preact": "https://esm.sh/preact@10.11.3",
       "preact/": "https://esm.sh/preact@10.11.3/",
-      "preact-render-to-string": "https://esm.sh/preact-render-to-string@5.2.6?external=preact"
-    }
+      "preact-render-to-string":
+        "https://esm.sh/preact-render-to-string@5.2.6?external=preact",
+    };
     MAIN_FILE.name = "main.jsx";
     MAIN_FILE.content = `
   import stewpot, { send } from "stewpot/stewpot.js";
@@ -70,11 +71,14 @@ export async function init(directory) {
     plugins: [jsxPlugin()],
     templateFormat: "jsx",
   });`.trim();
-    DENO_JSON_CONTENT["tasks"] = {"dev": `deno run --watch --allow-net --allow-read ${MAIN_FILE.name} --dev`}
+    DENO_JSON_CONTENT["tasks"] = {
+      "dev":
+        `deno run --watch --allow-net --allow-read ${MAIN_FILE.name} --dev`,
+    };
     DENO_JSON_CONTENT["compilerOptions"] = {
       "jsx": "react-jsx",
-      "jsxImportSource": "preact"
-    }
+      "jsxImportSource": "preact",
+    };
   }
 
   await Deno.mkdir(join(directory, "public"), { recursive: true });
