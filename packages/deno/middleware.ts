@@ -1,4 +1,4 @@
-import { getCookies } from "./deps.js";
+// import { getCookies } from "./deps.js";
 
 export function cookies(_config = {}) {
   return function cookiesMiddleware(
@@ -6,7 +6,7 @@ export function cookies(_config = {}) {
     next: (req: Request) => Response,
   ) {
     const res = next(req);
-    const cookies = getCookies(req.headers);
+    // const cookies = getCookies(req.headers);
     // console.log(cookies);
     return res;
   };
