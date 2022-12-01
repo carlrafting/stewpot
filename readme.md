@@ -47,7 +47,7 @@ Now that the project is initialized, we can run the following command:
 $ deno task dev
 ```
 
-If you've installed the stewpot cli, [as described above](#install-optional), you can run the following command:
+If you've installed the stewpot cli, [as described above](#install), you can run the following command:
 
 ```bash
 $ stewpot serve path/to/dir path/to/main --dev
