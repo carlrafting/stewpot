@@ -479,7 +479,7 @@ function configureHandler({ state, module }) {
   const respondWithMiddleware = composeMiddleware({ state, module });
 
   return (request) => {
-    const url = new URL(request.url);
+    /* const url = new URL(request.url);
     const { pathname } = url;
 
     const CONTEXT = {
@@ -488,7 +488,7 @@ function configureHandler({ state, module }) {
       url,
       pathname,
       render: render(state),
-    };
+    }; */
 
     return respondWithMiddleware(request, [...middlewares, serveStatic(state)], inner)
     /* inner({
