@@ -15,6 +15,7 @@ import {
 import meta from "./stewpot.json" assert { type: "json" };
 import mime from "../node/src/server/mime.js";
 import etaPlugin from "stewpot/plugins/eta.js";
+import { composeMiddleware, middlewares, } from "./middleware.ts";
 
 export { meta, mime };
 export { Router } from "./lib/Router.js";
@@ -178,8 +179,62 @@ function logNotFound(error, pathname) {
   }
 }
 
-async function handler({ state, request, module }) {
-  const { pathname } = new URL(request.url);
+function serveStatic({ root }) {
+  return async function serveStaticMiddleware(request, next) {
+    const { pathname } = new URL(request.url);
+
+    let serveStatic = false;
+    let hasFileExt = false;
+
+    if (pathname.includes(".")) {
+      hasFileExt = true;
+  
+      try {
+        const file = await Deno.readFile(
+          join(root, "public", pathname),
+        );
+  
+        if (file) {
+          serveStatic = true;
+        }
+      } catch (error) {
+        logNotFound(error, pathname);
+      }
+    }
+
+    if (!hasFileExt && pathname !== "/") {
+      try {
+        const path = join(root, "public", pathname);
+        const { isDirectory } = await Deno.stat(path);
+  
+        if (isDirectory) {
+          serveStatic = true;
+        }
+      } catch (error) {
+        logNotFound(error, pathname);
+      }
+    }
+
+    if (serveStatic && hasFileExt) {
+      const path = join(root, "public", pathname);
+      return serveFile(request, path);
+    }
+  
+    if (serveStatic && !hasFileExt) {
+      const path = join(root, "public");
+      return serveDir(request, {
+        fsRoot: path,
+        showIndex: true,
+      });
+    }
+
+    return next(request);
+  }
+}
+
+async function handler({ state, /* pathname, */ /* url, */ request, module }) {
+  const url = new URL(request.url);
+  const { pathname } = url;
 
   const CONTEXT = {
     state,
@@ -188,14 +243,24 @@ async function handler({ state, request, module }) {
     render: render(state),
   };
 
-  let serveStatic = false;
-  let hasFileExt = false;
+  // const { state, pathname, url, request, module } = CONTEXT;
+
+  // redirect url pathnames like /about/ to /about
+  // this means we cant define /about/ in handlers and routers
+  // unless i fix it some other way, or perhaps document it
+  // another option would be to make it configurable
+  if (pathname.length > 1 && pathname.endsWith("/")) {
+    url.pathname = pathname.slice(0, -1);
+    return Response.redirect(url.href, 307);
+  }
+
+  // let serveStatic = false;
+  // let hasFileExt = false;
   let useRouter = false;
 
   /* if (IS_DEV) {
     console.log({
       module,
-      handler,
       state,
       pathname,
       url: request.url,
@@ -203,7 +268,7 @@ async function handler({ state, request, module }) {
   } */
 
   // check pathname contains file extension
-  if (pathname.includes(".")) {
+  /* if (pathname.includes(".")) {
     hasFileExt = true;
 
     try {
@@ -217,7 +282,7 @@ async function handler({ state, request, module }) {
     } catch (error) {
       logNotFound(error, pathname);
     }
-  }
+  } */
 
   // continue if pathname is added route path, otherwise we'll serve public/
   if (
@@ -227,7 +292,7 @@ async function handler({ state, request, module }) {
   }
 
   // check for existing directory mathing pathname
-  if (!useRouter && !hasFileExt && pathname !== "/") {
+  /* if (!useRouter && !hasFileExt && pathname !== "/") {
     try {
       const path = join(state.root, "public", pathname);
       const { isDirectory } = await Deno.stat(path);
@@ -238,12 +303,12 @@ async function handler({ state, request, module }) {
     } catch (error) {
       logNotFound(error, pathname);
     }
-  }
+  } */
 
   const handler = state?.handler || module?.handler ||
-    (IS_DEV && !useRouter && !serveStatic) && defaultHandler;
+    (IS_DEV && !useRouter) && defaultHandler;
 
-  if (serveStatic && hasFileExt) {
+  /* if (serveStatic && hasFileExt) {
     const path = join(state.root, "public", pathname);
     return serveFile(request, path);
   }
@@ -254,7 +319,7 @@ async function handler({ state, request, module }) {
       fsRoot: path,
       showIndex: true,
     });
-  }
+  } */
 
   // if module exports a router, we initialize it here...
   if (useRouter) {
@@ -410,12 +475,28 @@ export default async function stewpot(settings = {}) {
 }
 
 function configureHandler({ state, module }) {
-  return (request) =>
-    handler({
+  const inner = handler;
+  const respondWithMiddleware = composeMiddleware({ state, module });
+
+  return (request) => {
+    const url = new URL(request.url);
+    const { pathname } = url;
+
+    const CONTEXT = {
+      state,
+      request,
+      url,
+      pathname,
+      render: render(state),
+    };
+
+    return respondWithMiddleware(request, [...middlewares, serveStatic(state)], inner)
+    /* inner({
       state,
       module,
       request,
-    });
+    }); */
+  }
 }
 
 function registerPlugins({ state, settings }) {
