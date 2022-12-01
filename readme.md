@@ -23,13 +23,13 @@ recently switched to targeting Deno environments. Source code for node.js will
 eventually be deprecated when the relevant implementations are ported to the
 Deno platform.
 
-## Install
+## Install (Optional)
 
 Stewpot provides a CLI module for running and initializing projects. Instead of
 writing urls everytime you invoke a certain command, you can install it locally.
 
 ```bash
-$ deno install -A --name=stewpot $URL/bin.js
+$ deno install -Af --name=stewpot ${URL}/packages/deno/cli.js
 ```
 
 To get started with a new project, you can use stewpot's init command to
@@ -45,4 +45,10 @@ Now that the project is initialized, we can run the following command:
 
 ```bash
 $ deno task dev
+```
+
+If you've installed the stewpot cli, [as described above](#install-optional), you can run the following command:
+
+```bash
+$ stewpot serve path/to/dir path/to/main --dev
 ```
