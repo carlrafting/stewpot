@@ -6,6 +6,7 @@ export {
   toFileUrl,
 } from "https://deno.land/std@0.166.0/path/mod.ts";
 export { serve } from "https://deno.land/std@0.166.0/http/server.ts";
+export { getCookies } from "https://deno.land/std@0.167.0/http/cookie.ts";
 export { parse } from "https://deno.land/std@0.166.0/flags/mod.ts";
 export * as colors from "https://deno.land/std@0.166.0/fmt/colors.ts";
 export {
