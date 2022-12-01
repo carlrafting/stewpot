@@ -104,13 +104,3 @@ export async function init(directory) {
     "Initialized new project with stewpot, run `deno task dev` to get started!",
   );
 }
-
-if (import.meta.main) {
-  const [directory] = Deno.args;
-
-  if (!directory || directory === null) {
-    printHelp();
-  }
-
-  await init(directory);
-}
