@@ -8,7 +8,13 @@ export {
 export { serve } from "https://deno.land/std@0.167.0/http/server.ts";
 export { getCookies } from "https://deno.land/std@0.167.0/http/cookie.ts";
 export { parse } from "https://deno.land/std@0.167.0/flags/mod.ts";
-export * as colors from "https://deno.land/std@0.167.0/fmt/colors.ts";
+import { brightGreen, brightBlue, dim, bold } from "https://deno.land/std@0.167.0/fmt/colors.ts"
+export const colors = {
+  brightBlue,
+  brightGreen,
+  dim,
+  bold,
+};
 export {
   errors,
   isHttpError,
