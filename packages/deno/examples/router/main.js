@@ -1,7 +1,7 @@
 import stewpot, { Router, send } from "../../stewpot.js";
 import { errors } from "../../deps.js";
 
-export default function main() {
+function module() {
   const router = new Router();
 
   router.add("GET", "/", async ({ render }) => {
@@ -25,13 +25,13 @@ export default function main() {
   };
 }
 
+export function main() {
+  return stewpot({
+    root: "packages/deno/examples/router",
+    module,
+  });
+}
+
 if (import.meta.main) {
-  try {
-    stewpot({
-      root: "packages/deno/examples/router",
-      module: main,
-    });
-  } catch (error) {
-    console.log(error);
-  }
+  main();
 }

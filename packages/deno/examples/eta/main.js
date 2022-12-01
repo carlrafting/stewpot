@@ -1,5 +1,4 @@
 import stewpot, { send } from "stewpot/stewpot.js";
-import { join } from "../../deps.js";
 
 function handler({ pathname, render }) {
   if (pathname === "/") {
@@ -17,10 +16,14 @@ function handler({ pathname, render }) {
   }
 }
 
-if (import.meta.main) {
-  stewpot({
-    root: join(Deno.cwd(), "packages/deno/examples/eta"),
+export function main() {
+  return stewpot({
+    root: "packages/deno/examples/eta",
     handler,
     templateFormat: "eta",
   });
+}
+
+if (import.meta.main) {
+  main();
 }

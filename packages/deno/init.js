@@ -21,7 +21,14 @@ const MAIN_FILE = {
   content: `
 import stewpot from "stewpot/stewpot.js";
 
-stewpot();`.trim(),
+export function main() {
+  return stewpot();
+}
+
+if (import.meta.main) {
+  main();
+}
+`.trim(),
 };
 
 export async function init(directory) {

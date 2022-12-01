@@ -8,6 +8,12 @@ function handler({ pathname }) {
   }
 }
 
-stewpot({
-  handler,
-});
+export function main() {
+  return stewpot({
+    handler,
+  });
+}
+
+if (import.meta.main) {
+  main();
+}

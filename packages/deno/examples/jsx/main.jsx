@@ -16,8 +16,14 @@ function handler({ pathname, render }) {
   }
 }
 
-stewpot({
-  handler,
-  plugins: [jsxPlugin()],
-  templateFormat: "jsx",
-});
+export function main() {
+  return stewpot({
+    handler,
+    plugins: [jsxPlugin()],
+    templateFormat: "jsx",
+  });
+}
+
+if (import.meta.main) {
+  main();
+}

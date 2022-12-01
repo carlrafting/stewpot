@@ -438,6 +438,9 @@ function initializeModule(module) {
     if (Object.hasOwn(module, "default")) {
       return module.default();
     }
+    if (Object.hasOwn(module, "main")) {
+      return module.main();
+    }
     if (Object.hasOwn(module, "handler")) {
       return module.handler;
     }

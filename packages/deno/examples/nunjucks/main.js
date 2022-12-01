@@ -17,8 +17,8 @@ function handler({ pathname, render }) {
   }
 }
 
-if (import.meta.main) {
-  stewpot({
+export function main() {
+  return stewpot({
     root: "packages/deno/examples/nunjucks",
     handler,
     plugins: [
@@ -26,4 +26,8 @@ if (import.meta.main) {
     ],
     templateFormat: "njk",
   });
+}
+
+if (import.meta.main) {
+  main();
 }

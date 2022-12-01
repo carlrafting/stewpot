@@ -1,5 +1,5 @@
 import { colors, parse, resolve, toFileUrl } from "./deps.js";
-import stewpot, { meta } from "./stewpot.js";
+import { meta } from "./stewpot.js";
 import { init } from "./init.js";
 
 const BANNER = `
@@ -65,13 +65,20 @@ async function serve(root, module) {
 
   module = await import(path);
 
-  try {
-    stewpot({
-      root,
-      module,
-    });
-  } catch (error) {
-    throw error;
+  // console.log(module)
+
+  if (module) {
+    try {
+      /* stewpot({
+        root,
+        module,
+      }); */
+      if (module.main) {
+        return module.main();
+      }
+    } catch (error) {
+      throw error;
+    }   
   }
 }
 
