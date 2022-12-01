@@ -1,5 +1,5 @@
 import stewpot, { Router, send } from "../../stewpot.js";
-import { errors, join } from "../../deps.js";
+import { errors } from "../../deps.js";
 
 export default function main() {
   const router = new Router();
@@ -28,7 +28,7 @@ export default function main() {
 if (import.meta.main) {
   try {
     stewpot({
-      root: join(Deno.cwd(), "packages/deno/examples/router"),
+      root: "packages/deno/examples/router",
       module: main,
     });
   } catch (error) {
