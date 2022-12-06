@@ -23,7 +23,7 @@ recently switched to targeting Deno environments. Source code for node.js will
 eventually be deprecated when the relevant implementations are ported to the
 Deno platform.
 
-## Install (Optional)
+## Install CLI (Optional)
 
 Stewpot provides a CLI module for running and initializing projects. Instead of
 writing urls everytime you invoke a certain command, you can install it locally.
