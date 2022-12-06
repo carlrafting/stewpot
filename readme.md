@@ -32,6 +32,8 @@ writing urls everytime you invoke a certain command, you can install it locally.
 $ deno install -Af --name=stewpot ${URL}/packages/deno/cli.js
 ```
 
+## Quick Start
+
 To get started with a new project, you can use stewpot's init command to
 initialize the project.
 
@@ -39,15 +41,13 @@ initialize the project.
 $ stewpot init path/to/project
 ```
 
-## Quick Start
-
 Now that the project is initialized, we can run the following command:
 
 ```bash
 $ deno task dev
 ```
 
-If you've installed the stewpot cli, [as described above](#install), you can also run the following command:
+If you've installed the stewpot cli, [as described above](#install-optional), you can run the following command instead:
 
 ```bash
 $ stewpot serve path/to/dir path/to/main --dev
