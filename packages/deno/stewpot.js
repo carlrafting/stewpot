@@ -14,7 +14,7 @@ import {
 } from "./deps.js";
 import meta from "./stewpot.json" assert { type: "json" };
 import mime from "../node/src/server/mime.js";
-import etaPlugin from "stewpot/plugins/eta.js";
+import etaPlugin from "./plugins/eta.js";
 import { composeMiddleware, middlewares, } from "./middleware.ts";
 
 export { meta, mime };
