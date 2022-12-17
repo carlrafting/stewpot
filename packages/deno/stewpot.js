@@ -3,7 +3,7 @@ import {
   // dirname,
   colors,
   errors,
-  fromFileUrl,
+  // fromFileUrl,
   isHttpError,
   join,
   serve,
@@ -26,6 +26,8 @@ const IS_DEV = Deno.args.includes("--dev") && "watchFs" in Deno;
 const supportedTemplateFormats = ["html"];
 const mergePlugins = true;
 const root = Deno.cwd();
+
+// console.log(IS_DEV ? 'dev mode enabled': 'dev mode disabled');
 
 const defaultPlugins = [
   etaPlugin(),
@@ -150,7 +152,8 @@ function defaultHandler({ pathname, render }) {
   if (pathname === "/") {
     return async () => {
       const template = await Deno.readTextFile(
-        fromFileUrl(import.meta.resolve("./templates/index.html")),
+        // fromFileUrl(import.meta.resolve("./templates/index.html")),
+        new URL(import.meta.resolve("./templates/index.html"))
       );
       return send(
         await render(
@@ -377,7 +380,7 @@ ${
         `.trim();
 
 const styles = async (path = "./templates/styles.css") =>
-  await Deno.readTextFile(fromFileUrl(import.meta.resolve(path)));
+  await Deno.readTextFile(new URL(import.meta.resolve(path)));
 
 async function errorHandler(err) {
   // console.log(err);
