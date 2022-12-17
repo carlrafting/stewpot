@@ -33,6 +33,10 @@ async function main(args) {
       // continue;
     }
   }
+
+  if (args.includes("--dev")) {
+    denoArgs.push("--watch");
+  }
   
   // console.log(denoArgs);
 
