@@ -50,24 +50,39 @@ async function serve(root, module) {
     );
   }
 
-  if (!module) {
+  /* if (!module) {
     module = "main";
-  }
-
-  if (!module.endsWith(".js")) {
+  } */
+  
+  /* if (!module.endsWith(".js")) {
     module = `${module}.js`;
+  } */
+
+  // if no module was explicitly specified, automatically look for a main module in root
+  // exit loop when first file matching the filename is found
+  if (!module) {
+    for await (const item of Deno.readDir(root)) {
+      if (item.isFile) {
+        for (const name of ["main.ts", "main.js", "main.tsx", "main.jsx"]) {
+          if (item.name === name) {
+            module = item.name;
+            break;
+          }
+        }
+      }
+    }
   }
 
   const path = toFileUrl(resolve(root, module));
   // const path = resolve(root, module);
 
   // console.log(path);
-
-  module = await import(path);
-
+  
   // console.log(module)
-
+  
   if (module) {
+    module = await import(path);
+
     try {
       /* stewpot({
         root,
