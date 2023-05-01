@@ -1,6 +1,6 @@
 import { dirname, /* fromFileUrl, */ join, resolve } from "./deps.js";
 
-const STD_VERSION = "0.167.0";
+const STD_VERSION = "0.185.0";
 const DENO_JSON_NAME = "deno.json";
 const DENO_JSON_CONTENT = {
   "importMap": "./import_map.json",
@@ -55,10 +55,10 @@ export async function init(directory) {
   if (confirm("Does your project require JSX?")) {
     IMPORT_MAP.imports = {
       ...IMPORT_MAP.imports,
-      "preact": "https://esm.sh/preact@10.11.3",
-      "preact/": "https://esm.sh/preact@10.11.3/",
+      "preact": "https://esm.sh/preact@10.13.2",
+      "preact/": "https://esm.sh/preact@10.13.2/",
       "preact-render-to-string":
-        "https://esm.sh/preact-render-to-string@5.2.6?external=preact",
+        "https://esm.sh/preact-render-to-string@6.0.2?external=preact",
     };
     MAIN_FILE.name = "main.jsx";
     MAIN_FILE.content = `
