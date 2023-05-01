@@ -1,7 +1,6 @@
 import { join } from "./deps.js";
 
 async function main(args) {
-  // console.log(args);
   const denoArgs = [
     "-A"
   ];
@@ -23,9 +22,9 @@ async function main(args) {
         }
         denoArgs.push(`--config=${path}`);
         break;
-      } 
+      }
       if (file === "import_map.json") {
-        denoArgs.push(`--import-map=${path}`)
+        denoArgs.push(`--import-map=${path}`);
       }
     } catch (_error) {
       // throw error;
@@ -37,10 +36,19 @@ async function main(args) {
   if (args.includes("--dev")) {
     denoArgs.push("--watch");
   }
-  
+
   // console.log(denoArgs);
 
-  const process = Deno.run({
+  const process = new Deno.Command(Deno.execPath(), {
+    args: [
+      "run",
+      ...denoArgs,
+      import.meta.resolve("./bin.js"),
+      ...args,
+    ]
+  });
+
+  /* const process = Deno.run({
     cmd: [
       "deno",
       "run",
@@ -48,13 +56,15 @@ async function main(args) {
       import.meta.resolve("./bin.js"),
       ...args,
     ],
-  });
+  }); */
 
   // console.log(Deno.cwd());
   // console.log({ process });
 
   try {
-    /* const status = */ await process.status();
+    // console.log(await process.output())
+    const child = process.spawn();
+    /* const status = */ await child.status;
     // console.log(status);
   } catch (error) {
     console.log(error);
@@ -65,6 +75,6 @@ if (import.meta.main) {
   try {
     main(Deno.args);
   } catch (error) {
-    console.log(error)
+    console.log(error);
   }
 }

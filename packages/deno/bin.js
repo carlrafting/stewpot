@@ -119,7 +119,7 @@ function main(args) {
 
   // printHelp();
 
-  if (args.help) {
+  if (args.help || args._.length === 0) {
     printHelp();
   }
 
