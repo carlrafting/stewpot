@@ -1,11 +1,11 @@
 import Nav from "../components/nav.jsx";
 
-export const home = (
+export const home = ({ date }) => (
   <>
     <Nav />
     <main>
       <h1>Current time</h1>
-      <p>{new Date().toLocaleString()}</p>
+      <p>{date}</p>
     </main>
   </>
 );

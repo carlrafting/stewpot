@@ -5,7 +5,8 @@ function module() {
   const router = new Router();
 
   router.add("GET", "/", async ({ render }) => {
-    return send(await render("index"));
+    const date = new Date().toLocaleString();
+    return send(await render("index", { data: { date } }));
   });
 
   router.add("GET", "/posts", async ({ render }) => {

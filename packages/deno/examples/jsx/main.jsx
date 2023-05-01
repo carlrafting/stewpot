@@ -6,7 +6,8 @@ import jsxPlugin from "stewpot/plugins/jsx.js";
 function handler({ pathname, render }) {
   if (pathname === "/") {
     return async () => {
-      return send(await render(home, { inline: true, data: { title: "Welcome Home!"} }));
+      const date = new Date().toLocaleString();
+      return send(await render(home({ date }), { inline: true, data: { title: "Welcome Home!"} }));
     };
   }
   if (pathname === "/about") {
