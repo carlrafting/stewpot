@@ -151,18 +151,20 @@ export function send(body, status = 200, statusText, headers = {}) {
 function defaultHandler({ pathname, render }) {
   if (pathname === "/") {
     return async () => {
-      const template = await Deno.readTextFile(
+      const template = async (name="index") => await Deno.readTextFile(
         // fromFileUrl(import.meta.resolve("./templates/index.html")),
-        new URL(import.meta.resolve("./templates/index.html"))
+        new URL(import.meta.resolve("./templates/"+name+".html"))
       );
       return send(
         await render(
-          template,
+          await template(),
           {
             inline: true,
             data: {
               ...meta,
               title: "Stewpot",
+              header: await render(await template('header'), { inline: true, data: { ...meta } }),
+              footer: await render(await template('footer'), { inline: true, data: { ...meta } })
             },
           },
         ),
@@ -170,10 +172,19 @@ function defaultHandler({ pathname, render }) {
     };
   }
 
-  if (pathname === "/styles.css") {
+  if (pathname.includes(".css")) {
+    return async () =>
+      send(await styles(`./templates${pathname}`), 200, null, { "content-type": "text/css" });
+  }
+
+  /* if (pathname === "/css/global.css") {
     return async () =>
       send(await styles(), 200, null, { "content-type": "text/css" });
   }
+
+  if (pathname === "/css/code.css") {
+    return async () => send(await styles('./templates/code.css'), 200, null, { 'content-type': 'text/css' })
+  } */
 }
 
 function logNotFound(error, pathname) {
@@ -352,7 +363,7 @@ async function handler({ state, /* pathname, */ /* url, */ request, module }) {
   // if no matches, return 404 Not Found
   // return new Response("404 Not Found", { status: 404 });
   throw new errors.NotFound(
-    `Stewpot wasn't able to find any matches for ${pathname}`,
+    `There were wasn't any matches for ${pathname}`,
   );
 }
 
@@ -379,7 +390,7 @@ ${
   }
         `.trim();
 
-const styles = async (path = "./templates/styles.css") =>
+const styles = async (path = "./templates/global.css") =>
   await Deno.readTextFile(new URL(import.meta.resolve(path)));
 
 async function errorHandler(err) {
