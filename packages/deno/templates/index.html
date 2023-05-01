@@ -43,6 +43,24 @@ if (import.meta.main) {
 
 <p>Render the index template.</p>
 
+<pre class="language-js" tabindex="-1">
+<code>import stewpot from "stewpot/stewpot.js";
+
+export function main() {
+  return stewpot({
+    handler({ pathname, render }) {
+      if (pathname === "/") {
+        return async () => new Response(await render('index'), { headers: { 'content-type': 'text/html' } });
+      }
+    },
+  });
+}
+
+if (import.meta.main) {
+  main();
+}</code>
+</pre>
+
 <h2>Further Steps</h2>
 <p>Take a look at the <a href="https://github.com/carlrafting/stewpot/tree/main/examples">examples on GitHub for getting started</a>. Make sure to <a href="https://github.com/carlrafting/stewpot/blob/main/src/server/default_handler.js">check out the default request handler</a>, which is responsible for rendering this very page.</p>
 </main>
