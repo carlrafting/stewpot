@@ -26,7 +26,10 @@
   "tasks": {
     "test": "deno test --watch ./packages/deno",
     "check": "deno fmt --check ./packages/deno",
-    "fmt": "deno fmt ./packages/deno"
+    "fmt": "deno fmt ./packages/deno",
+    "lume": "echo \"import 'lume/cli.ts'\" | deno run --watch --unstable -A -",
+    "build": "deno task lume",
+    "serve": "deno task lume -s"
   },
   "compilerOptions": {
     "jsx": "react-jsx",
