@@ -1,0 +1,93 @@
+@layer code {
+    :root {
+        --token-keyword: orange;
+        --token-constant: deepskyblue;
+        --token-function: #ff54b0;
+        --token-string: lightgreen;
+        --token-number: violet;
+        --token-param: gold;
+        --token-comment: #909daa;
+        --token-punctuation: var(--pre-color, #fff);
+        --token-operator: coral;
+        --codeblock-background: #333;
+        --pre-color: lightblue;
+        /* --pre-color: var(--token-constant); */
+        --pre-bg: #323232;
+    }
+
+    @media (prefers-color-scheme: dark) {
+        :root {
+          --pre-bg: #222;
+        }
+    }
+
+    pre, code {
+        font-size: 1rem;
+        font-family: Cascadia Code, monospace;
+        color: var(--pre-color, --color);
+        background-color: var(--pre-bg);
+        border-radius: .25rem;
+    }
+    
+    pre {
+      word-break: break-all;
+      padding: 2rem;
+      white-space: pre-wrap;
+      margin-block-end: 1rem;
+    }
+    
+    code {
+        padding: .5rem;
+    }
+    
+    pre > code {
+      background-color: transparent;
+      padding: 0;
+    }
+
+    .keyword {
+        color: var(--token-keyword);
+    }
+
+    .operator {
+        color: var(--token-operator);
+    }
+
+    .constant {
+        color: var(--token-constant);
+    }
+
+    .function {
+        color: var(--token-function);
+    }
+
+    .string,
+    .string-property {
+        color: var(--token-string);
+    }
+
+    .number {
+        color: var(--token-number);
+    }
+
+    .parameter {
+        color: var(--token-param);
+    }
+
+    .comment {
+        color: var(--token-comment);
+    }
+
+    .punctuation {
+        color: var(--token-punctuation);
+    }
+
+    /* pre {
+        background-color: var(--codeblock-background);
+    } */
+    
+    pre[class*="language-"],
+    code[class*="language-"] {
+        color: var(--token-constant) !important;
+    }
+}
