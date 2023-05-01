@@ -1,5 +1,3 @@
-# stewpot
-
 ```
 ┌─┐┌┬┐┌─┐┬ ┬┌─┐┌─┐┌┬┐
 └─┐ │ ├┤ │││├─┘│ │ │
@@ -11,17 +9,9 @@ A delicious serving of http/https!
 ⚠ WARNING: This project is young, under development and is not ready for use in
 a production environment yet.
 
-## Introduction
+# A pretty small web framework for Deno
 
-Stewpot is a small abstraction on top of Deno's http/https server module,
-inspired by the simplicity of
-[deno_blog](https://github.com/denoland/deno_blog). There is currently a version
-of Stewpot that is compatible with node.js versions that has support for ES
-Modules and not versions supporting only CommonJS, with very different APIs. The
-reason is that stewpot for a long time, was targeting node.js projects, but has
-recently switched to targeting Deno environments. Source code for node.js will
-eventually be deprecated when the relevant implementations are ported to the
-Deno platform.
+Stewpot is pretty small, yet it has most of what you might need. Stewpot's ambition is not to become the _Next Big Thing_ or supporting huge _Big Tech™_ websites. Instead the ambition is a more modest one, supporting the everyday human in building things on the web.
 
 ## Install CLI (Optional)
 
