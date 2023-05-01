@@ -1,0 +1,11 @@
+{% extends 'layouts/base.njk' %}
+
+{% block body %}
+{% if url != "/" %}
+{% include 'header.njk' %}
+{% endif %}
+<main>
+{{ content | safe }}
+</main>
+{% include "footer.html" %}
+{% endblock %}

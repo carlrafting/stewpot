@@ -1,0 +1,28 @@
+html {
+    grid-template-rows: 100vh;
+}
+
+body {
+    width: 100%;
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    min-height: 100vh;
+}
+
+body > header,
+body > main {
+    border: 0;
+}
+
+body > header {
+    /* margin-block-end: 2rem; */
+    border: 0;
+}
+
+.info {
+    color: #fff;
+    background-color: #1273d1;
+    padding: 1rem;
+    margin-inline: -1rem;
+    margin-block-end: 1rem;
+}

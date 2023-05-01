@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>
+        {{ title }} |
+        {{ name }}
+        {% if page.data.layout == 'layouts/home.njk' %}
+        |
+        {{ description }}
+        {% endif %}
+    </title>
+    {% block styles %}
+    <link rel="stylesheet" href="/css/basic.css">
+    <link rel="stylesheet" href="/css/global.css">
+    <link rel="stylesheet" href="/css/code.css">
+    {% if page.data.layout == 'layouts/docs.njk' %}<link rel="stylesheet" href="/css/docs.css">{% endif %}
+    {% if page.data.layout == 'layouts/home.njk' %}<link rel="stylesheet" href="/css/home.css">{% endif %}
+    {% endblock %}
+</head>
+<body>
+    {% block body %}
+    {{ content | safe }}
+    {% endblock %}
+</body>
+</html>
