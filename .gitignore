@@ -3,3 +3,4 @@ sandbox
 .env
 coverage
 *.lcov
+dist
