@@ -3,6 +3,7 @@
     "stewpot/": "../packages/deno/",
     "preact": "https://esm.sh/preact@10.11.3",
     "preact/": "https://esm.sh/preact@10.11.3/",
-    "preact-render-to-string": "https://esm.sh/preact-render-to-string@5.2.6?external=preact"
+    "preact-render-to-string": "https://esm.sh/preact-render-to-string@6.0.2?external=preact",
+    "lume/": "https://deno.land/x/lume@v1.14.2/"
   }
 }

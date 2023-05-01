@@ -1,6 +1,6 @@
 {
   "deno.enable": true,
-  "deno.enablePaths": ["./packages/deno", "./sandbox"],
+  "deno.enablePaths": ["./packages/deno", "./sandbox", "./www", "./_config.js"],
   "editor.defaultFormatter": "denoland.vscode-deno",
   "prettier.enable": false
 }
