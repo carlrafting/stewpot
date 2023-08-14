@@ -1,27 +1,21 @@
 {
   "fmt": {
-    "files": {
-      "exclude": [
-        "node_modules/",
-        "packages/node"
-      ]
-    }
+    "exclude": [
+      "node_modules/",
+      "packages/node"
+    ]
   },
   "test": {
-    "files": {
-      "exclude": [
-        "node_modules/",
-        "packages/node"
-      ]
-    }
+    "exclude": [
+      "node_modules/",
+      "packages/node"
+    ]
   },
   "lint": {
-    "files": {
-      "exclude": [
-        "node_modules/",
-        "packages/node"
-      ]
-    }
+    "exclude": [
+      "node_modules/",
+      "packages/node"
+    ]
   },
   "tasks": {
     "test": "deno test --watch ./packages/deno",
