@@ -1,6 +1,6 @@
 import { dirname, /* fromFileUrl, */ join, resolve } from "./deps.js";
 
-const STD_VERSION = "0.185.0";
+const STD_VERSION = "0.198.0";
 const DENO_JSON_NAME = "deno.json";
 const DENO_JSON_CONTENT = {
   "importMap": "./import_map.json",

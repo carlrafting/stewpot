@@ -6,7 +6,6 @@ import {
   // fromFileUrl,
   isHttpError,
   join,
-  serve,
   serveDir,
   serveFile,
   Status,
@@ -137,7 +136,7 @@ export function render(state) {
   };
 }
 
-export function send(body, status = 200, statusText, headers = {}) {
+export function send(body, status = 200, statusText = "", headers = {}) {
   return new Response(body, {
     status,
     statusText,
@@ -461,7 +460,7 @@ function initializeModule(module) {
   }
 }
 
-export default async function stewpot(settings = {}) {
+export default function stewpot(settings = {}) {
   const state = configureApp(IS_DEV, settings);
 
   if (state.plugins.length > 0) {
@@ -475,7 +474,7 @@ export default async function stewpot(settings = {}) {
   } */
 
   try {
-    await serve(configureHandler({ state, module }), {
+    Deno.serve(configureHandler({ state, module }), {
       port: state.port,
       signal: state.controller.signal,
       onListen(params) {

@@ -1,4 +1,4 @@
-import { renderToString } from "preact-render-to-string";
+import { renderToString } from "../deps.js";
 
 export default ({ pageHtml } = {}) => {
   const templateFormat = "jsx";
