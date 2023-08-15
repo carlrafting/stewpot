@@ -362,7 +362,7 @@ async function handler({ state, /* pathname, */ /* url, */ request, module }) {
   // if no matches, return 404 Not Found
   // return new Response("404 Not Found", { status: 404 });
   throw new errors.NotFound(
-    `There were wasn't any matches for ${pathname}`,
+    `There were no matches for ${pathname}`,
   );
 }
 
