@@ -152,7 +152,7 @@ function defaultHandler({ pathname, render }) {
     return async () => {
       const template = async (name="index") => await Deno.readTextFile(
         // fromFileUrl(import.meta.resolve("./templates/index.html")),
-        new URL(import.meta.resolve("./templates/"+name+".html"))
+        new URL(import.meta.resolve(`./templates/${name}.html`))
       );
       return send(
         await render(
@@ -173,7 +173,7 @@ function defaultHandler({ pathname, render }) {
 
   if (pathname.includes(".css")) {
     return async () =>
-      send(await styles(`./templates${pathname}`), 200, null, { "content-type": "text/css" });
+      send(await styles(`./static${pathname}`), 200, null, { "content-type": "text/css" });
   }
 
   /* if (pathname === "/css/global.css") {
@@ -389,7 +389,7 @@ ${
   }
         `.trim();
 
-const styles = async (path = "./templates/global.css") =>
+const styles = async (path = "./static/global.css") =>
   await Deno.readTextFile(new URL(import.meta.resolve(path)));
 
 async function errorHandler(err) {
