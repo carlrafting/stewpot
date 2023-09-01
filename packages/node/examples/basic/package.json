@@ -1,6 +1,0 @@
-{
-    "name": "basic-example",
-    "scripts": {
-        "start": "node app.mjs"
-    }
-}

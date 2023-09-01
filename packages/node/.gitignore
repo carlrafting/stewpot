@@ -1,6 +1,0 @@
-src/config/*.pem
-src/config/*.key
-src/config/*.crt
-src/sandbox
-examples/foobar
-*.esproj
