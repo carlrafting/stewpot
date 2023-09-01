@@ -365,7 +365,17 @@ async function handler({ state, /* pathname, */ /* url, */ request, module }) {
     }
 
     if (handlerInstance && typeof handlerInstance === "function") {
-      return handlerInstance();
+      const response = handlerInstance();
+      const type = typeof response;
+      if (type === "object") {
+        return send(JSON.stringify(response), 200, null, {
+          "content-type": "application/json",
+        });
+      }
+      if (type === "string") {
+        return send(response);
+      }
+      return response;
     }
   }
 
@@ -484,9 +494,10 @@ export default function stewpot(settings = {}) {
   } */
 
   try {
-    Deno.serve(configureHandler({ state, module }), {
+    Deno.serve({
       port: state.port,
       signal: state.controller.signal,
+      handler: configureHandler({ state, module }),
       onListen(params) {
         console.log(
           `=> Started Web Server at ${params.hostname}:${params.port}!`,
