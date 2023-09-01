@@ -21,12 +21,13 @@ export { Router } from "./lib/Router.js";
 
 const port = 80;
 const controller = new AbortController();
-const IS_DEV = Deno.args.includes("--dev") && "watchFs" in Deno;
+const IS_DEV = Deno.env.get("DENO_ENV") ||
+  (Deno.args.includes("--dev") && "watchFs" in Deno);
 const supportedTemplateFormats = ["html"];
 const mergePlugins = true;
 const root = Deno.cwd();
 
-// console.log(IS_DEV ? 'dev mode enabled': 'dev mode disabled');
+// console.log(IS_DEV ? "dev mode enabled" : "dev mode disabled");
 
 const defaultPlugins = [
   etaPlugin(),
@@ -150,10 +151,11 @@ export function send(body, status = 200, statusText = "", headers = {}) {
 function defaultHandler({ pathname, render }) {
   if (pathname === "/") {
     return async () => {
-      const template = async (name="index") => await Deno.readTextFile(
-        // fromFileUrl(import.meta.resolve("./templates/index.html")),
-        new URL(import.meta.resolve(`./templates/${name}.html`))
-      );
+      const template = async (name = "index") =>
+        await Deno.readTextFile(
+          // fromFileUrl(import.meta.resolve("./templates/index.html")),
+          new URL(import.meta.resolve(`./templates/${name}.html`)),
+        );
       return send(
         await render(
           await template(),
@@ -162,8 +164,14 @@ function defaultHandler({ pathname, render }) {
             data: {
               ...meta,
               title: "Stewpot",
-              header: await render(await template('header'), { inline: true, data: { ...meta } }),
-              footer: await render(await template('footer'), { inline: true, data: { ...meta } })
+              header: await render(await template("header"), {
+                inline: true,
+                data: { ...meta },
+              }),
+              footer: await render(await template("footer"), {
+                inline: true,
+                data: { ...meta },
+              }),
             },
           },
         ),
@@ -173,7 +181,9 @@ function defaultHandler({ pathname, render }) {
 
   if (pathname.includes(".css")) {
     return async () =>
-      send(await styles(`./static${pathname}`), 200, null, { "content-type": "text/css" });
+      send(await styles(`./static${pathname}`), 200, null, {
+        "content-type": "text/css",
+      });
   }
 
   /* if (pathname === "/css/global.css") {
@@ -201,12 +211,12 @@ function serveStatic({ root }) {
 
     if (pathname.includes(".")) {
       hasFileExt = true;
-  
+
       try {
         const file = await Deno.readFile(
           join(root, "public", pathname),
         );
-  
+
         if (file) {
           serveStatic = true;
         }
@@ -219,7 +229,7 @@ function serveStatic({ root }) {
       try {
         const path = join(root, "public", pathname);
         const { isDirectory } = await Deno.stat(path);
-  
+
         if (isDirectory) {
           serveStatic = true;
         }
@@ -232,7 +242,7 @@ function serveStatic({ root }) {
       const path = join(root, "public", pathname);
       return serveFile(request, path);
     }
-  
+
     if (serveStatic && !hasFileExt) {
       const path = join(root, "public");
       return serveDir(request, {
@@ -242,7 +252,7 @@ function serveStatic({ root }) {
     }
 
     return next(request);
-  }
+  };
 }
 
 async function handler({ state, /* pathname, */ /* url, */ request, module }) {
@@ -506,13 +516,17 @@ function configureHandler({ state, module }) {
       render: render(state),
     }; */
 
-    return respondWithMiddleware(request, [...middlewares, serveStatic(state)], inner)
+    return respondWithMiddleware(
+      request,
+      [...middlewares, serveStatic(state)],
+      inner,
+    );
     /* inner({
       state,
       module,
       request,
     }); */
-  }
+  };
 }
 
 function registerPlugins({ state, settings }) {
