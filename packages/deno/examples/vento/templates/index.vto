@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ title |> toUpperCase }}</title>
+</head>
+<body>
+  <h1>
+    {{ if title == "This is an example" }}
+    The title is an example
+    {{ else }}
+    The title is: {{ title }}
+    {{ /if }}
+  </h1>
+
+  {{ if message && date }}
+    <p>{{ message }} - {{ date }}</p>
+  {{ /if }}
+</body>
+</html>
