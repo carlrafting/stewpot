@@ -1,7 +1,0 @@
-{
-  "importMap": "../../.vscode/import_map.json",
-  "compilerOptions": {
-    "jsx": "react-jsx",
-    "jsxImportSource": "preact"
-  }
-}
