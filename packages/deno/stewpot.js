@@ -14,7 +14,7 @@ import {
 import meta from "./stewpot.json" assert { type: "json" };
 import mime from "../node/src/server/mime.js";
 import etaPlugin from "./plugins/eta.js";
-import { composeMiddleware, middlewares, } from "./middleware.ts";
+import { composeMiddleware, middlewares } from "./middleware.js";
 
 export { meta, mime };
 export { Router } from "./lib/Router.js";
