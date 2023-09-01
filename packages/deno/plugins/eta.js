@@ -1,4 +1,4 @@
-import { eta } from "../deps.js";
+import { Eta } from "../deps.js";
 
 export default () => {
   const templateFormat = "eta";
@@ -7,21 +7,26 @@ export default () => {
     state.templateFormats.push(templateFormat);
 
     function configure(templateDir) {
-      return eta.configure({
-        views: templateDir,
-      });
+      return new Eta(
+        templateDir
+          ? {
+            views: templateDir,
+          }
+          : null,
+      );
     }
 
     return {
       type: "template",
       name: "etaPlugin",
       templateFormat,
-      renderString(template, data) {
-        return eta.render(template, data);
+      async renderString(template, data) {
+        const eta = configure();
+        return await eta.renderStringAsync(template, data);
       },
       async renderFile(templateDir, template, data) {
-        configure(templateDir);
-        return await eta.renderFile(`${template}`, { ...data });
+        const eta = configure(templateDir);
+        return await eta.renderAsync(`${template}`, { ...data });
       },
     };
   };

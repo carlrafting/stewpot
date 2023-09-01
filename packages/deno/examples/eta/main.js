@@ -1,4 +1,4 @@
-import stewpot, { send } from "stewpot/stewpot.js";
+import stewpot, { send } from "../../stewpot.js";
 
 function handler({ pathname, render }) {
   if (pathname === "/") {
@@ -8,10 +8,12 @@ function handler({ pathname, render }) {
   }
   if (pathname === "/string") {
     return async () => {
-      return send(await render("<h1>Hello from <%= it.message %>!</h1>", {
-        inline: true,
-        data: { message: "eta" },
-      }));
+      return send(
+        await render("<h1>Hello from <%= it.message %>!</h1>", {
+          inline: true,
+          data: { message: "eta" },
+        }),
+      );
     };
   }
 }
