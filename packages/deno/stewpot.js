@@ -1,9 +1,8 @@
 import {
-  // resolve,
-  // dirname,
   colors,
+  dirname,
   errors,
-  // fromFileUrl,
+  fromFileUrl,
   isHttpError,
   join,
   serveDir,
@@ -12,11 +11,10 @@ import {
   STATUS_TEXT,
 } from "./deps.js";
 import meta from "./stewpot.json" assert { type: "json" };
-import mime from "../node/src/server/mime.js";
 import etaPlugin from "./plugins/eta.js";
 import { composeMiddleware, middlewares } from "./middleware.js";
 
-export { meta, mime };
+export { meta };
 export { Router } from "./lib/Router.js";
 
 const port = 80;
@@ -26,14 +24,28 @@ const IS_DEV = Deno.env.get("DENO_ENV") ||
 const supportedTemplateFormats = ["html"];
 const mergePlugins = true;
 const root = Deno.cwd();
+// const root = dirname(fromFileUrl(import.meta.url));
 
 // console.log(IS_DEV ? "dev mode enabled" : "dev mode disabled");
+
+// console.log("root", root);
 
 const defaultPlugins = [
   etaPlugin(),
 ];
 
 const pluginInstances = new Map();
+
+const checkType = (obj) =>
+  (Object.prototype.toString.call(obj)).slice(8, -1).toLocaleLowerCase();
+
+/* console.log("checkType", checkType([]));
+console.log("checkType", checkType({}));
+console.log("checkType", checkType(null));
+console.log("checkType", checkType(undefined));
+console.log("checkType", checkType(new Map()));
+console.log("checkType", checkType(new Set()));
+console.log("checkType", checkType(1)); */
 
 const html = {
   injectData(data, template) {
@@ -366,8 +378,11 @@ async function handler({ state, /* pathname, */ /* url, */ request, module }) {
 
     if (handlerInstance && typeof handlerInstance === "function") {
       const response = handlerInstance();
-      const type = typeof response;
-      if (type === "object") {
+      const type = typeof await response;
+      if (
+        checkType(response) === "object" ||
+        checkType(response) === "array"
+      ) {
         return send(JSON.stringify(response), 200, null, {
           "content-type": "application/json",
         });
@@ -559,6 +574,10 @@ function registerPlugins({ state, settings }) {
 
 // is this method even necessary?
 function configureApp(isDev, settings = {}) {
+  if (settings.root) {
+    settings.root = dirname(fromFileUrl(settings.root));
+  }
+
   const defaultSettings = {
     port,
     controller,

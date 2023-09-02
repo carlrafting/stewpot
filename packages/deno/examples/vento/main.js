@@ -26,7 +26,7 @@ function handler({ pathname, render }) {
 
 export function main() {
   return stewpot({
-    root: "packages/deno/examples/vento",
+    root: import.meta.url,
     handler,
     plugins: [
       ventoPlugin(),

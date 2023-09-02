@@ -4,6 +4,7 @@ export class Router {
       "GET": [],
       "POST": [],
       "PUT": [],
+      "PATCH": [],
     };
   }
   #routes;

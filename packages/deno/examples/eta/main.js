@@ -20,7 +20,7 @@ function handler({ pathname, render }) {
 
 export function main() {
   return stewpot({
-    root: "packages/deno/examples/eta",
+    root: import.meta.url,
     handler,
     templateFormat: "eta",
   });

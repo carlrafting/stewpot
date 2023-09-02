@@ -28,7 +28,7 @@ function module() {
 
 export function main() {
   return stewpot({
-    root: "packages/deno/examples/router",
+    root: import.meta.url,
     module,
   });
 }
