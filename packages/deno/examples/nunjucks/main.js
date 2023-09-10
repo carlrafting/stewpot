@@ -1,5 +1,5 @@
 import stewpot, { send } from "../../stewpot.js";
-import nunjucksPlugin from "../../plugins/nunjucks.js";
+import { nunjucksPlugin } from "../../plugins.js";
 
 function handler({ pathname, render }) {
   const date = new Date().toLocaleString();

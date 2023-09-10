@@ -1,5 +1,5 @@
 import stewpot, { send } from "../../stewpot.js";
-import ventoPlugin from "../../plugins/vento.js";
+import { ventoPlugin } from "../../plugins.js";
 
 function handler({ pathname, render }) {
   const date = new Date().toLocaleString();
