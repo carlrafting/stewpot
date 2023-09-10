@@ -2,5 +2,9 @@
   "deno.enable": true,
   "deno.enablePaths": ["./packages/deno", "./sandbox", "./www", "./_config.js"],
   "editor.defaultFormatter": "denoland.vscode-deno",
-  "prettier.enable": false
+  "prettier.enable": false,
+  "[html]": {
+    "editor.defaultFormatter": "vscode.html-language-features"
+  },
+  "editor.formatOnSave": true
 }
