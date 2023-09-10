@@ -11,7 +11,7 @@ import {
   STATUS_TEXT,
 } from "./deps.js";
 import meta from "./stewpot.json" assert { type: "json" };
-import etaPlugin from "./plugins/eta.js";
+import { etaPlugin } from "./plugins.js";
 import { composeMiddleware, middlewares } from "./middleware.js";
 
 export { meta };
@@ -36,16 +36,8 @@ const defaultPlugins = [
 
 const pluginInstances = new Map();
 
-const checkType = (obj) =>
-  (Object.prototype.toString.call(obj)).slice(8, -1).toLocaleLowerCase();
-
-/* console.log("checkType", checkType([]));
-console.log("checkType", checkType({}));
-console.log("checkType", checkType(null));
-console.log("checkType", checkType(undefined));
-console.log("checkType", checkType(new Map()));
-console.log("checkType", checkType(new Set()));
-console.log("checkType", checkType(1)); */
+export const checkType = (obj) =>
+  (Object.prototype.toString.call(obj)).slice(8, -1).toLowerCase();
 
 const html = {
   injectData(data, template) {
