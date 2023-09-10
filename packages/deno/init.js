@@ -1,19 +1,17 @@
 import { dirname, /* fromFileUrl, */ join, resolve } from "./deps.js";
+import { ensureFile } from "https://deno.land/std@0.201.0/fs/mod.ts";
+import { parse as parseFlags } from "https://deno.land/std@0.201.0/flags/mod.ts";
 
 const STD_VERSION = "0.201.0";
 const DENO_JSON_NAME = "deno.json";
 const DENO_JSON_CONTENT = {
-  "importMap": "./import_map.json",
-  "tasks": {
-    "dev": "deno run --watch --allow-net --allow-read main.js --dev",
-  },
-};
-const IMPORT_MAP_NAME = "import_map.json";
-const IMPORT_MAP = {
   "imports": {
     "stewpot/": `${dirname(import.meta.url)}/`,
     "http/": `https://deno.land/std@${STD_VERSION}/http/`,
     "path/": `https://deno.land/std@${STD_VERSION}/path/`,
+  },
+  "tasks": {
+    "dev": "deno run --watch --allow-net --allow-read main.js --dev",
   },
 };
 const MAIN_FILE = {
@@ -31,8 +29,10 @@ if (import.meta.main) {
 `.trim(),
 };
 
-export async function init(directory) {
-  directory = resolve(directory);
+export async function init(path) {
+  const directory = resolve(path);
+
+  // console.log("directory", directory);
 
   console.log(`Intializing new stewpot project at ${directory}...`);
 
@@ -52,9 +52,28 @@ export async function init(directory) {
     }
   }
 
+  if (confirm("Install and configure CLI?")) {
+    const installPath = dirname(Deno.execPath());
+    console.log("installPath", installPath);
+    if (ensureFile(join(installPath, "stewpot"))) {
+      const command = new Deno.Command(Deno.execPath(), {
+        // stdin: "piped",
+        // stdout: "piped",
+        args: [
+          "install",
+          "-Af",
+          "--name=stewpot",
+          import.meta.resolve("./cli.js"),
+        ],
+      });
+      const child = command.spawn();
+      await child.output();
+    }
+  }
+
   if (confirm("Does your project require JSX?")) {
-    IMPORT_MAP.imports = {
-      ...IMPORT_MAP.imports,
+    DENO_JSON_CONTENT.imports = {
+      ...DENO_JSON_CONTENT.imports,
       "preact": "https://esm.sh/preact@10.13.2",
       "preact/": "https://esm.sh/preact@10.13.2/",
       "preact-render-to-string":
@@ -103,11 +122,31 @@ export async function init(directory) {
     join(directory, DENO_JSON_NAME),
     JSON.stringify(DENO_JSON_CONTENT, null, 2),
   );
-  await Deno.writeTextFile(
-    join(directory, IMPORT_MAP_NAME),
-    JSON.stringify(IMPORT_MAP, null, 2),
-  );
   console.log(
     "Initialized new project with stewpot, run `deno task dev` to get started!",
   );
+}
+
+function main(args) {
+  console.log("hello world!");
+  const parsedFlags = parseFlags(args);
+  const length = parsedFlags._.length;
+  // console.log("parsedFlags", parsedFlags._);
+  if (length === 0) {
+    throw new Error(`Expect 1 argument of type: string`);
+  }
+  if (length > 1) {
+    throw new Error(`Only expected 1 argument, got ${parsedFlags._.length}`);
+  }
+  const [path] = parsedFlags._;
+  // console.log("path", path);
+  init(path);
+}
+
+if (import.meta.main) {
+  try {
+    main(Deno.args);
+  } catch (error) {
+    throw error;
+  }
 }
