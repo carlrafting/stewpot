@@ -1,39 +1,14 @@
 {
-  "fmt": {
-    "exclude": [
-      "node_modules/",
-      "packages/node"
-    ]
-  },
-  "test": {
-    "exclude": [
-      "node_modules/",
-      "packages/node"
-    ]
-  },
-  "lint": {
-    "exclude": [
-      "node_modules/",
-      "packages/node"
-    ]
-  },
   "tasks": {
-    "test": "deno test --watch ./packages/deno",
-    "check": "deno fmt --check ./packages/deno",
-    "fmt": "deno fmt ./packages/deno",
+    "test": "deno test --watch .",
+    "check": "deno fmt --check .",
+    "fmt": "deno fmt .",
     "lume": "echo \"import 'lume/cli.ts'\" | deno run --unstable -A -",
     "build": "deno task lume",
     "serve": "deno task lume -s"
   },
-  "compilerOptions": {
-    "jsx": "react-jsx",
-    "jsxImportSource": "preact"
-  },
   "imports": {
-    "stewpot/": "../packages/deno/",
-    "preact": "https://esm.sh/preact@10.11.3",
-    "preact/": "https://esm.sh/preact@10.11.3/",
-    "preact-render-to-string": "https://esm.sh/preact-render-to-string@6.0.2?external=preact",
+    "stewpot/": "./",
     "lume/": "https://deno.land/x/lume@v1.18.5/"
   }
 }

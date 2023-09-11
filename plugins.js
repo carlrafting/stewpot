@@ -1,7 +1,7 @@
 import vento from "https://deno.land/x/vento@v0.7.1/mod.ts";
 import { Eta } from "https://deno.land/x/eta@v3.0.3/src/index.ts";
 import { default as nunjucks } from "npm:nunjucks@3.2.4";
-import { renderToString } from "npm:preact-render-to-string@6.2.0";
+import { renderToString } from "npm:preact-render-to-string@6.2.1";
 
 export function etaPlugin() {
   const templateFormat = "eta";

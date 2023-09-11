@@ -74,10 +74,10 @@ export async function init(path) {
   if (confirm("Does your project require JSX?")) {
     DENO_JSON_CONTENT.imports = {
       ...DENO_JSON_CONTENT.imports,
-      "preact": "https://esm.sh/preact@10.13.2",
-      "preact/": "https://esm.sh/preact@10.13.2/",
+      "preact": "https://esm.sh/preact@10.17.1",
+      "preact/": "https://esm.sh/preact@10.17.1/",
       "preact-render-to-string":
-        "https://esm.sh/preact-render-to-string@6.0.2?external=preact",
+        "https://esm.sh/preact-render-to-string@6.2.1?external=preact",
     };
     MAIN_FILE.name = "main.jsx";
     MAIN_FILE.content = `
