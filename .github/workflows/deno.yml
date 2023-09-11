@@ -50,4 +50,4 @@ jobs:
           # The path or URL to an import map file
           # import-map: # optional
           # The path to the directory containing the code and assets to upload
-          root: www/dist # optional
+          # root: www/dist # optional
