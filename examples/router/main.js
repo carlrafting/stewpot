@@ -1,5 +1,5 @@
 import { Router, send, stewpot } from "../../stewpot.js";
-import { errors } from "../../deps.js";
+import { errors } from "../../deps/http.ts";
 
 function module() {
   const router = new Router();
