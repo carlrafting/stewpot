@@ -1,28 +1,30 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ title }}</title>
-    <link rel="stylesheet" href="/basic.css">
-    <link rel="stylesheet" href="/global.css">
-    <link rel="stylesheet" href="/code.css">
-    <link rel="stylesheet" href="/intro.css">
-    <script src="https://unpkg.com/prismjs@1.29.0/prism.js"></script>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ title }}</title>
+  <link rel="stylesheet" href="/basic.css">
+  <link rel="stylesheet" href="/global.css">
+  <link rel="stylesheet" href="/code.css">
+  <link rel="stylesheet" href="/intro.css">
+  <script src="https://unpkg.com/prismjs@1.29.0/prism.js"></script>
 </head>
+
 <body>
-{{ header }}
-<main>
-<h1>{{ description }}</h1>
+  {{ header }}
+  <main>
+    <h1>{{ description }}</h1>
 
-<p>...</p>
+    <p>...</p>
 
-<h2>First Steps</h2>
+    <h2>First Steps</h2>
 
-<p>Register a request handler.</p>
+    <p>Register a request handler.</p>
 
-<pre class="language-js" tabindex="-1">
-<code>import stewpot from 'stewpot/stewpot.js';
+    <pre class="language-js" tabindex="-1">
+<code>import { stewpot } from 'stewpot/stewpot.js';
 
 export function main() {
   return stewpot({
@@ -39,12 +41,12 @@ if (import.meta.main) {
 }</code>
 </pre>
 
-<h2>Next Steps</h2>
+    <h2>Next Steps</h2>
 
-<p>Render the index template.</p>
+    <p>Render the index template.</p>
 
-<pre class="language-js" tabindex="-1">
-<code>import stewpot from "stewpot/stewpot.js";
+    <pre class="language-js" tabindex="-1">
+<code>import { stewpot } from "stewpot/stewpot.js";
 
 export function main() {
   return stewpot({
@@ -61,20 +63,24 @@ if (import.meta.main) {
 }</code>
 </pre>
 
-<h2>Further Steps</h2>
-<p>Take a look at the <a href="https://github.com/carlrafting/stewpot/tree/main/examples">examples on GitHub for getting started</a>. Make sure to <a href="https://github.com/carlrafting/stewpot/blob/main/src/server/default_handler.js">check out the default request handler</a>, which is responsible for rendering this very page.</p>
-</main>
+    <h2>Further Steps</h2>
+    <p>Take a look at the <a href="https://github.com/carlrafting/stewpot/tree/main/examples">examples on GitHub for
+        getting started</a>. Make sure to <a
+        href="https://github.com/carlrafting/stewpot/blob/main/src/server/default_handler.js">check out the default
+        request handler</a>, which is responsible for rendering this very page.</p>
+  </main>
 
-{{ footer }}
+  {{ footer }}
 
-<script type="module">
-  document.addEventListener("DOMContentLoaded", () => {
-    const codeblocks = document.querySelectorAll("pre[class*=\"language-\"]");
-    for (const block of codeblocks) {
-      block.classList.add("codeblock");
-    }
-  })
-</script>
+  <script type="module">
+    document.addEventListener("DOMContentLoaded", () => {
+      const codeblocks = document.querySelectorAll("pre[class*=\"language-\"]");
+      for (const block of codeblocks) {
+        block.classList.add("codeblock");
+      }
+    })
+  </script>
 
 </body>
+
 </html>

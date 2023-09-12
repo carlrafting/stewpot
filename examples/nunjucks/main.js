@@ -1,4 +1,4 @@
-import stewpot, { send } from "../../stewpot.js";
+import { send, stewpot } from "../../stewpot.js";
 import { nunjucksPlugin } from "../../plugins.js";
 
 function handler({ pathname, render }) {

@@ -1,4 +1,4 @@
-import stewpot, { send } from "../../stewpot.js";
+import { send, stewpot } from "../../stewpot.js";
 import { home } from "./pages/home.jsx";
 import { about } from "./pages/about.jsx";
 import { jsxPlugin } from "../../plugins.js";

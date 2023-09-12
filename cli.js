@@ -1,4 +1,5 @@
-import { colors, join, parse, resolve, toFileUrl } from "./deps.js";
+import { join, parse, resolve, toFileUrl } from "./deps/path.ts";
+import * as colors from "./deps/fmt.ts";
 import { meta } from "./stewpot.js";
 import { init } from "./init.js";
 
@@ -142,7 +143,7 @@ function cli(args) {
   }
 }
 
-async function main(args) {
+async function _main(args) {
   const denoArgs = [
     "-A",
   ];

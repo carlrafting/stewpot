@@ -1,4 +1,4 @@
-import stewpot, { send } from "../../stewpot.js";
+import { send, stewpot } from "../../stewpot.js";
 
 function handler({ pathname, render }) {
   if (pathname === "/") {

@@ -1,15 +1,13 @@
 import {
-  colors,
-  dirname,
   errors,
-  fromFileUrl,
   isHttpError,
-  join,
   serveDir,
   serveFile,
   Status,
   STATUS_TEXT,
-} from "./deps.js";
+} from "./deps/http.ts";
+import { dirname, fromFileUrl, join } from "./deps/path.ts";
+import * as colors from "./deps/fmt.ts";
 import meta from "./stewpot.json" assert { type: "json" };
 import { etaPlugin } from "./plugins.js";
 import { composeMiddleware, middlewares } from "./middleware.js";
@@ -487,7 +485,7 @@ function initializeModule(module) {
   }
 }
 
-export default function stewpot(settings = {}) {
+export function stewpot(settings = {}) {
   const state = configureApp(IS_DEV, settings);
 
   if (state.plugins.length > 0) {
@@ -501,7 +499,7 @@ export default function stewpot(settings = {}) {
   } */
 
   try {
-    Deno.serve({
+    return Deno.serve({
       port: state.port,
       signal: state.controller.signal,
       handler: configureHandler({ state, module }),
@@ -574,8 +572,6 @@ function configureApp(isDev, settings = {}) {
     port,
     controller,
     environment: isDev ? "development" : "production",
-    // directory: dirname(fromFileUrl(import.meta.url)),
-    directory: root, // TODO: deprecate config option `directory`, replace with `root`
     root,
     module: "main.js",
     templateFormat: "html",

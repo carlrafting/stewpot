@@ -1,4 +1,4 @@
-import stewpot, { Router, send } from "../../stewpot.js";
+import { Router, send, stewpot } from "../../stewpot.js";
 import { errors } from "../../deps.js";
 
 function module() {

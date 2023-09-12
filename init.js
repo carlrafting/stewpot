@@ -1,6 +1,6 @@
-import { dirname, /* fromFileUrl, */ join, resolve } from "./deps.js";
-import { ensureFile } from "https://deno.land/std@0.201.0/fs/mod.ts";
-import { parse as parseFlags } from "https://deno.land/std@0.201.0/flags/mod.ts";
+import { dirname, join, resolve } from "./deps/path.ts";
+import { ensureFile } from "./deps/fs.ts";
+import { parseFlags } from "./deps/flags.ts";
 
 const STD_VERSION = "0.201.0";
 const DENO_JSON_NAME = "deno.json";
@@ -17,7 +17,7 @@ const DENO_JSON_CONTENT = {
 const MAIN_FILE = {
   name: "main.js",
   content: `
-import stewpot from "stewpot/stewpot.js";
+import { stewpot } from "stewpot/stewpot.js";
 
 export function main() {
   return stewpot();
@@ -81,7 +81,7 @@ export async function init(path) {
     };
     MAIN_FILE.name = "main.jsx";
     MAIN_FILE.content = `
-  import stewpot, { send } from "stewpot/stewpot.js";
+  import { stewpot, send } from "stewpot/stewpot.js";
   import jsxPlugin from "stewpot/plugins/jsx.js";
   
   function handler({ pathname, render }) {
