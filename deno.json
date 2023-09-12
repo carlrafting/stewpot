@@ -8,7 +8,6 @@
     "serve": "deno task lume -s"
   },
   "imports": {
-    "stewpot/": "./",
     "lume/": "https://deno.land/x/lume@v1.18.5/"
   }
 }
