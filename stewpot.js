@@ -60,7 +60,7 @@ const html = {
   },
 };
 
-export function render(state) {
+export function createTemplateRenderer(state) {
   const { templateFormat, templateFormats } = state;
 
   const templatePlugins = [...pluginInstances.values()].filter((plugin) =>
@@ -265,7 +265,7 @@ async function handler({ state, /* pathname, */ /* url, */ request, module }) {
     state,
     request,
     pathname,
-    render: render(state),
+    render: createTemplateRenderer(state),
   };
 
   // const { state, pathname, url, request, module } = CONTEXT;
@@ -407,7 +407,9 @@ ${
     IS_DEV
       ? `
 <main>
+<div class="container">
 <pre>${err.stack}</pre>
+</div>
 </main>
 `
       : ""
