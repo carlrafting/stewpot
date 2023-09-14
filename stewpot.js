@@ -150,6 +150,29 @@ export function send(body, status = 200, statusText = "", headers = {}) {
   });
 }
 
+export function stream(fn) {
+  if (checkType(fn) !== "function") {
+    throw new Error("Expected argument to be a function!");
+  }
+  let timer = null;
+  const body = new ReadableStream({
+    start(controller) {
+      timer = setInterval(() => {
+        controller.enqueue(new TextEncoder().encode(fn()));
+      });
+    },
+    cancel() {
+      if (timer) {
+        clearInterval(timer);
+      }
+    },
+  });
+  return send(body, 200, "OK", {
+    "content-type": "text/plain",
+    "x-content-type-options": "nosniff",
+  });
+}
+
 function defaultHandler({ pathname, render }) {
   if (pathname === "/") {
     return async () => {
