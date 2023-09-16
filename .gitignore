@@ -1,6 +1,7 @@
 node_modules
-sandbox
+sandbox/*
 .env
 coverage
 *.lcov
 dist
+!sandbox/routes.js 
