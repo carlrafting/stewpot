@@ -23,6 +23,8 @@ const routeMap = new Map([
     "*",
     new Map([
       ["*", new Set()],
+      ["GET", new Set()],
+      ["POST", new Set()],
     ]),
   ],
   // ["GET", createRouteMapItem()],
@@ -66,7 +68,8 @@ const addRoute = (routes) => {
   };
 };
 
-function match(scope = "/", request = Request) {
+export function match(scope = "/", request = new Request("http://localhost")) {
+  console.log({ request });
   const { method, url, headers } = request;
   const requestUrl = new URL(url);
   // console.log("routeMap", routeMap);
@@ -90,7 +93,7 @@ function match(scope = "/", request = Request) {
 
 function respond({
   handlers = new Set(),
-  request = Request,
+  request = Request.prototype,
 }) {
   console.log(request.url);
   // console.log("respond handlers", handlers);
@@ -105,7 +108,7 @@ function respond({
       console.log({ current, next });
       if (Array.isArray(current)) {
         const [controller, action] = current;
-        Object.prototype.call(controller, action)(request, next);
+        // Object.prototype.call(controller, action)(request, next);
       }
     }
   }
@@ -152,7 +155,9 @@ configureRoutes("*", (routes) => {
 configureRoutes("/", (routes) => {
   routes.get("/", [HomeController, "index"]);
   routes.post("/", [HomeController, "create"]);
-  routes.get("/foo", foobar);
+  routes.get("/foobar", foobar);
 });
 
-Deno.serve((req) => respond(match("/", req)));
+if (import.meta.main) {
+  Deno.serve((req) => respond(match("/", req)));
+}
