@@ -11,7 +11,7 @@ const createRouteMapItem = () => {
   new Set();
 };
 
-const routeMap = new Map([
+export const map = new Map([
   [
     "/",
     new Map([
@@ -35,10 +35,11 @@ function getRoutes(scope = "/") {
   // routeMap.get();
 }
 
-console.log("routeMap", routeMap);
+console.log("Stewpot.Routes.Map", map);
 
-function configureRoutes(scope = "/", fn) {
+export function configureRoutes(scope = "/", fn) {
   let routes = null;
+  const routeMap = map;
   routeMap.has(scope)
     ? (routes = routeMap.get(scope))
     : (routes = routeMap.set(scope));
@@ -68,10 +69,13 @@ const addRoute = (routes) => {
   };
 };
 
-export function match(scope = "/", request = new Request("http://localhost")) {
+const url = new URL("http://localhost");
+
+export function match(scope = "/", request = new Request(url)) {
   console.log({ request });
   const { method, url, headers } = request;
   const requestUrl = new URL(url);
+  const routeMap = map;
   // console.log("routeMap", routeMap);
   // console.log("Request", req);
   // console.log("url", url, requestUrl);
@@ -89,75 +93,4 @@ export function match(scope = "/", request = new Request("http://localhost")) {
     handlers,
     request,
   };
-}
-
-function respond({
-  handlers = new Set(),
-  request = Request.prototype,
-}) {
-  console.log(request.url);
-  // console.log("respond handlers", handlers);
-  if (handlers.size > 0) {
-    handlers = [...handlers]; // mutates handlers to array :/
-    for (let i = handlers.length - 1; i > 0; i--) {
-      const current = handlers[i];
-      const next = handlers[i - 1];
-      if (!next) {
-        break;
-      }
-      console.log({ current, next });
-      if (Array.isArray(current)) {
-        const [controller, action] = current;
-        // Object.prototype.call(controller, action)(request, next);
-      }
-    }
-  }
-  return new Response();
-}
-
-class BaseController {
-  constructor() {}
-  prepare() {
-  }
-  render() {
-  }
-  respond(action) {
-    return new Response();
-  }
-}
-
-class HomeController extends BaseController {
-  index() {
-    return "hello home!";
-  }
-  create() {
-    return {
-      id: 1,
-      foo: "bar",
-      date: new Date().toISOString(),
-    };
-  }
-}
-
-function foobar() {
-  return "hello foobar!";
-}
-
-function all() {
-  console.log("i love log!");
-  return "hello all!";
-}
-
-configureRoutes("*", (routes) => {
-  routes.all(all);
-});
-
-configureRoutes("/", (routes) => {
-  routes.get("/", [HomeController, "index"]);
-  routes.post("/", [HomeController, "create"]);
-  routes.get("/foobar", foobar);
-});
-
-if (import.meta.main) {
-  Deno.serve((req) => respond(match("/", req)));
 }
