@@ -1,5 +1,4 @@
-import { stewpot } from "../../stewpot.js";
-import { stream } from "../../stewpot.js";
+import { stewpot, stream } from "../../stewpot.js";
 
 export function main() {
   return stewpot({
