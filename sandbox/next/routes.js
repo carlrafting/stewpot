@@ -35,7 +35,7 @@ function getRoutes(scope = "/") {
   // routeMap.get();
 }
 
-console.log("Stewpot.Routes.Map", map);
+// console.log("routes map", map);
 
 export function configureRoutes(scope = "/", fn) {
   let routes = null;
