@@ -111,7 +111,10 @@ function executeMiddleware(req, inner) {
   return h();
 }
 
-const wrap = (inner) => (req) => executeMiddleware(req, inner);
+const wrap = (inner) => (req) => {
+  executeMiddleware(req, inner);
+  return inner(req); // NOTE: hack for now
+};
 
 export function compose() {
 }
