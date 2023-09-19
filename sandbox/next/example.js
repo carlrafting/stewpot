@@ -75,9 +75,11 @@ export const app = (req) => {
   throw new Error("Not Found", 404);
 };
 
-function handler() {
+export function handler() {
+  console.log("final response!");
+  return new Response("hello there");
 }
 
 if (import.meta.main) {
-  stewpot.http.serve();
+  stewpot.http.serve(handler);
 }
