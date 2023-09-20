@@ -16,7 +16,10 @@ const methods = new Map([
   ["POST", 2],
 ]);
 
-const scopes = new Map();
+const scopes = new Map([
+  ["/", 1],
+]);
+
 const routes = new Map();
 
 /* scopes.set("/", 1);
