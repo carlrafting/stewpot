@@ -18,6 +18,12 @@ function callAction(current, request, next) {
   return output;
 }
 
+/**
+ * use(fn)
+ *
+ * @param {Function} fn
+ * @returns {Map<Number, Function>}
+ */
 export const use = (fn) => middleware.set(middleware.size, fn);
 
 /* export const insert = (index, fn) => {
@@ -41,47 +47,67 @@ export const use = (fn) => middleware.set(middleware.size, fn);
 
 use(function one(req, next) {
   console.log("=> one");
-  next(req);
+  const res = next(req);
   console.log("=> one");
+  return res;
 });
 
 use(function two(req, next) {
   console.log("=> => two");
-  next(req);
+  const res = next(req);
   console.log("hello world!");
   console.log("=> => two");
+  return res;
 });
 
 use(function three(req, next) {
   console.log("=> => => three");
-  next(req);
+  const res = next(req);
   console.log("=> => => three");
+  return res;
 });
 
 // insert(0, noop);
 
-const process = (req, next) => {
-  const result = next(req);
-  console.log({ result });
-  if (checkType(result) === "string") {
+/**
+ * compose(...middleware)
+ *
+ * @param  {...Function} middleware
+ */
+export function compose(...middleware) {
+}
+
+/**
+ * process(req, next)
+ *
+ * @param {Request} req
+ * @param {Function} next
+ * @returns {Response}
+ */
+function process(results) {
+  const headers = new Headers();
+  if (checkType(results) === "string") {
     headers.set("content-type", "text/plain");
-    return result;
   }
   if (
-    checkType(result) === "object" ||
-    checkType(result) === "array" ||
-    checkType(result) === "set" ||
-    checkType(result) === "map"
+    checkType(results) === "object" ||
+    checkType(results) === "array" ||
+    checkType(results) === "set" ||
+    checkType(results) === "map"
   ) {
     headers.set("content-type", "application/json");
-    return JSON.stringify(result);
+    results = JSON.stringify(results);
   }
-  return new Response(result);
-};
+  return new Response(results, { status: 200, headers });
+}
+
+function respond() {
+}
 
 function responseMiddleware(req, next) {
   try {
-    return new Response(process(req, next));
+    const body = process(req, next);
+    return new Response(body);
   } catch (error) {
     console.error(error);
   }
@@ -91,14 +117,23 @@ function responseMiddleware(req, next) {
 
 export const flip = (bool = true) => !bool;
 
+/**
+ * @param {Request} req
+ * @param {Function} inner
+ * @returns {*}
+ */
 function executeMiddleware(req, inner) {
-  const mws = Array.from(middleware.values()).reverse();
+  const mws = Array.from(middleware.values());
   const handlers = [];
 
   function next() {
     const h = handlers.shift();
     return h();
   }
+
+  /* console.log({
+    next,
+  }); */
 
   if (mws) {
     for (const mw of mws) {
@@ -108,16 +143,31 @@ function executeMiddleware(req, inner) {
 
   handlers.push(() => inner(req, next));
   const h = handlers.shift();
+  /* console.log({
+    h,
+  }); */
   return h();
 }
 
-const wrap = (inner) => (req) => {
-  executeMiddleware(req, inner);
-  return inner(req); // NOTE: hack for now
+/**
+ * wrap(fn)
+ *
+ * @param {Function} fn
+ * @returns {(req: Request) => any}
+ */
+const wrap = (fn) => (req) => {
+  const results = executeMiddleware(req, fn);
+  console.log({
+    results,
+  });
+  if (!results) {
+    throw new Error(
+      "No response was returned in any of the middleware functions.",
+    );
+  }
+  return process(results);
+  return fn(req); // NOTE: hack for now
 };
-
-export function compose() {
-}
 
 console.log({
   middleware,

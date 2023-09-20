@@ -11,6 +11,30 @@ const createRouteMapItem = () => {
   new Set();
 };
 
+const methods = new Map([
+  ["GET", 1],
+  ["POST", 2],
+]);
+
+const scopes = new Map();
+const routes = new Map();
+
+/* scopes.set("/", 1);
+
+routes.set(0, {
+  pathname: "/foo/:id",
+  pattern: new URLPattern({ pathname: "/foo/:id" }),
+  method: methods.get("GET"),
+  handlers: [() => {}, () => {}],
+  scope: scopes.get("/"),
+});
+
+console.log({
+  methods,
+  scopes,
+  routes,
+}); */
+
 export const map = new Map([
   [
     "/",

@@ -75,9 +75,10 @@ export const app = (req) => {
   throw new Error("Not Found", 404);
 };
 
-export function handler() {
+export function handler(req, next) {
+  // typeof next === "function" && next(req);
   console.log("final response!");
-  return new Response("hello there");
+  return "hello there";
 }
 
 if (import.meta.main) {
