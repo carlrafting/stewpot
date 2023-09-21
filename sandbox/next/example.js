@@ -1,8 +1,8 @@
 import { checkType } from "../../stewpot.js";
 import { compose, use } from "./http.js";
-import Stewpot from "./main.js";
+import stewpot from "./main.js";
 
-const stewpot = Stewpot();
+const app = stewpot();
 
 class BaseController {
   constructor() {}
@@ -45,17 +45,17 @@ async function middleware(request, next) {
   console.log({ next });
 }
 
-stewpot.routes.configure("*", (routes) => {
+app.routes.configure("*", (routes) => {
   routes.all(all);
 });
 
-stewpot.routes.configure("/", (routes) => {
+app.routes.configure("/", (routes) => {
   routes.get("/", [HomeController, "index"]);
   routes.post("/", [HomeController, "create"]);
   routes.get("/foobar", foobar);
 });
 
-export const app = (req) => {
+/* export const app = (req) => {
   if (!req) {
     throw new Error("Expected argument to be a Request!");
   }
@@ -73,7 +73,7 @@ export const app = (req) => {
     return instance.create(req);
   }
   throw new Error("Not Found", 404);
-};
+}; */
 
 export function handler(req, next) {
   // typeof next === "function" && next(req);
@@ -82,5 +82,5 @@ export function handler(req, next) {
 }
 
 if (import.meta.main) {
-  stewpot.http.serve(handler);
+  app.http.serve(handler);
 }

@@ -34,6 +34,10 @@ const defaultPlugins = [
 
 const pluginInstances = new Map();
 
+/**
+ * @param {Object} obj
+ * @returns {String}
+ */
 export const checkType = (obj) =>
   (Object.prototype.toString.call(obj)).slice(8, -1).toLowerCase();
 
@@ -139,7 +143,7 @@ export function createTemplateRenderer(state) {
   };
 }
 
-export function send(body, status = 200, statusText = "", headers = {}) {
+export function send(body = null, status = 200, statusText = "", headers = {}) {
   return new Response(body, {
     status,
     statusText,
@@ -150,15 +154,16 @@ export function send(body, status = 200, statusText = "", headers = {}) {
   });
 }
 
-export function stream(fn) {
+export function stream(fn = () => {}) {
   if (checkType(fn) !== "function") {
     throw new Error("Expected argument to be a function!");
   }
-  let timer = null;
+  let timer = 0;
   const body = new ReadableStream({
     start(controller) {
       timer = setInterval(() => {
-        controller.enqueue(new TextEncoder().encode(fn()));
+        const results = fn();
+        controller.enqueue(new TextEncoder().encode(results));
       });
     },
     cancel() {
@@ -459,22 +464,6 @@ async function errorHandler(err) {
         },
       );
     }
-    /* if (err.status === 500) {
-      return new Response(
-        await errorTemplate(
-          err,
-          `${Status.InternalServerError} ${
-            STATUS_TEXT[Status.InternalServerError]
-          }`,
-        ),
-        {
-          headers: {
-            "content-type": "text/html",
-          },
-          status: err.status,
-        },
-      );
-    } */
   }
 
   return new Response(

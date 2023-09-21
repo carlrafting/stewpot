@@ -1,21 +1,12 @@
-import { serve, use } from "./http.js";
-import { configureRoutes, map, match } from "./routes.js";
-
-const Stewpot = {}; // namespace
-
-Stewpot.http = {
-  use,
-  serve,
-};
-
-Stewpot.routes = {
-  map,
-  match,
-  configure: configureRoutes,
-};
+import * as http from "./http.js";
+import * as routes from "./routes.js";
 
 export default function main() {
-  return Object.freeze(Stewpot);
+  const stewpot = {
+    http,
+    routes,
+  };
+  return Object.freeze(stewpot);
 }
 
 export { main };

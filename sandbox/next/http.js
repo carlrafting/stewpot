@@ -1,8 +1,8 @@
 import { checkType } from "../../stewpot.js";
 import { match } from "./routes.js";
-import { app } from "./example.js";
 
-const noop = () => {};
+export const noop = () => {};
+
 const middleware = new Map();
 
 function callAction(current, request, next) {
@@ -19,12 +19,21 @@ function callAction(current, request, next) {
 }
 
 /**
- * use(fn)
+ * use(...fns)
  *
- * @param {Function} fn
- * @returns {Map<Number, Function>}
+ * register http middleware
+ *
+ * @param {Array<Function>} fns
+ * @returns {undefined}
  */
-export const use = (fn) => middleware.set(middleware.size, fn);
+export const use = (...fns) => {
+  for (const fn of fns) {
+    if (checkType(fn) !== "function") {
+      throw new Error("middleware must be a function!");
+    }
+    middleware.set(middleware.size, fn);
+  }
+};
 
 /* export const insert = (index, fn) => {
   const oldMiddleware = middleware.get(index);
@@ -98,6 +107,9 @@ function process(results) {
     headers.set("content-type", "application/json");
     results = JSON.stringify(results);
   }
+  if (results instanceof Response) {
+    return results;
+  }
   return new Response(results, { status: 200, headers });
 }
 
@@ -106,7 +118,7 @@ function respond() {
 
 function responseMiddleware(req, next) {
   try {
-    const body = process(req, next);
+    const body = process(next());
     return new Response(body);
   } catch (error) {
     console.error(error);
@@ -115,8 +127,6 @@ function responseMiddleware(req, next) {
 
 // use(responseMiddleware);
 
-export const flip = (bool = true) => !bool;
-
 /**
  * @param {Request} req
  * @param {Function} inner
@@ -124,16 +134,14 @@ export const flip = (bool = true) => !bool;
  */
 function executeMiddleware(req, inner) {
   const mws = Array.from(middleware.values());
+  /** @type {Array<Function>} handlers */
   const handlers = [];
 
   function next() {
     const h = handlers.shift();
+    if (!h) throw new Error("next: h is undefiend");
     return h();
   }
-
-  /* console.log({
-    next,
-  }); */
 
   if (mws) {
     for (const mw of mws) {
@@ -141,11 +149,9 @@ function executeMiddleware(req, inner) {
     }
   }
 
-  handlers.push(() => inner(req, next));
+  handlers.push(() => inner(req));
   const h = handlers.shift();
-  /* console.log({
-    h,
-  }); */
+  if (!h) throw new Error("executeMiddleware: h is undefiend");
   return h();
 }
 
@@ -157,9 +163,9 @@ function executeMiddleware(req, inner) {
  */
 const wrap = (fn) => (req) => {
   const results = executeMiddleware(req, fn);
-  console.log({
+  /* console.log({
     results,
-  });
+  }); */
   if (!results) {
     throw new Error(
       "No response was returned in any of the middleware functions.",
@@ -169,9 +175,9 @@ const wrap = (fn) => (req) => {
   return fn(req); // NOTE: hack for now
 };
 
-console.log({
+/* console.log({
   middleware,
-});
+}); */
 
 /**
  * serve()
@@ -181,10 +187,8 @@ console.log({
  */
 export function serve(fn) {
   if (!fn) throw new Error("Expected handler to be given!");
-  // handler = createHandler(handler);
   return Deno.serve({
     handler(req) {
-      // return new Response("hello world");
       return wrap(fn)(req);
     },
     onError(err) {

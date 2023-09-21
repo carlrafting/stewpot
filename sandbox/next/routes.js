@@ -1,103 +1,86 @@
-// import routes from "./stewpot.js";
-
-/**
- * scope
- * - "/" scope routes to root path
- * - "/app" scope routes to all paths beginning with /app
- * - "*" scope routes to all available paths
- */
-
-const createRouteMapItem = () => {
-  new Set();
-};
+/** @typedef {Map<string, number>} */
 
 const methods = new Map([
   ["GET", 1],
   ["POST", 2],
 ]);
 
+/**
+ * @typedef {string} ScopeKey
+ */
+
+/**
+ * @typedef {number} ScopeValue
+ */
+
+/**
+ * @constant scope
+ * @typedef {Map<ScopeKey, ScopeValue>}
+ */
 const scopes = new Map([
   ["/", 1],
 ]);
 
-const routes = new Map();
+/**
+ * @typedef {Number} RouteIndex
+ */
 
-/* scopes.set("/", 1);
+/**
+ * @typedef {Object} RouteItem
+ * @property {string} pathname
+ * @property {URLPattern} pattern
+ * @property {Number} method
+ * @property {Array<Function>} handlers
+ * @property {Number=} scope
+ */
 
-routes.set(0, {
-  pathname: "/foo/:id",
-  pattern: new URLPattern({ pathname: "/foo/:id" }),
-  method: methods.get("GET"),
-  handlers: [() => {}, () => {}],
-  scope: scopes.get("/"),
-});
+/**
+ * @type {Map<RouteIndex, RouteItem>}
+ */
+export const map = new Map();
 
+add("get", "/", function handler() {});
+add("get", "/foo/:id", () => {}, () => {});
+
+/**
+ * add(method, pathname, ...handlers)
+ *
+ * @param {string} method
+ * @param {string} pathname
+ * @param  {...function} handlers
+ */
+export function add(method, pathname, ...handlers) {
+  const scope = "/";
+  map.set(map.size, {
+    method: methods.get(method.toUpperCase()) || 0,
+    pathname,
+    pattern: new URLPattern({ pathname }),
+    handlers,
+    scope: scopes.get(scope),
+  });
+}
+
+export function clear() {
+  map.clear();
+}
+
+/*
 console.log({
   methods,
   scopes,
-  routes,
-}); */
-
-export const map = new Map([
-  [
-    "/",
-    new Map([
-      ["GET", new Set()],
-      ["POST", new Set()],
-    ]),
-  ],
-  [
-    "*",
-    new Map([
-      ["*", new Set()],
-      ["GET", new Set()],
-      ["POST", new Set()],
-    ]),
-  ],
-  // ["GET", createRouteMapItem()],
-  // ["POST", createRouteMapItem()],
-]);
-
-function getRoutes(scope = "/") {
-  // routeMap.get();
-}
+  map,
+}); // */
 
 // console.log("routes map", map);
 
-export function configureRoutes(scope = "/", fn) {
-  let routes = null;
-  const routeMap = map;
-  routeMap.has(scope)
-    ? (routes = routeMap.get(scope))
-    : (routes = routeMap.set(scope));
-  return fn(addRoute(routes));
+export function configure(scope = "/", fn) {
+  scopes.get(scope);
+  return () => fn();
 }
-
-const addRoute = (routes) => {
-  const add = (method, path, action) => {
-    routes
-      .get(method.toUpperCase())
-      .add({
-        path,
-        pattern: new URLPattern({ pathname: path }),
-        action,
-      });
-  };
-  return {
-    get(path, action) {
-      add("GET", path, action);
-    },
-    post(path, action) {
-      add("POST", path, action);
-    },
-    all(action) {
-      add("*", "*", action);
-    },
-  };
-};
 
 const url = new URL("http://localhost");
 
+/*
 export function match(scope = "/", request = new Request(url)) {
   console.log({ request });
   const { method, url, headers } = request;
@@ -120,4 +103,36 @@ export function match(scope = "/", request = new Request(url)) {
     handlers,
     request,
   };
+}
+*/
+
+/**
+ * match(method, url)
+ *
+ * @param {string} method
+ * @param {string} url
+ */
+export function match(method, url) {
+  const methodNumber = methods.get(method.toUpperCase());
+  const handlers = new Set();
+  const params = new Map();
+  /** @type {RouteItem} item */
+  for (const item of map.values()) {
+    if (methodNumber === item.method) {
+      if (item.pattern.test({ pathname: url })) {
+        params.set(
+          item.pathname,
+          item.pattern.exec({ pathname: url })?.pathname.groups,
+        );
+        handlers.add([...item.handlers]);
+      }
+    }
+  }
+  return {
+    handlers,
+    params,
+  };
+}
+
+export function routesMiddleware() {
 }

@@ -1,4 +1,5 @@
-import { join, parse, resolve, toFileUrl } from "./deps/path.ts";
+import { join, resolve, toFileUrl } from "./deps/path.ts";
+import { parseFlags } from "./deps/flags.ts";
 import * as colors from "./deps/fmt.ts";
 import { meta } from "./stewpot.js";
 import { init } from "./init.js";
@@ -26,6 +27,9 @@ const HELP = `
     ${colors.dim("$")} stewpot serve ${colors.brightGreen("<root>")} ${
   colors.brightGreen("<module>")
 } ${colors.dim("serve module from <root>")}
+    ${colors.dim("$")} stewpot upgrade ${
+  colors.dim("stewpot to latest version")
+}
 
   ${colors.bold("FLAGS:")}
 
@@ -89,6 +93,7 @@ async function serve(root, module) {
         root,
         module,
       }); */
+
       if (module.main) {
         return module.main();
       }
@@ -104,7 +109,7 @@ function printHelp() {
 }
 
 function cli(args) {
-  args = parse(args, {
+  args = parseFlags(args, {
     "--": true,
     alias: {
       "version": "v",
