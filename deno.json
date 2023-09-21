@@ -7,6 +7,9 @@
     "build": "deno task lume",
     "serve": "deno task lume -s"
   },
+  "compilerOptions": {
+    "checkJs": true
+  },
   "imports": {
     "lume/": "https://deno.land/x/lume@v1.18.5/"
   }
