@@ -462,8 +462,11 @@
     "https://deno.land/x/vento@v0.8.0/src/loader.ts": "eb01b0dca7ea8bcdcdfd30b1f90f2fad28fb7f2cfd943900322a85bfaa86130c",
     "https://deno.land/x/vento@v0.8.0/src/tokenizer.ts": "57052c7badf591600f5c7e370cee9a6c187fb0dc21135aac6c013092304dfee9",
     "https://esm.sh/preact@10.11.3/jsx-runtime": "709b51a6a82520d3ee2063b338a6ff319fa16c0bfc931e68afbdefcb6a572eec",
+    "https://esm.sh/preact@10.17.1/jsx-runtime": "bd703f2946a838f2921f6a170bd00fe7589b469ee94d8250ee92ee8ac2a5b11c",
     "https://esm.sh/stable/preact@10.11.3/denonext/jsx-runtime.js": "cfc87996dcc28e8229ecd0db66366d71cb777ecf33f4df73e93625399840c4fa",
-    "https://esm.sh/stable/preact@10.11.3/denonext/preact.mjs": "c828d9020ea26f07ba07b2f0a3ef97fd7ceb1c2a772c380ca05e2647ac8d3923"
+    "https://esm.sh/stable/preact@10.11.3/denonext/preact.mjs": "c828d9020ea26f07ba07b2f0a3ef97fd7ceb1c2a772c380ca05e2647ac8d3923",
+    "https://esm.sh/stable/preact@10.17.1/denonext/jsx-runtime.js": "0fa1261fdb2c1e2d75a528d82117726ac532e87b88f2b83e5a1cc50d9f9540c7",
+    "https://esm.sh/stable/preact@10.17.1/denonext/preact.mjs": "0f2f159289b4502eea839f4b57cef910ad03d63213ac5301e6767326b060d8f6"
   },
   "npm": {
     "specifiers": {
