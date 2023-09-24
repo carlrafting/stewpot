@@ -8,9 +8,12 @@ templateEngine: [njk,md]
 Stewpot is pretty small, yet it has most of what you might need. Stewpot's
 ambition is not to become the _Next Big Thing_ or supporting huge _Big Tech™_
 websites. Instead the ambition is a more modest one, supporting the everyday
-human in building things on the web.
+human in building things on the web. Written in JavaScript with the help of
+TypeScript for linting and JSDoc for type definitions.
 
 {% include "templates/info.html" %}
+
+...
 
 ```js
 // ...
