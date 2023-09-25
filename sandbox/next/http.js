@@ -87,10 +87,9 @@ export function compose(...middleware) {
 }
 
 /**
- * process(req, next)
+ * process(results)
  *
- * @param {Request} req
- * @param {Function} next
+ * @param {*} results
  * @returns {Response}
  */
 function process(results) {
@@ -199,3 +198,5 @@ export function serve(fn) {
     },
   });
 }
+
+export function start() {}
