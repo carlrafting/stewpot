@@ -5,8 +5,8 @@ import date from "lume/plugins/date.ts";
 import meta from "./stewpot.json" assert { type: "json" };
 
 const site = lume({
-  src: "www/src",
-  dest: "www/dist",
+  src: "www",
+  dest: "dist",
 });
 
 site.use(date());
@@ -23,7 +23,8 @@ site.remoteFile("css/code.css", "static/code.css");
 site.remoteFile("css/global.css", "static/global.css");
 site.remoteFile("css/basic.css", "static/basic.css");
 site.remoteFile("index.md", "readme.md");
-// site.copy('css');
+site.copy("css");
+
 site.loadAssets([".css", ".html"]);
 
 export default site;
