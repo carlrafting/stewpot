@@ -1,4 +1,8 @@
 // import { getCookies } from "./deps.js";
+import * as colors from "./deps/fmt.ts";
+import { errors, serveDir, serveFile } from "./deps/http.ts";
+import { join } from "./deps/path.ts";
+import { logNotFound } from "./stewpot.js";
 
 export function cookies(_config = {}) {
   return function cookiesMiddleware(
@@ -17,17 +21,78 @@ export function logger(_config = {}) {
     req,
     next,
   ) {
-    const res = await next(req);
     const url = new URL(req.url);
-    console.log(req.method, url.pathname, res.status);
-    return res;
+    try {
+      const res = await next(req);
+      console.log(
+        req.method,
+        url.pathname,
+        res.status >= 200 && res.status <= 299
+          ? colors.green(res.status.toString())
+          : res.status,
+      );
+      return res;
+    } catch (error) {
+      logNotFound(req, error, url.pathname);
+      throw error; // throw error again so we can render error page
+    }
   };
 }
 
-export const middlewares = [
-  cookies(),
-  logger(),
-];
+export function serveStatic({ root }) {
+  return async function serveStaticMiddleware(request, next) {
+    const { pathname } = new URL(request.url);
+
+    let serveStatic = false;
+    let hasFileExt = false;
+
+    if (pathname.includes(".")) {
+      hasFileExt = true;
+
+      try {
+        const file = await Deno.readFile(
+          join(root, "public", pathname),
+        );
+
+        if (file) {
+          serveStatic = true;
+        }
+      } catch (error) {
+        // logNotFound(request, error, pathname);
+        throw error;
+      }
+    }
+
+    if (!hasFileExt && pathname !== "/") {
+      try {
+        const path = join(root, "public", pathname);
+        const { isDirectory } = await Deno.stat(path);
+
+        if (isDirectory) {
+          serveStatic = true;
+        }
+      } catch (error) {
+        // logNotFound(request, error, pathname);
+        // throw error;
+      }
+    }
+
+    if (serveStatic && hasFileExt) {
+      const path = join(root, "public", pathname);
+      return serveFile(request, path);
+    }
+
+    if (serveStatic && !hasFileExt) {
+      const path = join(root, "public");
+      return serveDir(request, {
+        fsRoot: path,
+        showIndex: true,
+      });
+    }
+
+    return next(request);
+  };
+}
 
 export function composeMiddleware({ state = {}, module = () => {} }) {
   return (

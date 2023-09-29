@@ -1,16 +1,14 @@
-import {
-  errors,
-  isHttpError,
-  serveDir,
-  serveFile,
-  Status,
-  STATUS_TEXT,
-} from "./deps/http.ts";
+import { errors, isHttpError, Status, STATUS_TEXT } from "./deps/http.ts";
 import { dirname, fromFileUrl, join } from "./deps/path.ts";
 import * as colors from "./deps/fmt.ts";
 import meta from "./stewpot.json" assert { type: "json" };
 import { etaPlugin } from "./plugins.js";
-import { composeMiddleware, middlewares } from "./middleware.js";
+import {
+  composeMiddleware,
+  cookies,
+  logger,
+  serveStatic,
+} from "./middleware.js";
 
 export { meta };
 export { Router } from "./lib/Router.js";
@@ -22,11 +20,28 @@ const IS_DEV = Deno.env.get("DENO_ENV") ||
 const supportedTemplateFormats = ["html"];
 const mergePlugins = true;
 const root = Deno.cwd();
+const middlewares = [
+  cookies(),
+  logger(),
+];
 // const root = dirname(fromFileUrl(import.meta.url));
 
 // console.log(IS_DEV ? "dev mode enabled" : "dev mode disabled");
 
 // console.log("root", root);
+
+/**
+ *  @typedef {Object} StewpotOptions
+ *  @property {String} root
+ *  @property {number} port
+ *  @property {String} environment
+ *  @property {AbortController} controller
+ *  @property {String} templateFormat
+ *  @property {Array<string>} templateFormats
+ *  @property {Array<Function>} plugins
+ *  @property {boolean} mergePlugins
+ *  @property {Object} meta
+ */
 
 const defaultPlugins = [
   etaPlugin(),
@@ -42,6 +57,11 @@ export const checkType = (obj) =>
   (Object.prototype.toString.call(obj)).slice(8, -1).toLowerCase();
 
 const html = {
+  /**
+   * @param {Object} data
+   * @param {String} template
+   * @returns
+   */
   injectData(data, template) {
     if (Object.keys(data).length > 0) {
       for (const [key, value] of Object.entries(data)) {
@@ -50,6 +70,10 @@ const html = {
     }
     return template;
   },
+  /**
+   * @param {String} templateDir
+   * @param {String} template
+   */
   async renderFile(templateDir, template) {
     const templatePath = join(
       templateDir,
@@ -64,6 +88,10 @@ const html = {
   },
 };
 
+/**
+ * @param {StewpotOptions} state
+ * @returns {() => Promise<Function>}
+ */
 export function createTemplateRenderer(state) {
   const { templateFormat, templateFormats } = state;
 
@@ -225,64 +253,15 @@ function defaultHandler({ pathname, render }) {
     return async () => send(await styles('./templates/code.css'), 200, null, { 'content-type': 'text/css' })
   } */
 }
-
-function logNotFound(error, pathname) {
+/**
+ * @param {Request} request
+ * @param {Error} error
+ * @param {String} pathname
+ */
+export function logNotFound(request, error, pathname) {
   if (error instanceof Deno.errors.NotFound) {
-    console.log(`${colors.red("404")} - ${pathname}`);
+    console.log(request.method, pathname, colors.red("404"));
   }
-}
-
-function serveStatic({ root }) {
-  return async function serveStaticMiddleware(request, next) {
-    const { pathname } = new URL(request.url);
-
-    let serveStatic = false;
-    let hasFileExt = false;
-
-    if (pathname.includes(".")) {
-      hasFileExt = true;
-
-      try {
-        const file = await Deno.readFile(
-          join(root, "public", pathname),
-        );
-
-        if (file) {
-          serveStatic = true;
-        }
-      } catch (error) {
-        logNotFound(error, pathname);
-      }
-    }
-
-    if (!hasFileExt && pathname !== "/") {
-      try {
-        const path = join(root, "public", pathname);
-        const { isDirectory } = await Deno.stat(path);
-
-        if (isDirectory) {
-          serveStatic = true;
-        }
-      } catch (error) {
-        logNotFound(error, pathname);
-      }
-    }
-
-    if (serveStatic && hasFileExt) {
-      const path = join(root, "public", pathname);
-      return serveFile(request, path);
-    }
-
-    if (serveStatic && !hasFileExt) {
-      const path = join(root, "public");
-      return serveDir(request, {
-        fsRoot: path,
-        showIndex: true,
-      });
-    }
-
-    return next(request);
-  };
 }
 
 async function handler({ state, /* pathname, */ /* url, */ request, module }) {
@@ -320,23 +299,6 @@ async function handler({ state, /* pathname, */ /* url, */ request, module }) {
     });
   } */
 
-  // check pathname contains file extension
-  /* if (pathname.includes(".")) {
-    hasFileExt = true;
-
-    try {
-      const file = await Deno.readFile(
-        join(state.root, "public", pathname),
-      );
-
-      if (file) {
-        serveStatic = true;
-      }
-    } catch (error) {
-      logNotFound(error, pathname);
-    }
-  } */
-
   // continue if pathname is added route path, otherwise we'll serve public/
   if (
     module && module.router && module.router.find(request.method, request.url)
@@ -344,35 +306,8 @@ async function handler({ state, /* pathname, */ /* url, */ request, module }) {
     useRouter = true;
   }
 
-  // check for existing directory mathing pathname
-  /* if (!useRouter && !hasFileExt && pathname !== "/") {
-    try {
-      const path = join(state.root, "public", pathname);
-      const { isDirectory } = await Deno.stat(path);
-
-      if (isDirectory) {
-        serveStatic = true;
-      }
-    } catch (error) {
-      logNotFound(error, pathname);
-    }
-  } */
-
   const handler = state?.handler || module?.handler ||
     (IS_DEV && !useRouter) && defaultHandler;
-
-  /* if (serveStatic && hasFileExt) {
-    const path = join(state.root, "public", pathname);
-    return serveFile(request, path);
-  }
-
-  if (serveStatic && !hasFileExt) {
-    const path = join(state.root, "public");
-    return serveDir(request, {
-      fsRoot: path,
-      showIndex: true,
-    });
-  } */
 
   // if module exports a router, we initialize it here...
   if (useRouter) {
@@ -419,7 +354,7 @@ async function handler({ state, /* pathname, */ /* url, */ request, module }) {
   );
 }
 
-const errorTemplate = async (err, title) =>
+export const errorTemplate = async (err, title) =>
   `
 <!doctype html>
 <html lang="en">
@@ -436,7 +371,7 @@ ${
       ? `
 <main>
 <div class="container">
-<pre>${err.stack}</pre>
+<pre class="debug-error">${err.stack}</pre>
 </div>
 </main>
 `
@@ -447,20 +382,23 @@ ${
 const styles = async (path = "./static/global.css") =>
   await Deno.readTextFile(new URL(import.meta.resolve(path)));
 
-async function errorHandler(err) {
+/**
+ * @returns {Promise<Response>}
+ */
+async function errorHandler(error) {
   // console.log(err);
-  if (isHttpError(err)) {
-    if (err.status === 404) {
+  if (isHttpError(error)) {
+    if (error.status === 404) {
       return new Response(
         await errorTemplate(
-          err,
+          error,
           `${Status.NotFound} ${STATUS_TEXT[Status.NotFound]}`,
         ),
         {
           headers: {
             "content-type": "text/html",
           },
-          status: err.status,
+          status: error.status,
         },
       );
     }
@@ -468,7 +406,7 @@ async function errorHandler(err) {
 
   return new Response(
     await errorTemplate(
-      err,
+      error,
       `${Status.InternalServerError} ${
         STATUS_TEXT[Status.InternalServerError]
       }`,
@@ -512,8 +450,13 @@ export function stewpot(settings = {}) {
     throw new Error('Could not initalize module, does it export a default method?');
   } */
 
+  Deno.addSignalListener("SIGINT", () => {
+    console.log(" Closing Web Server connection...");
+    state.controller.abort();
+  });
+
   try {
-    return Deno.serve({
+    const server = Deno.serve({
       port: state.port,
       signal: state.controller.signal,
       handler: configureHandler({ state, module }),
@@ -524,6 +467,8 @@ export function stewpot(settings = {}) {
       },
       onError: errorHandler,
     });
+    server.finished.then(() => console.log("Web Server connection closed..."));
+    return server;
   } catch (error) {
     // await stewpot({ ...state, port: state.port++ })
     throw error;
@@ -576,18 +521,27 @@ function registerPlugins({ state, settings }) {
   }
 }
 
+/**
+ * configureApp(isDev, settings)
+ *
+ * @param {Boolean} isDev
+ * @param {StewpotOptions} settings
+ * @returns {StewpotOptions}
+ */
 // is this method even necessary?
-function configureApp(isDev, settings = {}) {
+function configureApp(isDev, settings) {
   if (settings.root) {
     settings.root = dirname(fromFileUrl(settings.root));
   }
 
+  const environment = isDev ? "development" : "production";
+
+  /** @type {StewpotOptions} */
   const defaultSettings = {
     port,
     controller,
-    environment: isDev ? "development" : "production",
+    environment,
     root,
-    module: "main.js",
     templateFormat: "html",
     templateFormats: supportedTemplateFormats,
     plugins: defaultPlugins,
