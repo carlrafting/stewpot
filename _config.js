@@ -17,7 +17,7 @@ for (const [key, value] of Object.entries(meta)) {
   site.data(key, value);
 }
 
-site.remoteFile("_includes/footer.html", "templates/footer.html");
+site.remoteFile("_includes/footer.njk", "templates/footer.html");
 site.remoteFile("_includes/header.njk", "templates/header.html");
 site.remoteFile("css/code.css", "static/code.css");
 site.remoteFile("css/global.css", "static/global.css");
