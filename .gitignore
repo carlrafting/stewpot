@@ -5,3 +5,4 @@ coverage
 *.lcov
 dist
 !sandbox/next
+.obsidian
