@@ -15,7 +15,7 @@ export { Router } from "./lib/Router.js";
 
 const port = 80;
 const controller = new AbortController();
-const IS_DEV = Deno.env.get("DENO_ENV") ||
+const IS_DEV = Deno.env.get("DENO_ENV") === "development" ||
   (Deno.args.includes("--dev") && "watchFs" in Deno);
 const supportedTemplateFormats = ["html"];
 const mergePlugins = true;
@@ -24,6 +24,11 @@ const middlewares = [
   cookies(),
   logger(),
 ];
+const defaultPlugins = [
+  etaPlugin(),
+];
+const pluginInstances = new Map();
+
 // const root = dirname(fromFileUrl(import.meta.url));
 
 // console.log(IS_DEV ? "dev mode enabled" : "dev mode disabled");
@@ -33,24 +38,18 @@ const middlewares = [
 /**
  *  @typedef {Object} StewpotOptions
  *  @property {String} root
- *  @property {number} port
+ *  @property {Number} port
  *  @property {String} environment
  *  @property {AbortController} controller
  *  @property {String} templateFormat
  *  @property {Array<string>} templateFormats
  *  @property {Array<Function>} plugins
- *  @property {boolean} mergePlugins
+ *  @property {Boolean} mergePlugins
  *  @property {Object} meta
  */
 
-const defaultPlugins = [
-  etaPlugin(),
-];
-
-const pluginInstances = new Map();
-
 /**
- * @param {Object} obj
+ * @param {Object|null|undefined} obj
  * @returns {String}
  */
 export const checkType = (obj) =>
@@ -259,6 +258,7 @@ function defaultHandler({ pathname, render }) {
  * @param {String} pathname
  */
 export function logNotFound(request, error, pathname) {
+  // NOTE: this only works for logging missing static files
   if (error instanceof Deno.errors.NotFound) {
     console.log(request.method, pathname, colors.red("404"));
   }
@@ -450,11 +450,6 @@ export function stewpot(settings = {}) {
     throw new Error('Could not initalize module, does it export a default method?');
   } */
 
-  Deno.addSignalListener("SIGINT", () => {
-    console.log(" Closing Web Server connection...");
-    state.controller.abort();
-  });
-
   try {
     const server = Deno.serve({
       port: state.port,
@@ -467,9 +462,17 @@ export function stewpot(settings = {}) {
       },
       onError: errorHandler,
     });
+
+    Deno.addSignalListener("SIGINT", () => {
+      console.log(" Closing Web Server connection...");
+      state.controller.abort();
+    });
+
     server.finished.then(() => console.log("Web Server connection closed..."));
+
     return server;
   } catch (error) {
+    state.controller.abort();
     // await stewpot({ ...state, port: state.port++ })
     throw error;
   }
