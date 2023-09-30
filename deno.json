@@ -1,6 +1,12 @@
 {
+  "fmt": {
+    "exclude": [
+      ".obsidian/",
+      ".vscode/"
+    ]
+  },
   "tasks": {
-    "test": "deno test --watch .",
+    "test": "deno test -A --no-check --watch",
     "check": "deno fmt --check .",
     "fmt": "deno fmt .",
     "lume": "echo \"import 'lume/cli.ts'\" | deno run --unstable -A -",
@@ -13,6 +19,6 @@
     "checkJs": true
   },
   "imports": {
-    "lume/": "https://deno.land/x/lume@v1.18.5/"
+    "lume/": "https://deno.land/x/lume@v1.19.1/"
   }
 }
