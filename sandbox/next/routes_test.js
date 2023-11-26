@@ -7,7 +7,7 @@ import {
   assertNotEquals,
   assertNotMatch,
   assertThrows,
-} from "https://deno.land/std@0.201.0/assert/mod.ts";
+} from "../../deps/dev.js";
 import { add, clear, match } from "./routes.js";
 import { noop } from "./http.js";
 

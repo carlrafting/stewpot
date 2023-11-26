@@ -1,6 +1,6 @@
-import { join, resolve, toFileUrl } from "./deps/path.ts";
-import { parseFlags } from "./deps/flags.ts";
-import * as colors from "./deps/fmt.ts";
+import { join, resolve, toFileUrl } from "./deps/path.js";
+import { parseFlags } from "./deps/flags.js";
+import * as colors from "./deps/fmt.js";
 import { meta } from "./stewpot.js";
 import { init } from "./init.js";
 

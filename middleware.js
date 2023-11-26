@@ -1,7 +1,7 @@
 // import { getCookies } from "./deps.js";
-import * as colors from "./deps/fmt.ts";
-import { errors, serveDir, serveFile } from "./deps/http.ts";
-import { join } from "./deps/path.ts";
+import * as colors from "./deps/fmt.js";
+import { errors, serveDir, serveFile } from "./deps/http.js";
+import { join } from "./deps/path.js";
 import { logNotFound } from "./stewpot.js";
 
 export function cookies(_config = {}) {

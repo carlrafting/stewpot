@@ -1,6 +1,6 @@
-import { dirname, join, resolve } from "./deps/path.ts";
-import { ensureFile } from "./deps/fs.ts";
-import { parseFlags } from "./deps/flags.ts";
+import { dirname, join, resolve } from "./deps/path.js";
+import { ensureFile } from "./deps/fs.js";
+import { parseFlags } from "./deps/flags.js";
 
 const STD_VERSION = "0.201.0";
 const DENO_JSON_NAME = "deno.json";
