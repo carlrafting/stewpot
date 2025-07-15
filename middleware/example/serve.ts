@@ -1,4 +1,4 @@
-import fetch from "./main.ts";
+import fetch from "./example.ts";
 
 export default {
     fetch
