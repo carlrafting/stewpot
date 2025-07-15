@@ -72,7 +72,7 @@ export function serveStatic({ root }) {
           serveStatic = true;
         }
       } catch (error) {
-        // logNotFound(request, error, pathname);
+        logNotFound(request, error, pathname);
         // throw error;
       }
     }
