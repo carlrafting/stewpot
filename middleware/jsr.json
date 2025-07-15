@@ -2,7 +2,10 @@
     "name": "@stewpot/middleware",
     "version": "0.1.0",
     "license": "MIT",
-    "exports": "./main.ts",
+    "exports": {
+        ".": "./main.ts",
+        "./logger": "./logger.ts"
+    },
     "publish": {
         "exclude": [
             "test.ts"
