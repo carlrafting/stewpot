@@ -1,5 +1,5 @@
 import { assertEquals } from "jsr:@std/assert";
-import { compose, Middleware } from "./main.ts";
+import { compose, Middleware } from "../main.ts";
 
 Deno.test("middleware runs in order", async () => {
     const trace: string[] = [];
