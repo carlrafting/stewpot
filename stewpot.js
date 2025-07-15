@@ -1,7 +1,7 @@
 import { errors, isHttpError, Status, STATUS_TEXT } from "./deps/http.js";
 import { dirname, fromFileUrl, join } from "./deps/path.js";
 import * as colors from "./deps/fmt.js";
-import meta from "./stewpot.json" assert { type: "json" };
+import meta from "./stewpot.json" with { type: "json" };
 import { etaPlugin } from "./plugins.js";
 import {
   composeMiddleware,
