@@ -1,4 +1,4 @@
-import { NextHandler } from "./main.ts";
+import type { NextHandler } from "./main.ts";
 
 export async function logger(req: Request, next: NextHandler): Promise<Response> {
     console.log(`--> ${req.method} ${req.url}`);

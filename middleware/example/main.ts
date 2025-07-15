@@ -1,4 +1,4 @@
-import { Middleware, RequestHandler, compose } from "../main.ts";
+import { type Middleware, type RequestHandler, compose } from "../main.ts";
 import logger from "../logger.ts";
 
 const middleware: Middleware[] = [logger];
