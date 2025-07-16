@@ -5,7 +5,7 @@ layout: layouts/base.vto
 <main>
     {{ include "header.vto" }}
     <div class="container">
-        {{ content | safe }}
+        {{ content }}
     </div>
 </main>
 <aside>
@@ -56,5 +56,5 @@ layout: layouts/base.vto
         </ol>
     </details>
 </aside>
-{% include "footer.njk" %}
-{% endblock %}
+{{ include "footer.vto" }}
+
