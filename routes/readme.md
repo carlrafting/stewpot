@@ -65,6 +65,22 @@ You can then run your app with `deno serve` CLI command:
 deno serve main.ts
 ```
 
+### 3. Use with `Deno.serve()`
+
+You can also use the fetch handler for the `Deno.serve` Http server.
+
+```ts
+import main from "./main.ts";
+
+if (import.meta.main) {
+  const port = 8000;
+  Deno.serve({ port }, main.fetch);
+  console.log(`Server started at localhost:${port}`);
+}
+```
+
+Then run with `deno run -N path/to/file.ts`
+
 ## ✅ Route Parameters
 
 `simpleRoutes()` uses `URLPattern` internally, so you can define named
