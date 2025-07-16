@@ -5,6 +5,11 @@
   "exports": {
     ".": "./main.ts"
   },
+  "publish": {
+    "exclude": [
+      "tests/"
+    ]
+  },
   "imports": {
     "@std/http": "jsr:@std/http@^1.0.19",
     "@stewpot/middleware": "jsr:@stewpot/middleware@^0.1.2"
