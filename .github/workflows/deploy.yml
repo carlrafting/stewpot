@@ -30,11 +30,6 @@ jobs:
         # You may pin to the exact commit or the version.
         uses: denoland/deployctl@v1
         with:
-          # The name or ID of the project to deploy
           project: stewpot
-          # The path or URL to the entrypoint file
-          entrypoint: server.js
-          # The path or URL to an import map file
-          # import-map: # optional
-          # The path to the directory containing the code and assets to upload
-          root: legacy/www # optional
+          entrypoint: www/server.js
+          root: ./legacy
