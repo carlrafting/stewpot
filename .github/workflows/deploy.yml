@@ -33,8 +33,8 @@ jobs:
           # The name or ID of the project to deploy
           project: stewpot
           # The path or URL to the entrypoint file
-          entrypoint: legacy/www/server.js
+          entrypoint: server.js
           # The path or URL to an import map file
           # import-map: # optional
           # The path to the directory containing the code and assets to upload
-          root: legacy/www/dist # optional
+          root: legacy/www # optional
