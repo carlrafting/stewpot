@@ -2,7 +2,7 @@ import Server from "lume/core/server.ts";
 
 const server = new Server({
   port: 8000,
-  root: `${Deno.cwd()}/dist`,
+  root: `./dist`,
 });
 
 server.start();
