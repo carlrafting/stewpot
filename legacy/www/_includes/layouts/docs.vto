@@ -1,8 +1,9 @@
-{% extends 'layouts/base.njk' %}
+---
+layout: layouts/base.vto
+---
 
-{% block body %}
 <main>
-    {% include "header.njk" %}
+    {{ include "header.vto" }}
     <div class="container">
         {{ content | safe }}
     </div>

@@ -1,6 +1,6 @@
 ---
 title: Home
-templateEngine: [njk,md]
+templateEngine: [vto,md]
 ---
 
 # A pretty small web framework for Deno
@@ -11,7 +11,7 @@ websites. Instead the ambition is a more modest one, supporting the everyday
 human in building things on the web. Written in JavaScript with the help of
 TypeScript for linting and JSDoc for type definitions.
 
-{% include "templates/info.html" %}
+{{ include "templates/info.html" }}
 
 ...
 
