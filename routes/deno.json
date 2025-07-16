@@ -7,7 +7,7 @@
   },
   "publish": {
     "exclude": [
-      "tests/"
+      "*.test.ts"
     ]
   },
   "imports": {
