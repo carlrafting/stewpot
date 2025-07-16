@@ -1,7 +1,11 @@
 import { type Middleware, type RequestHandler, compose } from "../main.ts";
 import logger from "../logger.ts";
+import serveStatic from "../static.ts";
 
-const middleware: Middleware[] = [logger];
+const middleware: Middleware[] = [
+    logger,
+    serveStatic()
+];
 
 const finalHandler: RequestHandler = () => new Response("Hello World!");
 const composedHandler: RequestHandler = compose(middleware, finalHandler);

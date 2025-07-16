@@ -8,7 +8,7 @@
     },
     "publish": {
         "exclude": [
-            "./tests",
+            "*.test.ts",
             "./example"
         ]
     }
