@@ -1,9 +1,7 @@
 {
   "deno.enable": true,
   "deno.lint": true,
-  "prettier.enable": false,
-  "eslint.enable": false,
-  "npm.autoDetect": "off",
+  "editor.tabSize": 2,
   "editor.formatOnSave": true,
   "[javascript]": {
     "editor.defaultFormatter": "denoland.vscode-deno"

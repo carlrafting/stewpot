@@ -1,0 +1,15 @@
+{
+  "name": "@stewpot/routes",
+  "version": "0.1.0",
+  "license": "MIT",
+  "exports": {
+    ".": "./main.ts"
+  },
+  "imports": {
+    "@std/http": "jsr:@std/http@^1.0.19",
+    "@stewpot/middleware": "jsr:@stewpot/middleware@^0.1.2"
+  },
+  "tasks": {
+    "dev:serve": "deno serve --watch -R main.ts"
+  }
+}
