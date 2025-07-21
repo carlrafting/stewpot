@@ -5,7 +5,8 @@
     "exports": {
         ".": "./main.ts",
         "./logger": "./logger.ts",
-        "./static": "./static.ts"
+        "./static": "./static.ts",
+        "./dev": "./dev.ts"
     },
     "publish": {
         "exclude": [
