@@ -3,7 +3,6 @@
   "specifiers": {
     "jsr:@davidbonnet/astring@1.8.6": "1.8.6",
     "jsr:@luca/esbuild-deno-loader@0.11.1": "0.11.1",
-    "jsr:@std/assert@*": "1.0.13",
     "jsr:@std/assert@1": "1.0.13",
     "jsr:@std/bytes@^1.0.2": "1.0.6",
     "jsr:@std/cli@1.0.20": "1.0.20",
@@ -29,6 +28,7 @@
     "jsr:@std/jsonc@1.0.2": "1.0.2",
     "jsr:@std/media-types@^1.1.0": "1.1.0",
     "jsr:@std/net@^1.0.4": "1.0.4",
+    "jsr:@std/path@*": "1.1.1",
     "jsr:@std/path@1.0.8": "1.0.8",
     "jsr:@std/path@1.1.0": "1.1.0",
     "jsr:@std/path@^1.0.6": "1.1.0",
@@ -726,7 +726,8 @@
   "workspace": {
     "dependencies": [
       "jsr:@std/assert@1",
-      "jsr:@std/http@^1.0.19"
+      "jsr:@std/http@^1.0.19",
+      "jsr:@std/path@^1.1.1"
     ],
     "members": {
       "routes": {
