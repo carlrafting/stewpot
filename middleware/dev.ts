@@ -1,4 +1,4 @@
-import { fromFileUrl } from "@std/path";
+import { fromFileUrl, join } from "@std/path";
 import type { Middleware, NextHandler } from "./main.ts";
 
 interface Options {
@@ -27,7 +27,10 @@ function injectReloadScript(html: string): string {
 }
 
 const defaultOptions: Options = {
-  watchPaths: ["./templates", "./public"]
+  watchPaths: [
+    join(Deno.cwd(), "./templates"),
+    join(Deno.cwd(), "./public")
+  ]
 }
 
 const normalizePaths = (paths: string[]): string[] => {
