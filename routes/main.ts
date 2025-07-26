@@ -6,49 +6,71 @@ export type Method = "GET" | "POST" | "PUT" | "DELETE" | "PATCH" | "OPTIONS";
 type Params = Record<string, unknown>;
 
 interface Definition {
-  method: Method,
-  path: string,
-  handler: (request: Request, params: Params) => Response | Promise<Response>
+  method: Method;
+  path: string;
+  handler: (request: Request, params: Params) => Response | Promise<Response>;
 }
 
 interface Options {
-  normalizePath?: boolean,
-  onError?: (request: Request, error: Error) => Promise<Response> | Response,
-};
+  normalizePath?: boolean;
+  onError?: (request: Request, error: Error) => Promise<Response> | Response;
+}
 
 const defaultHeaders: HeadersInit = {
-  'content-type': 'text/html; charset=utf-8'
+  "content-type": "text/html; charset=utf-8",
 };
 
-export const defineRoutes = (definitions: Definition[]): Definition[] => definitions
+export const defineRoutes = (definitions: Definition[]): Definition[] =>
+  definitions;
 
 export function onError(request: Request, error: Error): Response {
   const headers = new Headers(defaultHeaders);
   const status = 500;
-  return new Response(`<h1>${STATUS_TEXT[status]}</h1>`, {
+  const html = `
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>${status}: ${STATUS_TEXT[status]}</title>
+<h1>${STATUS_TEXT[status]}</h1>
+  `;
+  return new Response(html, {
     status,
-    headers
+    headers,
   });
 }
 
 export function onNotFound(request: Request): Response {
-  const headers = new Headers(defaultHeaders)
+  const headers = new Headers(defaultHeaders);
   const status = 404;
-  return new Response(`<h1>${STATUS_TEXT[status]}</h1>`, {
-    status,
-    headers
-  });
+  return new Response(
+    `
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>${status}: ${STATUS_TEXT[status]}</title>
+<h1>${STATUS_TEXT[status]}</h1>
+    `,
+    {
+      status,
+      headers,
+    },
+  );
 }
 
 export const defaultOptions = {
   normalizePath: true,
-  onError
-}
+  onError,
+};
 
 export const normalizePath = (path: string): string =>
   path.endsWith("/") && path !== "/" ? path.slice(0, -1) : path;
 
-export function simpleRoutes(definitions: Definition[], options: Options = defaultOptions): Middleware {
+export function simpleRoutes(
+  definitions: Definition[],
+  options: Options = defaultOptions,
+): Middleware {
   const routes = definitions.map(({ method, path, handler }) => ({
     method: method.toUpperCase() as Method,
     pattern: new URLPattern({ pathname: path }),
@@ -57,7 +79,9 @@ export function simpleRoutes(definitions: Definition[], options: Options = defau
   return async (request: Request, next: NextHandler) => {
     try {
       const url = new URL(request.url);
-      const pathname = options?.normalizePath ? normalizePath(url.pathname) : url.pathname;
+      const pathname = options?.normalizePath
+        ? normalizePath(url.pathname)
+        : url.pathname;
       for (const route of routes) {
         if (request.method !== route.method) continue;
         const match = route.pattern.exec({ pathname });
@@ -71,18 +95,14 @@ export function simpleRoutes(definitions: Definition[], options: Options = defau
       if (options.onError) {
         return await options.onError(
           request,
-          (error instanceof Error ?
-            error :
-            new Error(String(error))
-          )
+          error instanceof Error ? error : new Error(String(error)),
         );
       }
 
-      return onError(request,
-        (error instanceof Error ?
-          error :
-          new Error(String(error))
-        ));
+      return onError(
+        request,
+        error instanceof Error ? error : new Error(String(error)),
+      );
     }
   };
 }
