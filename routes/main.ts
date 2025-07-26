@@ -12,8 +12,8 @@ interface Definition {
 }
 
 interface Options {
-  normalizePath: boolean,
-  onError: (request: Request, error: Error) => Promise<Response> | Response,
+  normalizePath?: boolean,
+  onError?: (request: Request, error: Error) => Promise<Response> | Response,
 };
 
 const defaultHeaders: HeadersInit = {
@@ -25,8 +25,7 @@ export const defineRoutes = (definitions: Definition[]): Definition[] => definit
 export function onError(request: Request, error: Error): Response {
   const headers = new Headers(defaultHeaders);
   const status = 500;
-  console.log(request.url, error);
-  return new Response(STATUS_TEXT[status], {
+  return new Response(`<h1>${STATUS_TEXT[status]}</h1>`, {
     status,
     headers
   });
@@ -35,8 +34,7 @@ export function onError(request: Request, error: Error): Response {
 export function onNotFound(request: Request): Response {
   const headers = new Headers(defaultHeaders)
   const status = 404;
-  console.log({ status, url: request.url })
-  return new Response(STATUS_TEXT[status], {
+  return new Response(`<h1>${STATUS_TEXT[status]}</h1>`, {
     status,
     headers
   });
@@ -70,13 +68,21 @@ export function simpleRoutes(definitions: Definition[], options: Options = defau
       }
       return await next();
     } catch (error) {
-      return await options.onError(
-        request,
+      if (options.onError) {
+        return await options.onError(
+          request,
+          (error instanceof Error ?
+            error :
+            new Error(String(error))
+          )
+        );
+      }
+
+      return onError(request,
         (error instanceof Error ?
           error :
           new Error(String(error))
-        )
-      );
+        ));
     }
   };
 }
