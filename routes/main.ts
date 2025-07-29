@@ -3,7 +3,7 @@ import { STATUS_TEXT } from "@std/http/status";
 
 export type Method = "GET" | "POST" | "PUT" | "DELETE" | "PATCH" | "OPTIONS";
 
-type Params = Record<string, unknown>;
+export type Params = Record<string, unknown>;
 
 interface Definition {
   method: Method;
