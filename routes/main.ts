@@ -76,7 +76,7 @@ export function simpleRoutes(
     pattern: new URLPattern({ pathname: path }),
     handler,
   }));
-  return async (request: Request, next: NextHandler) => {
+  return async function routesMiddleware(request: Request, next: NextHandler) {
     try {
       const url = new URL(request.url);
       const pathname = options?.normalizePath
