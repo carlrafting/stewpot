@@ -62,7 +62,7 @@ export default function devReload(options: Options = defaultOptions): Middleware
 
   })();
 
-  return async (req: Request, next: NextHandler) => {
+  return async function devReloadMiddleware(req: Request, next: NextHandler) {
     const url = new URL(req.url);
     if (url.pathname === '/reload') {
       const { response, socket } = Deno.upgradeWebSocket(req);
