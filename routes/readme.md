@@ -67,7 +67,8 @@ deno serve main.ts
 
 ### 3. Use with `Deno.serve()`
 
-You can also use the fetch handler for the `Deno.serve` Http server.
+You can also use the fetch handler (defined in the previous example) for the
+`Deno.serve` HTTP server.
 
 ```ts
 import main from "./main.ts";
