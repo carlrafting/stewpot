@@ -1,5 +1,5 @@
 import { serveDir } from "@std/http/file-server"
-import type { Middleware, NextHandler } from "@stewpot/middleware";
+import type { Middleware, NextHandler } from "./main.ts";
 
 interface Options {
   path?: string,
