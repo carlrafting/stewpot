@@ -7,6 +7,7 @@
     "jsr:@std/bytes@^1.0.2": "1.0.6",
     "jsr:@std/cli@1.0.20": "1.0.20",
     "jsr:@std/cli@^1.0.20": "1.0.20",
+    "jsr:@std/cli@^1.0.21": "1.0.21",
     "jsr:@std/collections@^1.1.1": "1.1.1",
     "jsr:@std/crypto@1.0.5": "1.0.5",
     "jsr:@std/encoding@1.0.10": "1.0.10",
@@ -23,6 +24,7 @@
     "jsr:@std/http@*": "1.0.19",
     "jsr:@std/http@1.0.18": "1.0.18",
     "jsr:@std/http@^1.0.19": "1.0.19",
+    "jsr:@std/http@^1.0.20": "1.0.20",
     "jsr:@std/internal@^1.0.6": "1.0.9",
     "jsr:@std/internal@^1.0.9": "1.0.9",
     "jsr:@std/jsonc@1.0.2": "1.0.2",
@@ -39,7 +41,7 @@
     "jsr:@std/toml@^1.0.3": "1.0.8",
     "jsr:@std/yaml@1.0.8": "1.0.8",
     "jsr:@std/yaml@^1.0.5": "1.0.8",
-    "jsr:@stewpot/middleware@~0.1.2": "0.1.2",
+    "jsr:@stewpot/middleware@~0.1.4": "0.1.4",
     "npm:date-fns@4.1.0": "4.1.0",
     "npm:estree-walker@3.0.3": "3.0.3",
     "npm:lightningcss-wasm@1.30.1": "1.30.1",
@@ -74,6 +76,9 @@
     },
     "@std/cli@1.0.20": {
       "integrity": "a8c384a2c98cec6ec6a2055c273a916e2772485eb784af0db004c5ab8ba52333"
+    },
+    "@std/cli@1.0.21": {
+      "integrity": "cd25b050bdf6282e321854e3822bee624f07aca7636a3a76d95f77a3a919ca2a"
     },
     "@std/collections@1.1.1": {
       "integrity": "eff6443fbd9d5a6697018fb39c5d13d5f662f0045f21392d640693d0008ab2af"
@@ -137,6 +142,20 @@
         "jsr:@std/streams"
       ]
     },
+    "@std/http@1.0.20": {
+      "integrity": "b5cc33fc001bccce65ed4c51815668c9891c69ccd908295997e983d8f56070a1",
+      "dependencies": [
+        "jsr:@std/cli@^1.0.21",
+        "jsr:@std/encoding@^1.0.10",
+        "jsr:@std/fmt@^1.0.8",
+        "jsr:@std/fs@^1.0.19",
+        "jsr:@std/html@^1.0.4",
+        "jsr:@std/media-types",
+        "jsr:@std/net",
+        "jsr:@std/path@^1.1.1",
+        "jsr:@std/streams"
+      ]
+    },
     "@std/internal@1.0.9": {
       "integrity": "bdfb97f83e4db7a13e8faab26fb1958d1b80cc64366501af78a0aee151696eb8"
     },
@@ -173,8 +192,12 @@
     "@std/yaml@1.0.8": {
       "integrity": "90b8aab62995e929fa0ea5f4151c287275b63e321ac375c35ff7406ca60c169d"
     },
-    "@stewpot/middleware@0.1.2": {
-      "integrity": "356107805d9e6b7bd65db430237f2f2bf011a324f53072ea8c44c300e70aa2f6"
+    "@stewpot/middleware@0.1.4": {
+      "integrity": "8893a63a62e1a789a0c6b8d98ceb8f3fc0317d7c2f1d523c1f669d5fd4e94220",
+      "dependencies": [
+        "jsr:@std/http@^1.0.19",
+        "jsr:@std/path@^1.1.1"
+      ]
     }
   },
   "npm": {
@@ -732,8 +755,8 @@
     "members": {
       "routes": {
         "dependencies": [
-          "jsr:@std/http@^1.0.19",
-          "jsr:@stewpot/middleware@~0.1.2"
+          "jsr:@std/http@^1.0.20",
+          "jsr:@stewpot/middleware@~0.1.4"
         ]
       }
     }
