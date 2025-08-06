@@ -10,6 +10,7 @@
     },
     "publish": {
         "exclude": [
+            "__snapshots__",
             "*.test.ts",
             "./example"
         ]

@@ -1,6 +1,7 @@
 import {
   assertEquals,
 } from "jsr:@std/assert";
+import { assertSnapshot } from "@std/testing/snapshot";
 import simpleRoutes, { defineRoutes, onNotFound } from "./main.ts";
 import type { Middleware } from "../middleware/main.ts";
 
@@ -42,7 +43,7 @@ Deno.test("simpleRoutes falls back to next for unmatched route", async () => {
   assertEquals(response.status, 200);
 });
 
-Deno.test("simpleRoutes returns 404 from onNotFound if next not called", async () => {
+Deno.test("simpleRoutes returns 404 from onNotFound if next not called", async (t) => {
   const definitions = defineRoutes([
     {
       method: "GET",
@@ -58,7 +59,7 @@ Deno.test("simpleRoutes returns 404 from onNotFound if next not called", async (
   const response = await middleware(request, finalHandler);
 
   const text = await response.text();
-  assertEquals(text, "Not Found");
+  await assertSnapshot(t, text);
   assertEquals(response.status, 404);
 });
 

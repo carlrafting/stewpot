@@ -27,7 +27,7 @@ const logger: Middleware = async (request, next) => {
 };
 
 const handler = compose([logger], () => {
-  return new Response("Hello from middleware!");
+  return new Response("Hello from final handler!");
 });
 
 Deno.serve(handler);

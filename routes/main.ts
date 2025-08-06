@@ -1,3 +1,23 @@
+/**
+ * This module contains all the necessary implementations for providing routing functionality. 
+ * 
+ * @example
+ * ```ts
+ * import simpleRoutes, { defineRoutes } from "@stewpot/routes";
+ * 
+ * const routesMiddleware = simpleRoutes(defineRoutes([
+ *    {
+ *      method: "GET",
+ *      path: "/",
+ *      handler(request: Request) {
+ *        return new Response("Hello Index!");
+ *      }
+ *    }
+ * ]));
+ * ```
+ * 
+ * @module 
+ */
 import type { Middleware, NextHandler } from "@stewpot/middleware";
 import { STATUS_TEXT } from "@std/http/status";
 
