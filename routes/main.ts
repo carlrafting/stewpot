@@ -1,36 +1,20 @@
-/**
- * This module contains all the necessary implementations for providing routing functionality. 
- * 
- * @example
- * ```ts
- * import simpleRoutes, { defineRoutes } from "@stewpot/routes";
- * 
- * const routesMiddleware = simpleRoutes(defineRoutes([
- *    {
- *      method: "GET",
- *      path: "/",
- *      handler(request: Request) {
- *        return new Response("Hello Index!");
- *      }
- *    }
- * ]));
- * ```
- * 
- * @module 
- */
 import type { Middleware, NextHandler } from "@stewpot/middleware";
 import { STATUS_TEXT } from "@std/http/status";
 
+/** Which request method the route handler should respond to */
 export type Method = "GET" | "POST" | "PUT" | "DELETE" | "PATCH" | "OPTIONS";
 
+/** Request parameters passed as second argument to `RequestHandler` */
 export type Params = Record<string, unknown>;
 
+/** Route definition interface. Every definition should have these members */
 interface Definition {
   method: Method;
   path: string;
   handler: (request: Request, params: Params) => Response | Promise<Response>;
 }
 
+/** Options to customize some aspects of `simpleRoutes` */
 interface Options {
   normalizePath?: boolean;
   onError?: (request: Request, error: Error) => Promise<Response> | Response;
@@ -40,9 +24,11 @@ const defaultHeaders: HeadersInit = {
   "content-type": "text/html; charset=utf-8",
 };
 
+/** Provide type hints when defining routes */
 export const defineRoutes = (definitions: Definition[]): Definition[] =>
   definitions;
 
+/** Error response displayed for server-related errors */
 export function onError(request: Request, error: Error): Response {
   const headers = new Headers(defaultHeaders);
   const status = 500;
@@ -60,18 +46,20 @@ export function onError(request: Request, error: Error): Response {
   });
 }
 
+/** Not found response displayed when no route mathches the requested URL */
 export function onNotFound(request: Request): Response {
   const headers = new Headers(defaultHeaders);
   const status = 404;
-  return new Response(
-    `
+  const html = `
 <!doctype html>
 <html lang="en">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>${status}: ${STATUS_TEXT[status]}</title>
 <h1>${STATUS_TEXT[status]}</h1>
-    `,
+    `;
+  return new Response(
+    html,
     {
       status,
       headers,
@@ -87,6 +75,10 @@ export const defaultOptions = {
 export const normalizePath = (path: string): string =>
   path.endsWith("/") && path !== "/" ? path.slice(0, -1) : path;
 
+/**
+ * @param definitions The array containing all route definitions
+ * @param options Options are passed as the second argument
+ */
 export function simpleRoutes(
   definitions: Definition[],
   options: Options = defaultOptions,
