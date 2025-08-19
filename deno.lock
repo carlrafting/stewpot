@@ -33,6 +33,7 @@
     "jsr:@std/testing@^1.0.15": "1.0.15",
     "jsr:@std/toml@1.0.8": "1.0.8",
     "jsr:@std/toml@^1.0.3": "1.0.8",
+    "jsr:@std/ulid@*": "1.0.0",
     "jsr:@std/yaml@1.0.8": "1.0.8",
     "jsr:@std/yaml@^1.0.5": "1.0.8",
     "jsr:@stewpot/middleware@0.3": "0.3.0",
@@ -156,6 +157,9 @@
       "dependencies": [
         "jsr:@std/collections"
       ]
+    },
+    "@std/ulid@1.0.0": {
+      "integrity": "d41c3d27a907714413649fee864b7cde8d42ee68437d22b79d5de4f81d808780"
     },
     "@std/yaml@1.0.8": {
       "integrity": "90b8aab62995e929fa0ea5f4151c287275b63e321ac375c35ff7406ca60c169d"
