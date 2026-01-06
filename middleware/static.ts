@@ -1,6 +1,6 @@
 import { serveDir } from "@std/http/file-server"
 import type { Middleware, NextHandler } from "./main.ts";
-import { fromFileUrl, join } from "@std/path";
+import { join } from "@std/path";
 
 export interface Options {
   path?: string,
