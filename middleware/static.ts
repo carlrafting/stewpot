@@ -1,23 +1,25 @@
 import { serveDir } from "@std/http/file-server"
 import type { Middleware, NextHandler } from "./main.ts";
+import { fromFileUrl, join } from "@std/path";
 
-interface Options {
+export interface Options {
   path?: string,
   debug?: boolean
 };
 
-export function serveStatic(options?: Options): Middleware {
-  return async (request: Request, next: NextHandler): Promise<Response> => {
+export function serveStaticMiddleware(options?: Options): Middleware {
+  return async function serveStatic(request: Request, next: NextHandler): Promise<Response> {
     try {
-      const pathname = decodeURIComponent(new URL(request.url).pathname);
-      if (pathname.includes('.')) {
-        const response = serveDir(request, {
-          fsRoot: options?.path || './public',
-          quiet: !options?.debug,
-        });
-        return response;
+      const response = await serveDir(request, {
+        fsRoot: options?.path ?? join(Deno.cwd(), "./public"),
+        quiet: !options?.debug,
+      });
+
+      if (response.status === 404) {
+        return await next();
       }
-      return await next();
+
+      return response;
     } catch (error) {
       if (options?.debug) {
         console.error(error);
@@ -27,4 +29,4 @@ export function serveStatic(options?: Options): Middleware {
   }
 }
 
-export default serveStatic;
+export default serveStaticMiddleware;
