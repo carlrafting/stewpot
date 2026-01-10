@@ -1,0 +1,13 @@
+export const snapshot = {};
+
+snapshot[`fetchIndexPage 1`] = `
+'<!doctype html>\\r
+<html lang="en">\\r
+<meta charset="utf-8">\\r
+<title>Hello World!</title>\\r
+<h1>Hello World</h1>\\r
+<section>\\r
+  <h2>Colors</h2>\\r
+</section>\\r
+'
+`;
