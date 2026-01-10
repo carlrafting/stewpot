@@ -42,6 +42,7 @@
     "npm:markdown-it-attrs@4.3.1": "4.3.1_markdown-it@14.1.0",
     "npm:markdown-it-deflist@3.0.0": "3.0.0",
     "npm:markdown-it@14.1.0": "14.1.0",
+    "npm:marked@^17.0.1": "17.0.1",
     "npm:meriyah@6.0.5": "6.0.5",
     "npm:nunjucks@3.2.4": "3.2.4",
     "npm:preact-render-to-string@6.2.1": "6.2.1_preact@10.26.9",
@@ -276,6 +277,10 @@
         "punycode.js",
         "uc.micro"
       ],
+      "bin": true
+    },
+    "marked@17.0.1": {
+      "integrity": "sha512-boeBdiS0ghpWcSwoNm/jJBwdpFaMnZWRzjA6SkUMYb40SVaN1x7mmfGKp0jvexGcx+7y2La5zRZsYFZI6Qpypg==",
       "bin": true
     },
     "mdurl@2.0.0": {
@@ -864,7 +869,8 @@
         "dependencies": [
           "jsr:@std/assert@1",
           "jsr:@std/http@1",
-          "jsr:@std/testing@^1.0.16"
+          "jsr:@std/testing@^1.0.16",
+          "npm:marked@^17.0.1"
         ]
       },
       "routes": {
