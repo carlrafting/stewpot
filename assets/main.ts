@@ -1,4 +1,5 @@
 import { serveDir } from "@std/http";
+import vento, { type Options as VentoOptions } from "ventojs/vento";
 
 const staticPathPattern = new URLPattern({ pathname: "/static/*" });
 const indexPage = await Deno.readTextFile("templates/index.html");
