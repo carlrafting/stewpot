@@ -1,18 +1,28 @@
 import { serveDir } from "@std/http";
 import vento, { type Options as VentoOptions } from "ventojs/vento";
 
-const staticPathPattern = new URLPattern({ pathname: "/static/*" });
-const indexPage = await Deno.readTextFile("templates/index.html");
+const templateOptions: VentoOptions = {
+  includes: "./templates",
+  strict: true,
+};
+const templateData: Record<string, unknown> = {
+  lang: "en"
+};
+const ventoEnvironment = vento(templateOptions);
+const staticURLPrefix = "static";
+const staticPathPattern = new URLPattern({ pathname: `/\\${staticURLPrefix}/*` });
 const headers = {
   "content-type": "text/html; charset=utf-8"
 };
 
 export default {
-  fetch(req) {
+  async fetch(req) {
     const url = new URL(req.url);
 
     if (url.pathname === "/") {
-      return new Response(indexPage, {
+      const title = "Stewpot UI System";
+      const indexPage = await ventoEnvironment.run("index.html.vto", { ...templateData, title });
+      return new Response(indexPage.content, {
         headers
       });
     }
