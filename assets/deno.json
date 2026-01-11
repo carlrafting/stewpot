@@ -2,7 +2,7 @@
   "name": "@stewpot/assets",
   "version": "0.0.0",
   "tasks": {
-    "dev": "deno serve --watch -R main.ts",
+    "dev": "deno serve --watch=templates/,components/ -R main.ts",
     "test": "deno test -RW"
   },
   "imports": {
@@ -13,13 +13,14 @@
     "ventojs/vento": "https://cdn.jsdelivr.net/gh/ventojs/vento/mod.ts"
   },
   "exports": {
-    ".": "./mod.ts"
+    ".": "./main.ts"
   },
   "publish": {
     "exclude": [
       "./static",
       "./templates",
       "./tmp",
+      "./__snapshots__",
       "*_test.ts"
     ]
   }
