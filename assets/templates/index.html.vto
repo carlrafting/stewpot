@@ -1,9 +1,6 @@
 {{ layout "document.html.vto" }}
-<h1>Hello World</h1>
+<h1>{{ title }}</h1>
 <section>
-  <h2>Colors</h2>
-  <ul>
-    <li></li>
-  </ul>
+  {{ include "../components/color/index.html.vto" }}
 </section>
 {{ /layout }}
