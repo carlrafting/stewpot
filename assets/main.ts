@@ -1,12 +1,14 @@
 import { serveDir } from "@std/http";
 import vento, { type Options as VentoOptions } from "ventojs/vento";
+import colorPalette from "./components/color/palette.json" with { type: "json" };
 
 const templateOptions: VentoOptions = {
   includes: "./templates",
   strict: true,
 };
 const templateData: Record<string, unknown> = {
-  lang: "en"
+  lang: "en",
+  colorPalette
 };
 const ventoEnvironment = vento(templateOptions);
 const staticURLPrefix = "static";

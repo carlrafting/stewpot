@@ -1,0 +1,74 @@
+:root {
+	--red-hex-100: #ffbbb3;
+	--red-hex-200: #ffa29a;
+	--red-hex-300: #ff7871;
+	--red-hex-400: #b3514c;
+	--red-hex-500: #8c3e3a;
+	--red-hex-600: #ac4e49;
+	--red-hex-700: #e06862;
+	--red-hex-800: #ff9e96;
+
+	--yellow-hex-100: #e7cd87;
+	--yellow-hex-200: #e0bc55;
+	--yellow-hex-300: #cc9c00;
+	--yellow-hex-400: #8d6b00;
+	--yellow-hex-500: #6e5300;
+	--yellow-hex-600: #886700;
+	--yellow-hex-700: #b28800;
+	--yellow-hex-800: #e0ba4b;
+
+	--green-hex-100: #94dfb6;
+	--green-hex-200: #67d49e;
+	--green-hex-300: #00bb77;
+	--green-hex-400: #008151;
+	--green-hex-500: #00643e;
+	--green-hex-600: #007c4d;
+	--green-hex-700: #00a367;
+	--green-hex-800: #5ed39b;
+
+	--blue-hex-100: #8ad9ff;
+	--blue-hex-200: #55ccff;
+	--blue-hex-300: #00b0f3;
+	--blue-hex-400: #0079a9;
+	--blue-hex-500: #005e83;
+	--blue-hex-600: #0074a3;
+	--blue-hex-700: #0099d4;
+	--blue-hex-800: #49caff;
+
+	--red-100: oklch(0.86 0.09 25);
+	--red-200: oklch(0.82 0.13 25);
+	--red-300: oklch(0.73 0.17 25);
+	--red-400: oklch(0.56 0.13 25);
+	--red-500: oklch(0.47 0.11 25);
+	--red-600: oklch(0.54 0.13 25);
+	--red-700: oklch(0.66 0.15 25);
+	--red-800: oklch(0.81 0.13 25);
+
+	--yellow-100: oklch(0.85 0.09 90);
+	--yellow-200: oklch(0.81 0.13 90);
+	--yellow-300: oklch(0.72 0.17 90);
+	--yellow-400: oklch(0.55 0.13 90);
+	--yellow-500: oklch(0.46 0.11 90);
+	--yellow-600: oklch(0.53 0.13 90);
+	--yellow-700: oklch(0.65 0.15 90);
+	--yellow-800: oklch(0.8 0.13 90);
+
+	--green-100: oklch(0.84 0.09 160);
+	--green-200: oklch(0.79 0.13 160);
+	--green-300: oklch(0.69 0.17 160);
+	--green-400: oklch(0.53 0.13 160);
+	--green-500: oklch(0.44 0.11 160);
+	--green-600: oklch(0.51 0.13 160);
+	--green-700: oklch(0.63 0.15 160);
+	--green-800: oklch(0.78 0.13 160);
+
+	--blue-100: oklch(0.85 0.09 230);
+	--blue-200: oklch(0.8 0.13 230);
+	--blue-300: oklch(0.7 0.17 230);
+	--blue-400: oklch(0.54 0.13 230);
+	--blue-500: oklch(0.45 0.11 230);
+	--blue-600: oklch(0.52 0.13 230);
+	--blue-700: oklch(0.63 0.15 230);
+	--blue-800: oklch(0.79 0.13 230);
+
+}

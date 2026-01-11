@@ -1,0 +1,13 @@
+<h2>Color Palette</h2>
+
+<p>This color palette is <a href="https://harmonizer.evilmartians.com/">generated with Harmonizer</a> by Evil Martians. Harmonizer is a tool for generating a harmozied palette that is accessible.</p>
+
+{{ if it.colorPalette }}
+<ul>
+{{ for c of colorPalette }}
+<li>
+{{ JSON.stringify(c) }}
+</li>
+{{ /for }}
+</ul>
+{{ /if }}
