@@ -13,6 +13,7 @@
   for (const { level, hue, oklch } of palette) {
     const name = hue.toLowerCase();
     output.push(`\t--${name}-${level}: ${oklch};`);
+    if (level === "800") output.push("");
   }
   output.push("}");
   Deno.writeTextFile(dest, output.join("\n"));
