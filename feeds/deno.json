@@ -1,0 +1,14 @@
+{
+  "name": "@stewpot/feeds",
+  "description": "This package provides utilities for consuming feeds of different kinds (RSS/Atom/JSON). It can also run as standalone CLI program.",
+  "version": "0.0.1",
+  "license": "MIT",
+  "exports": {
+    ".": "./main.ts"
+  },
+  "imports": {
+    "@std/assert": "jsr:@std/assert@^1.0.17",
+    "@std/cli": "jsr:@std/cli@^1.0.26",
+    "@std/testing": "jsr:@std/testing@^1.0.17"
+  }
+}
