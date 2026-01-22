@@ -6,8 +6,9 @@
 
 Stewpot is a curated collection of lightweight, interoperable packages for
 building web applications in Deno. Each package represents a distinct part of
-the modern web stack — routing, middleware, and more — combined like ingredients
-in a flavorful stew. Designed for composability, clarity, and minimalism.
+the modern web stack: ui, feeds, routing, middleware, and more. Each package,
+combined like ingredients in a flavorful stew. Designed for composability,
+clarity, and minimalism.
 
 # Packages
 
