@@ -11,6 +11,8 @@ in a flavorful stew. Designed for composability, clarity, and minimalism.
 
 # Packages
 
+- [@stewpot/feeds](/feeds/)
+- [@stewpot/ui](/ui/)
 - [@stewpot/middleware](/middleware/)
 - [@stewpot/routes](/routes/)
 
