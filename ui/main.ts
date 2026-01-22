@@ -1,4 +1,4 @@
-import { serveDir } from "@std/http";
+import { serveDir, STATUS_CODE } from "@std/http";
 import vento, { type Options as VentoOptions } from "ventojs/vento";
 import colorPalette from "./components/color/palette.json" with { type: "json" };
 
@@ -11,8 +11,8 @@ const templateData: Record<string, unknown> = {
   colorPalette
 };
 const ventoEnvironment = vento(templateOptions);
-const staticURLPrefix = "static";
-const staticPathPattern = new URLPattern({ pathname: `/\\${staticURLPrefix}/*` });
+// const staticURLPrefix = "components";
+// const staticPathPattern = new URLPattern({ pathname: `/\\${staticURLPrefix}/*` });
 const headers = {
   "content-type": "text/html; charset=utf-8"
 };
@@ -29,11 +29,28 @@ export default {
       });
     }
 
-    const staticFileMatch = staticPathPattern.test(url);
+    /* const staticFileMatch = staticPathPattern.test(url);
     if (staticFileMatch) {
-      return serveDir(req);
+      return serveDir(req, {
+        showDirListing: true,
+        showIndex: true,
+      });
+    } */
+
+    let staticResponse = null;
+    try {
+      staticResponse = await serveDir(req, {
+        showDirListing: true,
+        showIndex: true,
+      });
+    } catch (err) {
+      return new Response(JSON.stringify(err));
     }
 
-    return Response.redirect(new URL("/", url.href), 301);
+    if (staticResponse !== null) {
+      return staticResponse;
+    }
+
+    return Response.redirect(new URL("/", url.href), STATUS_CODE.TemporaryRedirect);
   },
 } satisfies Deno.ServeDefaultExport;
