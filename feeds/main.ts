@@ -1,6 +1,7 @@
 import { parseArgs } from "@std/cli";
 import { assertEquals } from "@std/assert";
 import * as path from "@std/path";
+import * as colors from "@std/fmt/colors";
 
 /*   
   console.log(`@stewpot/feeds is a package that provides utilities for consuming feeds of different kinds (RSS/Atom/JSON).\n`);
@@ -34,22 +35,66 @@ function help() {
   return 0;
 }
 
-export const listCommand = (args: ParsedArguments) => {
-  console.log("1.  Example Feed");
-  console.log("2.  Another Feed");
+function parseURL(input: string): URL | undefined {
+  try {
+    return new URL(input);
+  } catch (_error) {
+    console.error(colors.red("error"), "invalid URL format!");
+  }
+}
+
+export const listCommand = (args: ParsedArguments, feeds: FeedFileSchema[]) => {
+  if (feeds.length === 0) {
+    console.error(colors.red("error"), "there are no feeds");
+    return 1;
+  }
+  for (const feed of feeds) {
+    console.dir(feed);
+  }
   return 0;
 }
 
-export const subscribeCommand = (args: ParsedArguments) => {
+export const subscribeCommand = async (args: ParsedArguments, feeds: FeedFileSchema[], filePath: string) => {
+  const [input] = args._;
+
+  if (typeof input !== "string") {
+    console.error(colors.red("error"), "subscribe: invalid input format!");
+    return 1;
+  }
+
+  const url = parseURL(input);
+
+  if (!url) {
+    return 1;
+  }
+
+  const exists = feeds.filter((value) => value.url === url?.href);
+
+  if (exists.length > 0) {
+    console.error(colors.red("error"), "URL already exists!");
+    return 1;
+  }
+
+  const response = await fetch(url);
+  const body = response.body;
+  const decoder = new TextDecoder('utf-8');
+  if (!body) {
+    console.error(colors.red("error"), "No response body present");
+    return 1;
+  }
+  for await (const chunk of body) {
+    console.log(decoder.decode(chunk));
+  }
+
   return 0;
 };
 
-export default (args: ParsedArguments) => {
+export const unsubscribeCommand = (args: ParsedArguments) => {
   return 0;
 };
 
 export type ParsedArguments = {
-  [x: string]: any;
+  [x: string]: unknown;
   _: Array<string | number>;
 };
 
@@ -61,13 +106,19 @@ interface FeedFileSchema {
 const feedsFileName = "feeds.json";
 const filePath = path.join(Deno.cwd(), feedsFileName);
 
+let feeds: FeedFileSchema[];
+
 export async function main(args: string[]): Promise<number> {
   const [command, ...rest] = args;
   const parsedArgs = parseArgs(rest);
 
+  console.log({
+    parsedArgs
+  });
+
   try {
     const textFile = await Deno.readTextFile(filePath);
-    const feeds: FeedFileSchema[] = JSON.parse(textFile);
+    feeds = JSON.parse(textFile);
   } catch (error) {
     if (error instanceof Deno.errors.NotFound) {
       const answer = prompt(`${feedsFileName} doesn't exist at ${filePath}, would you like to create it? [yes|y]/[no|n]`, "yes");
@@ -83,9 +134,9 @@ export async function main(args: string[]): Promise<number> {
 
   switch (command) {
     case "list":
-      return listCommand(parsedArgs);
+      return listCommand(parsedArgs, feeds);
     case "subscribe":
-      return subscribeCommand(parsedArgs);
+      return subscribeCommand(parsedArgs, feeds, filePath);
     case "unsubscribe":
     case "fetch":
     case "read":
