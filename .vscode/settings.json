@@ -1,5 +1,8 @@
 {
   "deno.enable": true,
+  "deno.disablePaths": [
+    "./legacy"
+  ],
   "deno.lint": true,
   "editor.tabSize": 2,
   "editor.formatOnSave": true,
