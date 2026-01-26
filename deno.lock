@@ -12,6 +12,7 @@
     "jsr:@std/data-structures@^1.0.10": "1.0.10",
     "jsr:@std/encoding@^1.0.10": "1.0.10",
     "jsr:@std/fmt@^1.0.8": "1.0.9",
+    "jsr:@std/fmt@^1.0.9": "1.0.9",
     "jsr:@std/front-matter@1.0.9": "1.0.9",
     "jsr:@std/fs@^1.0.21": "1.0.22",
     "jsr:@std/fs@^1.0.22": "1.0.22",
@@ -109,7 +110,7 @@
       "dependencies": [
         "jsr:@std/cli@^1.0.25",
         "jsr:@std/encoding",
-        "jsr:@std/fmt",
+        "jsr:@std/fmt@^1.0.8",
         "jsr:@std/fs@^1.0.21",
         "jsr:@std/html@^1.0.5",
         "jsr:@std/media-types",
@@ -918,6 +919,7 @@
         "dependencies": [
           "jsr:@std/assert@^1.0.17",
           "jsr:@std/cli@^1.0.26",
+          "jsr:@std/fmt@^1.0.9",
           "jsr:@std/path@^1.1.4",
           "jsr:@std/testing@^1.0.17"
         ]
