@@ -99,6 +99,7 @@ export const listCommand = (args: ParsedArguments, feeds: FeedFileSchema[]) => {
 export const subscribeCommand = async (
   args: ParsedArguments,
   feeds: FeedFileSchema[],
+  store: FilePersistence,
 ) => {
   const [input] = args._;
 
@@ -119,6 +120,35 @@ export const subscribeCommand = async (
     console.error(colors.red("error"), "URL already exists!");
     return 1;
   }
+
+  let title: string = url.href;
+
+  try {
+    const response = await fetch(url);
+    const text = await response.text();
+
+    const match = text.match(/<title>(.*?)<\/title>/i);
+    if (match && match[1]) {
+      title = match[1].trim();
+    }
+  } catch (error) {
+    console.error(
+      colors.red("warning"),
+      "Failed to fetch feed title, using URL as fallback title",
+    );
+  }
+
+  const newFeed: FeedFileSchema = {
+    title,
+    url: url.href,
+  };
+
+  feeds.push(newFeed);
+  await store.saveFeeds(feeds);
+
+  console.log(colors.green("Subscribed!"), newFeed.url);
+
+  return 0;
 
   const response = await fetch(url);
   const body = response.body;
@@ -158,11 +188,8 @@ export async function main(args: string[]): Promise<number> {
   switch (command) {
     case "list":
       return listCommand(parsedArgs, feeds);
-    case "subscribe": {
-      const code = subscribeCommand(parsedArgs, feeds);
-      await store.saveFeeds(feeds);
-      return code;
-    }
+    case "subscribe":
+      return await subscribeCommand(parsedArgs, feeds, store);
     case "unsubscribe":
     case "fetch":
     case "read":
