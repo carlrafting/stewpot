@@ -1,8 +1,8 @@
 import { assertEquals, assertRejects } from "@std/assert";
-import { CommandError, main } from "./main.ts";
+import { CommandError, main } from "@stewpot/feeds/cli";
 
-Deno.test("feeds list exits with 0", () => {
-  const code = main(["list"]);
+Deno.test("feeds list exits with 0", async () => {
+  const code = await main(["list"]);
   assertEquals(code, 0);
 });
 
