@@ -97,7 +97,10 @@ function help() {
   return 0;
 }
 
-export const listCommand = (args: ParsedArguments, feeds: FeedFileSchema[]) => {
+export const listCommand = (
+  args: ParsedArguments,
+  feeds: FeedFileSchema[],
+): number => {
   if (feeds.length === 0) {
     console.error(colors.red("error"), "there are no feeds");
     return 1;
@@ -112,7 +115,7 @@ export const subscribeCommand = async (
   args: ParsedArguments,
   feeds: FeedFileSchema[],
   store: FilePersistence,
-) => {
+): Promise<number> => {
   const [input] = args._;
 
   if (typeof input !== "string") {
@@ -163,7 +166,7 @@ export const subscribeCommand = async (
   return 0;
 };
 
-export const unsubscribeCommand = (args: ParsedArguments) => {
+export const unsubscribeCommand = (args: ParsedArguments): number => {
   return 0;
 };
 
