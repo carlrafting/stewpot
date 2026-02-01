@@ -53,6 +53,19 @@ export class FilePersistence {
   }
 }
 
+async function* fetchResponseBodyInChunksFromURL(url: URL) {
+  const response = await fetch(url);
+  const body = response.body;
+  const decoder = new TextDecoder("utf-8");
+  if (!body) {
+    console.error(colors.red("error"), "No response body present");
+    return;
+  }
+  for await (const chunk of body) {
+    yield decoder.decode(chunk);
+  }
+}
+
 /*
   console.log(`@stewpot/feeds is a package that provides utilities for consuming feeds of different kinds (RSS/Atom/JSON).\n`);
 
@@ -121,7 +134,7 @@ export const subscribeCommand = async (
     return 1;
   }
 
-  let title: string = url.href;
+  let title: string | null = null;
 
   try {
     const response = await fetch(url);
@@ -131,7 +144,7 @@ export const subscribeCommand = async (
     if (match && match[1]) {
       title = match[1].trim();
     }
-  } catch (error) {
+  } catch (_error) {
     console.error(
       colors.red("warning"),
       "Failed to fetch feed title, using URL as fallback title",
@@ -149,19 +162,6 @@ export const subscribeCommand = async (
   console.log(colors.green("Subscribed!"), newFeed.url);
 
   return 0;
-
-  const response = await fetch(url);
-  const body = response.body;
-  const decoder = new TextDecoder("utf-8");
-  if (!body) {
-    console.error(colors.red("error"), "No response body present");
-    return 1;
-  }
-  for await (const chunk of body) {
-    console.log(decoder.decode(chunk));
-  }
-
-  return 0;
 };
 
 export const unsubscribeCommand = (args: ParsedArguments) => {
@@ -174,7 +174,7 @@ export type ParsedArguments = {
 };
 
 export interface FeedFileSchema {
-  title: string;
+  title: string | null;
   url: string;
 }
 
