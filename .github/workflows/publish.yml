@@ -12,5 +12,7 @@ jobs:
       contents: read
       id-token: write
     steps:
+      - uses: denoland/setup-deno@v2
+      - run: echo "Deno version is ${{ steps.deno.outputs.deno-version }}"
       - uses: actions/checkout@v6
       - run: deno publish
