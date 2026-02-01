@@ -2,7 +2,7 @@ import { parseArgs } from "@std/cli";
 import { assertEquals } from "@std/assert";
 import * as path from "@std/path";
 import * as colors from "@std/fmt/colors";
-import { parseURL } from "./main.ts";
+import { parseSubscribeInputToURL } from "./main.ts";
 
 export class FilePersistence {
   private filePath: string;
@@ -19,9 +19,8 @@ export class FilePersistence {
       if (error instanceof Deno.errors.NotFound) {
         await Deno.writeTextFile(this.filePath, "[]");
         console.log(colors.green(`Created new feeds file at ${this.filePath}`));
-      } else {
-        throw error;
       }
+      throw error;
     }
   }
 
@@ -121,7 +120,7 @@ export const subscribeCommand = async (
     return 1;
   }
 
-  const url = parseURL(input);
+  const url = parseSubscribeInputToURL(input);
 
   if (!url) {
     return 1;
@@ -177,6 +176,8 @@ export interface FeedFileSchema {
   title: string | null;
   url: string;
 }
+
+export function discoverFeeds() {}
 
 export async function main(args: string[]): Promise<number> {
   const [command, ...rest] = args;

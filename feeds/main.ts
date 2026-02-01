@@ -1,6 +1,9 @@
 import * as colors from "@std/fmt/colors";
 
-export function parseURL(input: string): URL | undefined {
+export function parseSubscribeInputToURL(input: string): URL | undefined {
+  if (!input.startsWith("http://") && !input.startsWith("https://")) {
+    input = `https://${input}`;
+  }
   try {
     return new URL(input);
   } catch (_error) {
