@@ -1,6 +1,6 @@
 {
   "name": "@stewpot/feeds",
-  "description": "This package provides utilities for consuming feeds of different kinds (RSS/Atom/JSON). It can also run as standalone CLI program.",
+  "description": "Feed utilities and CLI",
   "version": "0.0.1",
   "license": "MIT",
   "exports": {
