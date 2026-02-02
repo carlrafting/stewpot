@@ -1,9 +1,8 @@
 {{ layout "document.html.vto" }}
 <h1>{{ title }}</h1>
+{{ for component of ["color", "button"] }}
 <section>
-  {{ include "../components/color/component.html.vto" }}
+  {{ include "../components/"+component+"/component.html.vto" }}
 </section>
-<section>
-  {{ include "../components/button/component.html.vto" }}
-</section>
+{{ /for }}
 {{ /layout }}
