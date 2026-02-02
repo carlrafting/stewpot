@@ -3,6 +3,7 @@ import { assertEquals } from "@std/assert";
 import * as path from "@std/path";
 import * as colors from "@std/fmt/colors";
 import { parseSubscribeInputToURL } from "./main.ts";
+import denoJSON from "./deno.json" with { type: "json" };
 
 export class FilePersistence {
   private filePath: string;
@@ -80,19 +81,30 @@ export class CommandError extends Error {
   }
 }
 
+class NotImplementedError extends Error {
+  constructor(
+    message: string = "Not Implemented!"
+  ) {
+    super(message);
+  }
+}
+
 function help() {
   console.log(`
-    @stewpot/feeds is a package that provides utilities for consuming feeds of different kinds (RSS/Atom/JSON).
+    @stewpot/feeds - v${denoJSON.version}
+    
+    ${colors.green("Description")}:
+      This package provides utilities for consuming feeds of different kinds (RSS/Atom/JSON).
 
-    Usage:
+    ${colors.green("Usage")}:
       @stewpot/feeds <command>
     
-    Commands:
-      list          - list added feeds
-      subscribe     - subscribe to new feeds
-      unsubscribe   - delete feed
-      fetch         - update feeds
-      read          - read feeds
+    ${colors.green("Commands")}:
+      ${colors.yellow("list")}          - list subscribed feed sources
+      ${colors.yellow("subscribe")}     - subscribe to new feed source
+      ${colors.yellow("unsubscribe")}   - delete feed source
+      ${colors.yellow("fetch")}         - update feed source
+      ${colors.yellow("read")}          - read feed source
   `);
   return 0;
 }
@@ -170,6 +182,18 @@ export const unsubscribeCommand = (args: ParsedArguments): number => {
   return 0;
 };
 
+const notImplementedCommand = () => {
+  try {
+    throw new NotImplementedError();
+  } catch (error) {
+    if (Error?.isError(error)) {
+      console.error(colors.red("error"), error.message);
+      return 1;
+    }
+    throw error;
+  }
+}
+
 export type ParsedArguments = {
   [x: string]: unknown;
   _: Array<string | number>;
@@ -180,7 +204,7 @@ export interface FeedFileSchema {
   url: string;
 }
 
-export function discoverFeeds() {}
+export function discoverFeeds() { }
 
 export async function main(args: string[]): Promise<number> {
   const [command, ...rest] = args;
@@ -195,8 +219,11 @@ export async function main(args: string[]): Promise<number> {
     case "subscribe":
       return await subscribeCommand(parsedArgs, feeds, store);
     case "unsubscribe":
+      return notImplementedCommand();
     case "fetch":
+      return notImplementedCommand();
     case "read":
+      return notImplementedCommand();
     case "--help":
     case "-h":
     case undefined:
