@@ -2,7 +2,7 @@
   "name": "@stewpot/ui",
   "version": "0.0.0",
   "tasks": {
-    "dev": "deno serve --watch=templates/,core/,components/ -R main.ts",
+    "dev": "deno serve --watch=templates/,core/,components/ -R serve.ts",
     "test": "deno test -RW"
   },
   "imports": {
@@ -21,7 +21,8 @@
       "./templates",
       "./tmp",
       "./__snapshots__",
-      "*_test.ts"
+      "*_test.ts",
+      "./serve.ts"
     ]
   }
 }

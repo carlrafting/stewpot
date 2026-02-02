@@ -1,6 +1,6 @@
 import { assertEquals } from "@std/assert";
 import { assertSnapshot } from "@std/testing/snapshot";
-import server from "./main.ts";
+import server from "./serve.ts";
 
 Deno.test(async function fetchIndexPage(t) {
   const req = new Request("https://example.com");

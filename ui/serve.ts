@@ -1,6 +1,8 @@
 import { serveDir, STATUS_CODE } from "@std/http";
 import vento, { type Options as VentoOptions } from "ventojs/vento";
-import colorPalette from "./components/color/palette.json" with { type: "json" };
+import colorPalette from "./components/color/palette.json" with {
+  type: "json",
+};
 
 const templateOptions: VentoOptions = {
   includes: "./templates",
@@ -8,13 +10,13 @@ const templateOptions: VentoOptions = {
 };
 const templateData: Record<string, unknown> = {
   lang: "en",
-  colorPalette
+  colorPalette,
 };
 const ventoEnvironment = vento(templateOptions);
 // const staticURLPrefix = "components";
 // const staticPathPattern = new URLPattern({ pathname: `/\\${staticURLPrefix}/*` });
-const headers = {
-  "content-type": "text/html; charset=utf-8"
+const headers: HeadersInit = {
+  "content-type": "text/html; charset=utf-8",
 };
 
 export default {
@@ -23,9 +25,12 @@ export default {
 
     if (url.pathname === "/") {
       const title = "Stewpot UI System";
-      const indexPage = await ventoEnvironment.run("index.html.vto", { ...templateData, title });
+      const indexPage = await ventoEnvironment.run("index.html.vto", {
+        ...templateData,
+        title,
+      });
       return new Response(indexPage.content, {
-        headers
+        headers,
       });
     }
 
@@ -51,6 +56,9 @@ export default {
       return staticResponse;
     }
 
-    return Response.redirect(new URL("/", url.href), STATUS_CODE.TemporaryRedirect);
+    return Response.redirect(
+      new URL("/", url.href),
+      STATUS_CODE.TemporaryRedirect,
+    );
   },
 } satisfies Deno.ServeDefaultExport;
