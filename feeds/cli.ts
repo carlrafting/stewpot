@@ -1,5 +1,4 @@
 import { parseArgs } from "@std/cli";
-import { assertEquals } from "@std/assert";
 import * as path from "@std/path";
 import * as colors from "@std/fmt/colors";
 import { parseSubscribeInputToURL } from "./main.ts";
