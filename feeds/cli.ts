@@ -19,7 +19,7 @@ export class FilePersistence {
     } catch (error) {
       if (error instanceof Deno.errors.NotFound) {
         await Deno.writeTextFile(this.filePath, "[]");
-        console.log(colors.green(`Created new feeds file at ${this.filePath}`));
+        console.log(colors.green("OK!"), `created new feeds file at ${this.filePath}`);
       }
       throw error;
     }
@@ -58,19 +58,13 @@ async function* fetchResponseBodyInChunksFromURL(url: URL) {
   const body = response.body;
   const decoder = new TextDecoder("utf-8");
   if (!body) {
-    console.error(colors.red("error"), "No response body present");
+    console.error(colors.red("error"), "no response body was found");
     return;
   }
   for await (const chunk of body) {
     yield decoder.decode(chunk);
   }
 }
-
-/*
-  console.log(`@stewpot/feeds is a package that provides utilities for consuming feeds of different kinds (RSS/Atom/JSON).\n`);
-
-  prompt("Enter website or feed URL:");
- */
 
 export class CommandError extends Error {
   constructor(
@@ -91,20 +85,20 @@ class NotImplementedError extends Error {
 
 function help() {
   console.log(`
-    @stewpot/feeds - v${denoJSON.version}
-    
-    ${colors.green("Description")}:
-      This package provides utilities for consuming feeds of different kinds (RSS/Atom/JSON).
+${colors.cyan("@stewpot/feeds")} - v${denoJSON.version}
 
-    ${colors.green("Usage")}:
-      @stewpot/feeds <command>
-    
-    ${colors.green("Commands")}:
-      ${colors.yellow("list")}          - list subscribed feed sources
-      ${colors.yellow("subscribe")}     - subscribe to new feed source
-      ${colors.yellow("unsubscribe")}   - delete feed source
-      ${colors.yellow("fetch")}         - update feed source
-      ${colors.yellow("read")}          - read feed source
+${colors.green("Description")}:
+  Small CLI program for managing & consuming feeds of different kinds (RSS/Atom/JSON).
+
+${colors.green("Usage")}:
+  deno run -RWN @stewpot/feeds/cli <command>
+
+${colors.green("Commands")}:
+  ${colors.yellow("list")}          - list subscribed feed sources
+  ${colors.yellow("subscribe")}     - subscribe to new feed source
+  ${colors.yellow("unsubscribe")}   - delete feed source
+  ${colors.yellow("fetch")}         - update feed source
+  ${colors.yellow("read")}          - read feed source
   `);
   return 0;
 }
@@ -131,7 +125,7 @@ export const subscribeCommand = async (
   const [input] = args._;
 
   if (typeof input !== "string") {
-    console.error(colors.red("error"), "subscribe: invalid input format!");
+    console.error(colors.red("error"), "invalid input format!");
     return 1;
   }
 
@@ -160,8 +154,8 @@ export const subscribeCommand = async (
     }
   } catch (_error) {
     console.error(
-      colors.red("warning"),
-      "Failed to fetch feed title, using URL as fallback title",
+      colors.yellow("warning"),
+      "failed to fetch feed title, using URL as fallback for title",
     );
   }
 
@@ -173,7 +167,7 @@ export const subscribeCommand = async (
   feeds.push(newFeed);
   await store.saveFeeds(feeds);
 
-  console.log(colors.green("Subscribed!"), newFeed.url);
+  console.log(colors.green("subscribed!"), newFeed.url);
 
   return 0;
 };
