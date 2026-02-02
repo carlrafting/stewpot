@@ -1,18 +1,22 @@
 {
-    "name": "@stewpot/middleware",
-    "version": "0.3.0",
-    "license": "MIT",
-    "exports": {
-        ".": "./main.ts",
-        "./logger": "./logger.ts",
-        "./static": "./static.ts",
-        "./dev": "./dev.ts"
-    },
-    "publish": {
-        "exclude": [
-            "__snapshots__",
-            "*.test.ts",
-            "./example"
-        ]
-    }
+  "name": "@stewpot/middleware",
+  "version": "0.3.1",
+  "license": "MIT",
+  "exports": {
+    ".": "./main.ts",
+    "./logger": "./logger.ts",
+    "./static": "./static.ts",
+    "./dev": "./dev.ts"
+  },
+  "publish": {
+    "exclude": [
+      "__snapshots__",
+      "*.test.ts",
+      "./example"
+    ]
+  },
+  "imports": {
+    "@std/http": "jsr:@std/http@^1.0.24",
+    "@std/path": "jsr:@std/path@^1.1.4"
+  }
 }
