@@ -4,6 +4,7 @@
     "jsr:@davidbonnet/astring@1.8.6": "1.8.6",
     "jsr:@std/assert@1": "1.0.18",
     "jsr:@std/assert@^1.0.17": "1.0.18",
+    "jsr:@std/assert@^1.0.18": "1.0.18",
     "jsr:@std/async@^1.1.0": "1.1.1",
     "jsr:@std/cli@^1.0.25": "1.0.26",
     "jsr:@std/cli@^1.0.26": "1.0.27",
@@ -959,6 +960,7 @@
       },
       "middleware": {
         "dependencies": [
+          "jsr:@std/assert@^1.0.18",
           "jsr:@std/http@^1.0.24",
           "jsr:@std/path@^1.1.4"
         ]
