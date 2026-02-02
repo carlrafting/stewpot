@@ -223,8 +223,7 @@ export async function main(args: string[]): Promise<number> {
     case undefined:
       return help();
     default:
-      help();
-      throw new CommandError(`Unknown command: ${command}`);
+      throw new CommandError(`unknown command: ${command}`);
   }
 }
 
@@ -234,7 +233,7 @@ if (import.meta.main) {
     Deno.exit(code);
   } catch (error) {
     if (error instanceof CommandError) {
-      console.error(error.message);
+      console.error(colors.red("error"), error.message);
       Deno.exit(error.exitCode);
     }
     throw error;
