@@ -1,8 +1,8 @@
 import { parseArgs } from "@std/cli";
-import { assertEquals } from "@std/assert";
 import * as path from "@std/path";
 import * as colors from "@std/fmt/colors";
 import { parseSubscribeInputToURL } from "./main.ts";
+import denoJSON from "./deno.json" with { type: "json" };
 
 export class FilePersistence {
   private filePath: string;
@@ -18,7 +18,7 @@ export class FilePersistence {
     } catch (error) {
       if (error instanceof Deno.errors.NotFound) {
         await Deno.writeTextFile(this.filePath, "[]");
-        console.log(colors.green(`Created new feeds file at ${this.filePath}`));
+        console.log(colors.green("OK!"), `created new feeds file at ${this.filePath}`);
       }
       throw error;
     }
@@ -57,19 +57,13 @@ async function* fetchResponseBodyInChunksFromURL(url: URL) {
   const body = response.body;
   const decoder = new TextDecoder("utf-8");
   if (!body) {
-    console.error(colors.red("error"), "No response body present");
+    console.error(colors.red("error"), "no response body was found");
     return;
   }
   for await (const chunk of body) {
     yield decoder.decode(chunk);
   }
 }
-
-/*
-  console.log(`@stewpot/feeds is a package that provides utilities for consuming feeds of different kinds (RSS/Atom/JSON).\n`);
-
-  prompt("Enter website or feed URL:");
- */
 
 export class CommandError extends Error {
   constructor(
@@ -80,19 +74,30 @@ export class CommandError extends Error {
   }
 }
 
+class NotImplementedError extends Error {
+  constructor(
+    message: string = "Not Implemented!"
+  ) {
+    super(message);
+  }
+}
+
 function help() {
   console.log(`
-    @stewpot/feeds is a package that provides utilities for consuming feeds of different kinds (RSS/Atom/JSON).
+${colors.cyan("@stewpot/feeds")} - v${denoJSON.version}
 
-    Usage:
-      @stewpot/feeds <command>
-    
-    Commands:
-      list          - list added feeds
-      subscribe     - subscribe to new feeds
-      unsubscribe   - delete feed
-      fetch         - update feeds
-      read          - read feeds
+${colors.green("Description")}:
+  Small CLI program for managing & consuming feeds of different kinds (RSS/Atom/JSON).
+
+${colors.green("Usage")}:
+  deno run -RWN @stewpot/feeds/cli <command>
+
+${colors.green("Commands")}:
+  ${colors.yellow("list")}          - list subscribed feed sources
+  ${colors.yellow("subscribe")}     - subscribe to new feed source
+  ${colors.yellow("unsubscribe")}   - delete feed source
+  ${colors.yellow("fetch")}         - update feed source
+  ${colors.yellow("read")}          - read feed source
   `);
   return 0;
 }
@@ -119,7 +124,7 @@ export const subscribeCommand = async (
   const [input] = args._;
 
   if (typeof input !== "string") {
-    console.error(colors.red("error"), "subscribe: invalid input format!");
+    console.error(colors.red("error"), "invalid input format!");
     return 1;
   }
 
@@ -148,8 +153,8 @@ export const subscribeCommand = async (
     }
   } catch (_error) {
     console.error(
-      colors.red("warning"),
-      "Failed to fetch feed title, using URL as fallback title",
+      colors.yellow("warning"),
+      "failed to fetch feed title, using URL as fallback for title",
     );
   }
 
@@ -161,7 +166,7 @@ export const subscribeCommand = async (
   feeds.push(newFeed);
   await store.saveFeeds(feeds);
 
-  console.log(colors.green("Subscribed!"), newFeed.url);
+  console.log(colors.green("subscribed!"), newFeed.url);
 
   return 0;
 };
@@ -169,6 +174,18 @@ export const subscribeCommand = async (
 export const unsubscribeCommand = (args: ParsedArguments): number => {
   return 0;
 };
+
+const notImplementedCommand = () => {
+  try {
+    throw new NotImplementedError();
+  } catch (error) {
+    if (Error?.isError(error)) {
+      console.error(colors.red("error"), error.message);
+      return 1;
+    }
+    throw error;
+  }
+}
 
 export type ParsedArguments = {
   [x: string]: unknown;
@@ -180,7 +197,7 @@ export interface FeedFileSchema {
   url: string;
 }
 
-export function discoverFeeds() {}
+export function discoverFeeds() { }
 
 export async function main(args: string[]): Promise<number> {
   const [command, ...rest] = args;
@@ -195,15 +212,17 @@ export async function main(args: string[]): Promise<number> {
     case "subscribe":
       return await subscribeCommand(parsedArgs, feeds, store);
     case "unsubscribe":
+      return notImplementedCommand();
     case "fetch":
+      return notImplementedCommand();
     case "read":
+      return notImplementedCommand();
     case "--help":
     case "-h":
     case undefined:
       return help();
     default:
-      help();
-      throw new CommandError(`Unknown command: ${command}`);
+      throw new CommandError(`unknown command: ${command}`);
   }
 }
 
@@ -213,7 +232,7 @@ if (import.meta.main) {
     Deno.exit(code);
   } catch (error) {
     if (error instanceof CommandError) {
-      console.error(error.message);
+      console.error(colors.red("error"), error.message);
       Deno.exit(error.exitCode);
     }
     throw error;
