@@ -1,6 +1,6 @@
 import { parseArgs } from "@std/cli";
 import * as colors from "@std/fmt/colors";
-import { discoverFeed, type FeedData, FilePersistence, parseSubscribeInputToURL } from "./main.ts";
+import { discoverFeed, type FeedData, FilePersistence, parseInputToURL } from "./main.ts";
 import denoJSON from "./deno.json" with { type: "json" };
 
 export class CommandError extends Error {
@@ -66,7 +66,7 @@ export const subscribeCommand = async (
     return 1;
   }
 
-  const url = parseSubscribeInputToURL(input);
+  const url = parseInputToURL(input);
 
   if (!url) {
     return 1;
@@ -121,7 +121,23 @@ export const subscribeCommand = async (
   return 0;
 };
 
-export const unsubscribeCommand = (args: ParsedArguments): number => {
+export const unsubscribeCommand = async (
+  args: ParsedArguments,
+  feeds: FeedData[],
+  store: FilePersistence
+): Promise<number> => {
+  const [input] = args._;
+
+  if (typeof input !== "string") {
+    console.error(colors.red("error"), "invalid input format!");
+    return 1;
+  }
+
+  const url = parseInputToURL(input);
+  const filtered = feeds.filter(item => item.url !== url?.href);
+  if (filtered.length > 0) {
+    await store.saveFeeds(filtered);
+  }
   return 0;
 };
 
@@ -155,7 +171,7 @@ export async function main(args: string[]): Promise<number> {
     case "subscribe":
       return await subscribeCommand(parsedArgs, feeds, store);
     case "unsubscribe":
-      return notImplementedCommand();
+      return unsubscribeCommand(parsedArgs, feeds, store);
     case "fetch":
       return notImplementedCommand();
     case "read":
