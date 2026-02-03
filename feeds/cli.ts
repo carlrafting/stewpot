@@ -134,14 +134,23 @@ export const subscribeCommand = async (
     return 1;
   }
 
-  if (url?.pathname === "/") {
-    url.href = await discoverFeed(url.href);
-  }
-
   const exists = feeds.find((value) => value.url === url?.href);
   if (exists) {
     console.error(colors.red("error"), "URL already exists!");
     return 1;
+  }
+
+  if (url?.pathname === "/") {
+    const oldHref = url.href;
+    const feedURL = await discoverFeed(url.href);
+    if (feedURL && feedURL !== url.href) {
+      url.href = feedURL;
+    }
+    const ok = prompt(`subscribe to discovered feed for "${oldHref}" at "${url.href}"? [y/N]`)?.toLocaleLowerCase();
+    if (ok !== 'y' && ok !== 'yes') {
+      url.href = oldHref;
+      return 1;
+    }
   }
 
   let title: string | null = null;
@@ -209,7 +218,7 @@ export interface FeedData {
  * 
  * @param url to website to discover feed links on
  */
-export async function discoverFeed(url: string): Promise<string> {
+export async function discoverFeed(url: string): Promise<string | undefined> {
   const commonPaths = [
     "/feed",
     "/rss",
@@ -232,8 +241,6 @@ export async function discoverFeed(url: string): Promise<string> {
       throw error;
     }
   }
-
-  return url;
 }
 
 export async function main(args: string[]): Promise<number> {
