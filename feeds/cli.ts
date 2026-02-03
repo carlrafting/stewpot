@@ -24,7 +24,7 @@ export class FilePersistence {
     }
   }
 
-  async loadFeeds(): Promise<FeedFileSchema[]> {
+  async loadFeeds(): Promise<FeedData[]> {
     await this.ensureFile();
 
     try {
@@ -46,7 +46,7 @@ export class FilePersistence {
     }
   }
 
-  async saveFeeds(feeds: FeedFileSchema[]): Promise<void> {
+  async saveFeeds(feeds: FeedData[]): Promise<void> {
     const text = JSON.stringify(feeds, null, 2);
     await Deno.writeTextFile(this.filePath, text);
   }
@@ -104,7 +104,7 @@ ${colors.green("Commands")}:
 
 export const listCommand = (
   args: ParsedArguments,
-  feeds: FeedFileSchema[],
+  feeds: FeedData[],
 ): number => {
   if (feeds.length === 0) {
     console.error(colors.red("error"), "there are no feeds");
@@ -118,7 +118,7 @@ export const listCommand = (
 
 export const subscribeCommand = async (
   args: ParsedArguments,
-  feeds: FeedFileSchema[],
+  feeds: FeedData[],
   store: FilePersistence,
 ): Promise<number> => {
   const [input] = args._;
@@ -134,9 +134,12 @@ export const subscribeCommand = async (
     return 1;
   }
 
-  const exists = feeds.filter((value) => value.url === url?.href);
+  if (url?.pathname === "/") {
+    url.href = await discoverFeed(url.href);
+  }
 
-  if (exists.length > 0) {
+  const exists = feeds.find((value) => value.url === url?.href);
+  if (exists) {
     console.error(colors.red("error"), "URL already exists!");
     return 1;
   }
@@ -158,7 +161,7 @@ export const subscribeCommand = async (
     );
   }
 
-  const newFeed: FeedFileSchema = {
+  const newFeed: FeedData = {
     title,
     url: url.href,
   };
@@ -192,12 +195,46 @@ export type ParsedArguments = {
   _: Array<string | number>;
 };
 
-export interface FeedFileSchema {
+export interface FeedData {
   title: string | null;
   url: string;
 }
 
-export function discoverFeeds() { }
+/**
+ * simple & dumb feed discovery function
+ * 
+ * ```ts
+ * const results = await discoverFeeds("https://example.com")
+ * ```
+ * 
+ * @param url to website to discover feed links on
+ */
+export async function discoverFeed(url: string): Promise<string> {
+  const commonPaths = [
+    "/feed",
+    "/rss",
+    "/atom",
+    "/feed.xml",
+    "/rss.xml",
+    "/atom.xml",
+    "/feed.json",
+  ];
+
+  for (const path of commonPaths) {
+    try {
+      const candidate = new URL(path, url).href;
+      const response = await fetch(candidate, { method: "HEAD" });
+      if (response.ok) return candidate;
+    } catch (error) {
+      if (Error.isError(error)) {
+        console.log(colors.red("error"), error.message);
+      }
+      throw error;
+    }
+  }
+
+  return url;
+}
 
 export async function main(args: string[]): Promise<number> {
   const [command, ...rest] = args;
