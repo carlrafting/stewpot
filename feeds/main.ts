@@ -88,7 +88,7 @@ export async function discoverFeed(url: string): Promise<string | undefined> {
   }
 }
 
-export async function* fetchResponseBodyInChunksFromURL(url: URL) {
+export async function* fetchResponseBodyInChunksFromURL(url: URL): AsyncGenerator<string | undefined> {
   const response = await fetch(url);
   const body = response.body;
   const decoder = new TextDecoder("utf-8");
