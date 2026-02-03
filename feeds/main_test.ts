@@ -1,5 +1,5 @@
 import { assertEquals } from "@std/assert/equals";
-import { parseSubscribeInputToURL } from "@stewpot/feeds";
+import { discoverFeed, parseSubscribeInputToURL } from "./main.ts";
 
 Deno.test(function normalizeSubscribeInputDomain() {
   const input = "example.com";
@@ -17,4 +17,9 @@ Deno.test(function normalizeSubscribeInputWithProtocol() {
   const input = "https://example.com";
   const result = parseSubscribeInputToURL(input);
   assertEquals(result, new URL("https://example.com"));
+});
+
+Deno.test("should discover feed link on carlrafting.com", async () => {
+  const result = await discoverFeed("https://carlrafting.com");
+  assertEquals(result, "https://carlrafting.com/feed.xml");
 });
