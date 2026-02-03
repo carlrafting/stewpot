@@ -137,6 +137,8 @@ export const unsubscribeCommand = async (
   const filtered = feeds.filter(item => item.url !== url?.href);
   if (filtered.length > 0) {
     await store.saveFeeds(filtered);
+    console.log(colors.green("ok"), `unsubscribed to ${url?.href}`);
+    return 0;
   }
   return 0;
 };
