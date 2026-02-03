@@ -88,6 +88,8 @@ export async function discoverFeed(url: string): Promise<string | undefined> {
   }
 }
 
+function fetchFeedItemsFromURL() { }
+
 export async function* fetchResponseBodyInChunksFromURL(url: URL): AsyncGenerator<string | undefined> {
   const response = await fetch(url);
   const body = response.body;
@@ -101,7 +103,7 @@ export async function* fetchResponseBodyInChunksFromURL(url: URL): AsyncGenerato
   }
 }
 
-export function parseSubscribeInputToURL(input: string): URL | undefined {
+export function parseInputToURL(input: string): URL | undefined {
   if (!input.startsWith("http://") && !input.startsWith("https://")) {
     input = `https://${input}`;
   }

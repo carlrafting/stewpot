@@ -1,21 +1,21 @@
 import { assertEquals } from "@std/assert/equals";
-import { discoverFeed, parseSubscribeInputToURL } from "./main.ts";
+import { discoverFeed, parseInputToURL } from "./main.ts";
 
 Deno.test(function normalizeSubscribeInputDomain() {
   const input = "example.com";
-  const result = parseSubscribeInputToURL(input);
+  const result = parseInputToURL(input);
   assertEquals(result, new URL("https://example.com"));
 });
 
 Deno.test(function normalizeSubscribeInputFeedURL() {
   const input = "example.com/feed.xml";
-  const result = parseSubscribeInputToURL(input);
+  const result = parseInputToURL(input);
   assertEquals(result, new URL("https://example.com/feed.xml"));
 });
 
 Deno.test(function normalizeSubscribeInputWithProtocol() {
   const input = "https://example.com";
-  const result = parseSubscribeInputToURL(input);
+  const result = parseInputToURL(input);
   assertEquals(result, new URL("https://example.com"));
 });
 
