@@ -1,9 +1,15 @@
 import * as colors from "@std/fmt/colors";
 import * as path from "@std/path";
+import { ulid } from "@std/ulid";
+
+export type FeedID = string;
 
 export interface FeedData {
+  id: FeedID;
   title: string | null;
   url: string;
+  etag?: string | null;
+  lastModified?: string | null;
 }
 
 export class FilePersistence {
@@ -20,7 +26,10 @@ export class FilePersistence {
     } catch (error) {
       if (error instanceof Deno.errors.NotFound) {
         await Deno.writeTextFile(this.filePath, "[]");
-        console.log(colors.green("OK!"), `created new feeds file at ${this.filePath}`);
+        console.log(
+          colors.green("OK!"),
+          `created new feeds file at ${this.filePath}`,
+        );
       }
       throw error;
     }
@@ -56,11 +65,11 @@ export class FilePersistence {
 
 /**
  * simple & dumb feed discovery function
- * 
+ *
  * ```ts
  * const results = await discoverFeeds("https://example.com")
  * ```
- * 
+ *
  * @param url to website to discover feed links on
  */
 export async function discoverFeed(url: string): Promise<string | undefined> {
@@ -88,9 +97,18 @@ export async function discoverFeed(url: string): Promise<string | undefined> {
   }
 }
 
-function fetchFeedItemsFromURL() { }
+export async function fetchFeedItemsFromURL(url: URL) {
+  const response = await fetch(url);
+  const headers = response.headers;
+  const contentType = headers.get("content-type");
+  const etag = headers.get("etag");
+  const lastModified = headers.get("last-modified");
+  console.log({ headers });
+}
 
-export async function* fetchResponseBodyInChunksFromURL(url: URL): AsyncGenerator<string | undefined> {
+export async function* fetchResponseBodyInChunksFromURL(
+  url: URL,
+): AsyncGenerator<string | undefined> {
   const response = await fetch(url);
   const body = response.body;
   const decoder = new TextDecoder("utf-8");
