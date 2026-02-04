@@ -161,7 +161,7 @@ export const unsubscribeCommand = async (
   return 0;
 };
 
-const fetchCommand = async (
+export const fetchCommand = async (
   args: ParsedArguments,
   feeds: FeedData[],
   store: FilePersistence,
@@ -177,16 +177,18 @@ const fetchCommand = async (
       const results = await fetchFeedItemsFromURL(new URL(url), feed);
 
       if (results.status === "not-modified") {
+        console.log("houston, we have a problem");
         continue;
       }
 
       if (
-        results.contentType === "application/feed+json" ||
-        results.contentType === "application/json" ||
-        results.contentType === "text/json"
+        results.body &&
+        results.contentType?.includes("json")
       ) {
+        const json = JSON.parse(results.body);
+        console.log({ json });
       }
-    } catch (error) {
+    } catch (_error) {
       console.error(
         colors.red("error"),
         `something went wrong while fetching items from ${url}`,
