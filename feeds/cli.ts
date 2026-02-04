@@ -1,15 +1,15 @@
 import { parseArgs } from "@std/cli";
 import * as colors from "@std/fmt/colors";
+import { ulid } from "@std/ulid/ulid";
 import {
   discoverFeed,
   type FeedData,
-  FeedID,
+  type FeedID,
   fetchFeedItemsFromURL,
   FilePersistence,
   parseInputToURL,
 } from "./main.ts";
 import denoJSON from "./deno.json" with { type: "json" };
-import { ulid } from "@std/ulid/ulid";
 
 export class CommandError extends Error {
   constructor(
@@ -173,12 +173,25 @@ const fetchCommand = async (
 
   for (const feed of feeds) {
     const { url } = feed;
-    const results = await fetchFeedItemsFromURL(new URL(url), feed);
+    try {
+      const results = await fetchFeedItemsFromURL(new URL(url), feed);
 
-    console.log({ results });
+      if (results.status === "not-modified") {
+        continue;
+      }
 
-    if (results.status === "not-modified") {
-      continue;
+      if (
+        results.contentType === "application/feed+json" ||
+        results.contentType === "application/json" ||
+        results.contentType === "text/json"
+      ) {
+      }
+    } catch (error) {
+      console.error(
+        colors.red("error"),
+        `something went wrong while fetching items from ${url}`,
+      );
+      return 1;
     }
   }
 

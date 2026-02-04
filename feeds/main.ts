@@ -108,7 +108,16 @@ export async function discoverFeed(url: string): Promise<string | undefined> {
   }
 }
 
-type FetchStatus = "modified" | "not-modified" | "error";
+/**
+ * the shape of results returned by `fetchFeedItemsFromURL`
+ */
+export interface FetchResults {
+  status: "modified" | "not-modified";
+  contentType: string | null;
+  etag: string | null;
+  lastModified: string | null;
+  body: string | null;
+}
 
 /**
  * function responsible for fetching feed items from a URL instance
@@ -119,12 +128,7 @@ type FetchStatus = "modified" | "not-modified" | "error";
 export async function fetchFeedItemsFromURL(
   url: URL,
   data: FeedData,
-): Promise<{
-  status: FetchStatus;
-  etag: string | null;
-  lastModified: string | null;
-  body: string | null;
-}> {
+): Promise<FetchResults> {
   const headers: HeadersInit = {};
 
   if (data.lastModified) {
@@ -140,6 +144,7 @@ export async function fetchFeedItemsFromURL(
   if (response.status === 304) {
     return {
       status: "not-modified",
+      contentType: response.headers.get("content-type"),
       etag: null,
       lastModified: null,
       body: null,
@@ -160,6 +165,7 @@ export async function fetchFeedItemsFromURL(
 
   return {
     status: "modified",
+    contentType,
     etag,
     lastModified,
     body,
