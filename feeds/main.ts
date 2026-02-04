@@ -4,6 +4,15 @@ import { ulid } from "@std/ulid";
 
 export type FeedID = string;
 
+export type FeedContentType =
+  | "application/xml"
+  | "application/json"
+  | "application/atom+xml"
+  | "application/rss+xml"
+  | "application/feed+json"
+  | "text/xml"
+  | "text/json";
+
 export interface FeedData {
   id: FeedID;
   title: string | null;
@@ -80,6 +89,8 @@ export async function discoverFeed(url: string): Promise<string | undefined> {
     "/feed.xml",
     "/rss.xml",
     "/atom.xml",
+    "/feed.rss",
+    "/feed.atom",
     "/feed.json",
   ];
 
@@ -97,15 +108,69 @@ export async function discoverFeed(url: string): Promise<string | undefined> {
   }
 }
 
-export async function fetchFeedItemsFromURL(url: URL) {
-  const response = await fetch(url);
-  const headers = response.headers;
-  const contentType = headers.get("content-type");
-  const etag = headers.get("etag");
-  const lastModified = headers.get("last-modified");
-  console.log({ headers });
+type FetchStatus = "modified" | "not-modified" | "error";
+
+/**
+ * function responsible for fetching feed items from a URL instance
+ *
+ * @param url URL object for use with fetch request
+ * @param data feed metadata from stored data (kv/file)
+ */
+export async function fetchFeedItemsFromURL(
+  url: URL,
+  data: FeedData,
+): Promise<{
+  status: FetchStatus;
+  etag: string | null;
+  lastModified: string | null;
+  body: string | null;
+}> {
+  const headers: HeadersInit = {};
+
+  if (data.lastModified) {
+    headers["if-modified-since"] = data.lastModified;
+  }
+
+  if (data.etag) {
+    headers["if-none-match"] = data.etag;
+  }
+
+  const response = await fetch(url, { headers });
+
+  if (!response.ok) {
+    throw new Error(`failed to fetch feed: ${response.status}`);
+  }
+
+  if (response.status === 304) {
+    return {
+      status: "not-modified",
+      etag: null,
+      lastModified: null,
+      body: null,
+    };
+  }
+
+  const contentType = response.headers.get("content-type") ?? "";
+  if (!contentType.includes("xml") && !contentType.includes("json")) {
+    throw new Error("resource does not appear to be a feed");
+  }
+  const etag = response.headers.get("etag");
+  const lastModified = response.headers.get("last-modified");
+  const body = await response.text();
+
+  return {
+    status: "modified",
+    etag,
+    lastModified,
+    body,
+  };
 }
 
+/**
+ * responsible for fetching response body in chunks from a URL instance
+ *
+ * @param url
+ */
 export async function* fetchResponseBodyInChunksFromURL(
   url: URL,
 ): AsyncGenerator<string | undefined> {

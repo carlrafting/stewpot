@@ -56,9 +56,15 @@ export const listCommand = (
     console.error(colors.red("error"), "there are no feeds");
     return 1;
   }
+
+  if (args?.update) {
+    /* TODO: update feed source metadata... */
+  }
+
   for (const feed of feeds) {
     console.dir(feed);
   }
+
   return 0;
 };
 
@@ -144,7 +150,9 @@ export const unsubscribeCommand = async (
   }
 
   const url = parseInputToURL(input);
-  const filtered = feeds.filter((item) => item.url !== url?.href);
+  const filtered = feeds.filter((item) =>
+    new URL(item.url).hostname !== url?.hostname
+  );
   if (filtered.length > 0) {
     await store.saveFeeds(filtered);
     console.log(colors.green("ok"), `unsubscribed to ${url?.href}`);
@@ -158,16 +166,23 @@ const fetchCommand = async (
   feeds: FeedData[],
   store: FilePersistence,
 ) => {
-  if (feeds.length > 0) {
-    for (const feed of feeds) {
-      const { url, etag, lastModified } = feed;
-      const id = feed?.id ?? null;
-      const response = await fetchFeedItemsFromURL(new URL(url));
-    }
-    return 0;
+  if (feeds.length === 0) {
+    console.error(colors.red("error"), "feeds empty, nothing to fetch");
+    return 1;
   }
-  console.error(colors.red("error"), "feeds empty, nothing to fetch");
-  return 1;
+
+  for (const feed of feeds) {
+    const { url } = feed;
+    const results = await fetchFeedItemsFromURL(new URL(url), feed);
+
+    console.log({ results });
+
+    if (results.status === "not-modified") {
+      continue;
+    }
+  }
+
+  return 0;
 };
 
 const notImplementedCommand = () => {
