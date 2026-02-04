@@ -137,10 +137,6 @@ export async function fetchFeedItemsFromURL(
 
   const response = await fetch(url, { headers });
 
-  if (!response.ok) {
-    throw new Error(`failed to fetch feed: ${response.status}`);
-  }
-
   if (response.status === 304) {
     return {
       status: "not-modified",
@@ -148,6 +144,10 @@ export async function fetchFeedItemsFromURL(
       lastModified: null,
       body: null,
     };
+  }
+
+  if (!response.ok) {
+    throw new Error(`failed to fetch feed: ${response.status}`);
   }
 
   const contentType = response.headers.get("content-type") ?? "";
