@@ -131,66 +131,61 @@ export async function discoverFeed(url: string): Promise<string | undefined> {
   }
 }
 
+function detectFeedFormatFromContentType(
+  contentType: string,
+): FeedFormat {
+  if (contentType?.includes("rss")) {
+    return "rss";
+  }
+  if (contentType?.includes("atom")) {
+    return "atom";
+  }
+  if (contentType?.includes("json")) {
+    return "json";
+  }
+  return "unknown";
+}
+
 export async function fetchFeedMetadata(url: URL): Promise<FeedData> {
+  let format: FeedFormat = "unknown";
+  let title = null;
+
+  const id: FeedID = ulid();
   const response = await fetch(url);
 
   if (!response.ok) {
-    throw new Error(`failed to fetch feed: ${response.status}`);
+    throw new Error(`failed to fetch feed from ${url.href}`);
   }
 
-  const id = ulid();
-  const lastModified = response.headers.get("last-modified");
-  const etag = response.headers.get("etag");
-  const contentType = response.headers.get("content-type") ?? "";
+  const headers = response.headers;
+  const lastModified = headers.get("last-modified");
+  const etag = headers.get("etag");
+  const contentType = headers.get("content-type") ?? "";
 
-  let format: FeedFormat = "unknown";
+  format = detectFeedFormatFromContentType(contentType);
 
-  if (contentType.includes("json")) {
-    format = "json";
+  if (format === "rss" || format === "atom") {
+    const text = await response.text();
+    const match = text.match(/<title>(.*?)<\/title>/i);
+    title = match?.[1].trim();
   }
-
-  if (contentType.includes("rss")) {
-    format = "rss"; // refine later if you want atom detection
-  }
-
-  if (contentType.includes("atom")) {
-    format = "atom";
-  }
-
-  if (contentType === "") {
-    console.error(
-      colors.yellow("warning"),
-      "couldn't determine feed format from content type",
-    );
-  }
-
-  const text = await response.text();
-
-  let title = null;
 
   if (format === "json") {
     try {
-      const parsed = JSON.parse(text);
-      title = typeof parsed.title === "string" ? parsed.title : null;
+      const json = await response.json();
+      title = json.title;
     } catch {
       /* ignore */
     }
   }
 
-  if (format === "rss" || format === "atom") {
-    const match = text.match(/<title>(.*?)<\/title>/i);
-    if (match?.[1]) {
-      title = match[1].trim();
-    }
-  }
-
   return {
     id,
-    url: url.href,
     title,
-    format,
+    url: url.href,
     etag,
     lastModified,
+    format,
   };
 }
 

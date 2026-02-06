@@ -1,12 +1,10 @@
 import { parseArgs } from "@std/cli";
 import * as colors from "@std/fmt/colors";
-import { ulid } from "@std/ulid/ulid";
 import {
   discoverFeed,
   type FeedData,
-  type FeedFormat,
-  type FeedID,
   fetchFeedItemsFromURL,
+  fetchFeedMetadata,
   FilePersistence,
   parseInputToURL,
 } from "./main.ts";
@@ -109,47 +107,12 @@ export const subscribeCommand = async (
     }
   }
 
-  let format: FeedFormat = "unknown";
-  let title = null;
+  const feed = await fetchFeedMetadata(url);
 
-  const response = await fetch(url);
-  const headers = response.headers;
-  const text = await response.text();
-
-  const match = text.match(/<title>(.*?)<\/title>/i);
-
-  if (match && match[1]) {
-    title = match[1].trim();
-  }
-
-  const contentType = headers.get("content-type");
-
-  if (contentType?.includes("rss")) {
-    format = "rss";
-  }
-  if (contentType?.includes("atom")) {
-    format = "atom";
-  }
-  if (contentType?.includes("json")) {
-    format = "json";
-  }
-
-  const lastModified = headers.get("last-modified");
-  const etag = headers.get("etag");
-  const id: FeedID = ulid();
-  const newFeed: FeedData = {
-    id,
-    title,
-    url: url.href,
-    etag,
-    lastModified,
-    format,
-  };
-
-  feeds.push(newFeed);
+  feeds.push(feed);
   await store.saveFeeds(feeds);
 
-  console.log(colors.green("subscribed!"), newFeed.url);
+  console.log(colors.green("subscribed!"), feed.url);
 
   return 0;
 };
