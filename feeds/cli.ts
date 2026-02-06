@@ -1,11 +1,10 @@
 import { parseArgs } from "@std/cli";
 import * as colors from "@std/fmt/colors";
-import { ulid } from "@std/ulid/ulid";
 import {
   discoverFeed,
   type FeedData,
-  type FeedID,
   fetchFeedItemsFromURL,
+  fetchFeedMetadata,
   FilePersistence,
   parseInputToURL,
 } from "./main.ts";
@@ -36,7 +35,7 @@ ${colors.green("Description")}:
   Small CLI program for managing & consuming feeds of different kinds (RSS/Atom/JSON).
 
 ${colors.green("Usage")}:
-  deno run -RWN @stewpot/feeds/cli <command>
+  deno -RWN @stewpot/feeds/cli <command>
 
 ${colors.green("Commands")}:
   ${colors.yellow("list")}          - list subscribed feed sources
@@ -87,6 +86,7 @@ export const subscribeCommand = async (
   }
 
   const exists = feeds.find((value) => value.url === url?.href);
+
   if (exists) {
     console.error(colors.red("error"), "URL already exists!");
     return 1;
@@ -107,32 +107,12 @@ export const subscribeCommand = async (
     }
   }
 
-  let title: string | null = null;
+  const feed = await fetchFeedMetadata(url);
 
-  const response = await fetch(url);
-  const headers = response.headers;
-  const text = await response.text();
-
-  const match = text.match(/<title>(.*?)<\/title>/i);
-  if (match && match[1]) {
-    title = match[1].trim();
-  }
-
-  const lastModified = headers.get("last-modified");
-  const etag = headers.get("etag");
-  const id: FeedID = ulid();
-  const newFeed: FeedData = {
-    id,
-    title,
-    url: url.href,
-    etag,
-    lastModified,
-  };
-
-  feeds.push(newFeed);
+  feeds.push(feed);
   await store.saveFeeds(feeds);
 
-  console.log(colors.green("subscribed!"), newFeed.url);
+  console.log(colors.green("subscribed!"), feed.url);
 
   return 0;
 };
@@ -161,7 +141,7 @@ export const unsubscribeCommand = async (
   return 0;
 };
 
-const fetchCommand = async (
+export const fetchCommand = async (
   args: ParsedArguments,
   feeds: FeedData[],
   store: FilePersistence,
@@ -177,16 +157,18 @@ const fetchCommand = async (
       const results = await fetchFeedItemsFromURL(new URL(url), feed);
 
       if (results.status === "not-modified") {
+        console.log("houston, we have a problem");
         continue;
       }
 
       if (
-        results.contentType === "application/feed+json" ||
-        results.contentType === "application/json" ||
-        results.contentType === "text/json"
+        results.body &&
+        results.contentType?.includes("json")
       ) {
+        const json = JSON.parse(results.body);
+        console.log({ json });
       }
-    } catch (error) {
+    } catch (_error) {
       console.error(
         colors.red("error"),
         `something went wrong while fetching items from ${url}`,

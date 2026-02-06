@@ -13,30 +13,35 @@ export type FeedContentType =
   | "text/xml"
   | "text/json";
 
+export type FeedFormat = "rss" | "atom" | "json" | "unknown";
+
 /**
  * feed source data eg. website
  */
 export interface FeedData {
-  /**
-   * unique identifier in form of ulid
-   */
+  /** unique identifier in form of ulid */
   id: FeedID;
-  /**
-   * feed source (website) title
-   */
-  title: string | null;
-  /**
-   * url to feed
-   */
+  /** url to feed */
   url: string;
-  /**
-   * response header etag (optional)
-   */
+  /** feed source format */
+  format: FeedFormat;
+  /** feed source title */
+  title?: string | null;
+  /** reponse header etag (optional) */
   etag?: string | null;
-  /**
-   * reponse header last-modified header (optional)
-   */
+  /** reponse header last-modified header (optional) */
   lastModified?: string | null;
+}
+
+/**
+ * the shape of results returned by `fetchFeedItemsFromURL`
+ */
+export interface FetchResults {
+  status: "modified" | "not-modified";
+  contentType: string | null;
+  etag: string | null;
+  lastModified: string | null;
+  body: string | null;
 }
 
 export class FilePersistence {
@@ -126,15 +131,62 @@ export async function discoverFeed(url: string): Promise<string | undefined> {
   }
 }
 
-/**
- * the shape of results returned by `fetchFeedItemsFromURL`
- */
-export interface FetchResults {
-  status: "modified" | "not-modified";
-  contentType: string | null;
-  etag: string | null;
-  lastModified: string | null;
-  body: string | null;
+function detectFeedFormatFromContentType(
+  contentType: string,
+): FeedFormat {
+  if (contentType?.includes("rss")) {
+    return "rss";
+  }
+  if (contentType?.includes("atom")) {
+    return "atom";
+  }
+  if (contentType?.includes("json")) {
+    return "json";
+  }
+  return "unknown";
+}
+
+export async function fetchFeedMetadata(url: URL): Promise<FeedData> {
+  let format: FeedFormat = "unknown";
+  let title = null;
+
+  const id: FeedID = ulid();
+  const response = await fetch(url);
+
+  if (!response.ok) {
+    throw new Error(`failed to fetch feed from ${url.href}`);
+  }
+
+  const headers = response.headers;
+  const lastModified = headers.get("last-modified");
+  const etag = headers.get("etag");
+  const contentType = headers.get("content-type") ?? "";
+
+  format = detectFeedFormatFromContentType(contentType);
+
+  if (format === "rss" || format === "atom") {
+    const text = await response.text();
+    const match = text.match(/<title>(.*?)<\/title>/i);
+    title = match?.[1].trim();
+  }
+
+  if (format === "json") {
+    try {
+      const json = await response.json();
+      title = json.title;
+    } catch {
+      /* ignore */
+    }
+  }
+
+  return {
+    id,
+    title,
+    url: url.href,
+    etag,
+    lastModified,
+    format,
+  };
 }
 
 /**
