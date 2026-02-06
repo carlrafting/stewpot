@@ -13,11 +13,29 @@ export type FeedContentType =
   | "text/xml"
   | "text/json";
 
+/**
+ * feed source data eg. website
+ */
 export interface FeedData {
+  /**
+   * unique identifier in form of ulid
+   */
   id: FeedID;
+  /**
+   * feed source (website) title
+   */
   title: string | null;
+  /**
+   * url to feed
+   */
   url: string;
+  /**
+   * response header etag (optional)
+   */
   etag?: string | null;
+  /**
+   * reponse header last-modified header (optional)
+   */
   lastModified?: string | null;
 }
 
