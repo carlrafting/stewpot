@@ -88,6 +88,7 @@ export const subscribeCommand = async (
   }
 
   const exists = feeds.find((value) => value.url === url?.href);
+
   if (exists) {
     console.error(colors.red("error"), "URL already exists!");
     return 1;
@@ -116,8 +117,21 @@ export const subscribeCommand = async (
   const text = await response.text();
 
   const match = text.match(/<title>(.*?)<\/title>/i);
+
   if (match && match[1]) {
     title = match[1].trim();
+  }
+
+  const contentType = headers.get("content-type");
+
+  if (contentType?.includes("rss")) {
+    format = "rss";
+  }
+  if (contentType?.includes("atom")) {
+    format = "atom";
+  }
+  if (contentType?.includes("json")) {
+    format = "json";
   }
 
   const lastModified = headers.get("last-modified");
@@ -129,7 +143,7 @@ export const subscribeCommand = async (
     url: url.href,
     etag,
     lastModified,
-format,
+    format,
   };
 
   feeds.push(newFeed);

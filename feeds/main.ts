@@ -24,6 +24,17 @@ export interface FeedData {
   lastModified?: string | null;
 }
 
+/**
+ * the shape of results returned by `fetchFeedItemsFromURL`
+ */
+export interface FetchResults {
+  status: "modified" | "not-modified";
+  contentType: string | null;
+  etag: string | null;
+  lastModified: string | null;
+  body: string | null;
+}
+
 export class FilePersistence {
   private filePath: string;
 
@@ -111,15 +122,67 @@ export async function discoverFeed(url: string): Promise<string | undefined> {
   }
 }
 
-/**
- * the shape of results returned by `fetchFeedItemsFromURL`
- */
-export interface FetchResults {
-  status: "modified" | "not-modified";
-  contentType: string | null;
-  etag: string | null;
-  lastModified: string | null;
-  body: string | null;
+export async function fetchFeedMetadata(url: URL): Promise<FeedData> {
+  const response = await fetch(url);
+
+  if (!response.ok) {
+    throw new Error(`failed to fetch feed: ${response.status}`);
+  }
+
+  const id = ulid();
+  const lastModified = response.headers.get("last-modified");
+  const etag = response.headers.get("etag");
+  const contentType = response.headers.get("content-type") ?? "";
+
+  let format: FeedFormat = "unknown";
+
+  if (contentType.includes("json")) {
+    format = "json";
+  }
+
+  if (contentType.includes("rss")) {
+    format = "rss"; // refine later if you want atom detection
+  }
+
+  if (contentType.includes("atom")) {
+    format = "atom";
+  }
+
+  if (contentType === "") {
+    console.error(
+      colors.yellow("warning"),
+      "couldn't determine feed format from content type",
+    );
+  }
+
+  const text = await response.text();
+
+  let title = null;
+
+  if (format === "json") {
+    try {
+      const parsed = JSON.parse(text);
+      title = typeof parsed.title === "string" ? parsed.title : null;
+    } catch {
+      /* ignore */
+    }
+  }
+
+  if (format === "rss" || format === "atom") {
+    const match = text.match(/<title>(.*?)<\/title>/i);
+    if (match?.[1]) {
+      title = match[1].trim();
+    }
+  }
+
+  return {
+    id,
+    url: url.href,
+    title,
+    format,
+    etag,
+    lastModified,
+  };
 }
 
 /**
