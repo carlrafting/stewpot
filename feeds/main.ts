@@ -13,10 +13,13 @@ export type FeedContentType =
   | "text/xml"
   | "text/json";
 
+export type FeedFormat = "rss" | "atom" | "json" | "unknown";
+
 export interface FeedData {
   id: FeedID;
-  title: string | null;
   url: string;
+  format: FeedFormat;
+  title?: string | null;
   etag?: string | null;
   lastModified?: string | null;
 }

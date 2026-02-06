@@ -4,6 +4,7 @@ import { ulid } from "@std/ulid/ulid";
 import {
   discoverFeed,
   type FeedData,
+  type FeedFormat,
   type FeedID,
   fetchFeedItemsFromURL,
   FilePersistence,
@@ -107,7 +108,8 @@ export const subscribeCommand = async (
     }
   }
 
-  let title: string | null = null;
+  let format: FeedFormat = "unknown";
+  let title = null;
 
   const response = await fetch(url);
   const headers = response.headers;
@@ -127,6 +129,7 @@ export const subscribeCommand = async (
     url: url.href,
     etag,
     lastModified,
+format,
   };
 
   feeds.push(newFeed);
