@@ -145,7 +145,7 @@ export const fetchCommand = async (
   args: ParsedArguments,
   feeds: FeedData[],
   store: FilePersistence,
-) => {
+): Promise<number> => {
   if (feeds.length === 0) {
     console.error(colors.red("error"), "feeds empty, nothing to fetch");
     return 1;
