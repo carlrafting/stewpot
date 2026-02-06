@@ -1,3 +1,0 @@
-export const snapshot = {};
-
-snapshot[`logNoutFound > should work 1`] = `"GET / 404"`;

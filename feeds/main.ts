@@ -15,12 +15,30 @@ export type FeedContentType =
 
 export type FeedFormat = "rss" | "atom" | "json" | "unknown";
 
+/**
+ * feed source data eg. website
+ */
 export interface FeedData {
+  /**
+   * unique identifier in form of ulid
+   */
   id: FeedID;
+  /**
+   * url to feed
+   */
   url: string;
+  /**
+   * feed source format
+   */
   format: FeedFormat;
+  /**
+   * feed source title
+   */
   title?: string | null;
   etag?: string | null;
+  /**
+   * reponse header last-modified header (optional)
+   */
   lastModified?: string | null;
 }
 
