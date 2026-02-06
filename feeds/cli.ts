@@ -37,7 +37,7 @@ ${colors.green("Description")}:
   Small CLI program for managing & consuming feeds of different kinds (RSS/Atom/JSON).
 
 ${colors.green("Usage")}:
-  deno run -RWN @stewpot/feeds/cli <command>
+  deno -RWN @stewpot/feeds/cli <command>
 
 ${colors.green("Commands")}:
   ${colors.yellow("list")}          - list subscribed feed sources
