@@ -19,26 +19,17 @@ export type FeedFormat = "rss" | "atom" | "json" | "unknown";
  * feed source data eg. website
  */
 export interface FeedData {
-  /**
-   * unique identifier in form of ulid
-   */
+  /** unique identifier in form of ulid */
   id: FeedID;
-  /**
-   * url to feed
-   */
+  /** url to feed */
   url: string;
-  /**
-   * feed source format
-   */
+  /** feed source format */
   format: FeedFormat;
-  /**
-   * feed source title
-   */
+  /** feed source title */
   title?: string | null;
+  /** reponse header etag (optional) */
   etag?: string | null;
-  /**
-   * reponse header last-modified header (optional)
-   */
+  /** reponse header last-modified header (optional) */
   lastModified?: string | null;
 }
 
