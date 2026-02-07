@@ -63,6 +63,7 @@ export class FilePersistence {
           colors.green("OK!"),
           `created new feeds file at ${this.filePath}`,
         );
+        return;
       }
       throw error;
     }
