@@ -219,11 +219,11 @@ export async function main(args: string[]): Promise<number> {
 
   switch (command) {
     case "list":
-      return listCommand(parsedArgs, feeds, store);
+      return await listCommand(parsedArgs, feeds, store);
     case "subscribe":
       return await subscribeCommand(parsedArgs, feeds, store);
     case "unsubscribe":
-      return unsubscribeCommand(parsedArgs, feeds, store);
+      return await unsubscribeCommand(parsedArgs, feeds, store);
     case "fetch":
       return await fetchCommand(parsedArgs, feeds, store);
     case "read":
