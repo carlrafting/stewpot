@@ -47,17 +47,30 @@ ${colors.green("Commands")}:
   return 0;
 }
 
-export const listCommand = (
+export const listCommand = async (
   args: ParsedArguments,
   feeds: FeedData[],
-): number => {
+  store: FilePersistence,
+): Promise<number> => {
   if (feeds.length === 0) {
     console.error(colors.red("error"), "there are no feeds");
     return 1;
   }
 
   if (args?.update) {
-    /* TODO: update feed source metadata... */
+    const updated: FeedData[] = [];
+    for (const feed of feeds) {
+      const url = new URL(feed.url);
+      console.log(
+        colors.cyan("info"),
+        `fetching and updating feed source metadata for ${url.host}`,
+      );
+      const metadata = await fetchFeedMetadata(url);
+      updated.push(metadata);
+    }
+    store.saveFeeds(updated);
+    console.log(colors.green("done"), `saved changes to ${store.filePath}`);
+    return 0;
   }
 
   for (const feed of feeds) {
@@ -206,7 +219,7 @@ export async function main(args: string[]): Promise<number> {
 
   switch (command) {
     case "list":
-      return listCommand(parsedArgs, feeds);
+      return listCommand(parsedArgs, feeds, store);
     case "subscribe":
       return await subscribeCommand(parsedArgs, feeds, store);
     case "unsubscribe":

@@ -45,7 +45,7 @@ export interface FetchResults {
 }
 
 export class FilePersistence {
-  private filePath: string;
+  public filePath: string;
 
   constructor(filename = "feeds.json") {
     this.filePath = path.join(Deno.cwd(), filename);
@@ -147,7 +147,6 @@ function detectFeedFormatFromContentType(
 }
 
 export async function fetchFeedMetadata(url: URL): Promise<FeedData> {
-  let format: FeedFormat = "unknown";
   let title = null;
 
   const id: FeedID = ulid();
@@ -162,7 +161,7 @@ export async function fetchFeedMetadata(url: URL): Promise<FeedData> {
   const etag = headers.get("etag");
   const contentType = headers.get("content-type") ?? "";
 
-  format = detectFeedFormatFromContentType(contentType);
+  const format: FeedFormat = detectFeedFormatFromContentType(contentType);
 
   if (format === "rss" || format === "atom") {
     const text = await response.text();
