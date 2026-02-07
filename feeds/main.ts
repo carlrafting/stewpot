@@ -2,6 +2,7 @@ import * as colors from "@std/fmt/colors";
 import * as path from "@std/path";
 import { ulid } from "@std/ulid";
 
+/** unique identifier for feed source (ulid) */
 export type FeedID = string;
 
 export type FeedContentType =
