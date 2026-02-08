@@ -19,6 +19,8 @@ const ROOT_DIR = "feeds";
 const SOURCES_FILENAME = "feeds.json";
 const ITEMS_FILENAME = "items.json";
 
+export { ENV_VAR, ITEMS_FILENAME, PARENT_DIR, ROOT_DIR, SOURCES_FILENAME };
+
 /** paths used for file & kv storage */
 export interface Paths {
   root: string;
