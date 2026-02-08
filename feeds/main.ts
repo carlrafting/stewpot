@@ -1,6 +1,7 @@
 import * as colors from "@std/fmt/colors";
 import { ulid } from "@std/ulid";
 import { Paths } from "@stewpot/feeds/cli";
+import { parseRssFeed } from "npm:feedsmith";
 
 /** unique identifier for feed source (ulid) */
 export type FeedID = string;
@@ -33,6 +34,53 @@ export interface FeedData {
   etag?: string | null;
   /** reponse header last-modified header (optional) */
   lastModified?: string | null;
+}
+
+const parsers: Parser[] = [];
+
+export interface Parser {
+  capable(contentType: string, text: string): boolean;
+  parse(text: string): FeedItem[];
+}
+
+export const rssParser: Parser = {
+  capable(contentType, text) {
+    return (contentType.includes("xml") && text.includes("<rss"));
+  },
+  parse(text) {
+    const items: FeedItem[] = [];
+    const parsed = parseRssFeed(text);
+    if (!parsed.items) return items;
+    for (const item of parsed.items) {
+      items.push({
+        id: ulid(),
+        title: item.title ?? "",
+        content: item?.content?.encoded ?? "",
+        url: item?.link ?? "",
+        published: item?.pubDate ? new Date(item?.pubDate) : new Date(),
+      });
+    }
+    return items;
+  },
+};
+
+function detectParser(contentType: string, text: string) {
+  for (const parser of parsers) {
+    if (parser.capable(contentType, text)) {
+      return parser;
+    }
+  }
+  throw new Error("Unsupported feed format");
+}
+
+export interface FeedItem {
+  id: string;
+  title: string;
+  url: string;
+  published: Date;
+  updated?: Date;
+  summary?: string;
+  content: string;
 }
 
 /**
