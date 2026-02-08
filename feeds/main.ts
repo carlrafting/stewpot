@@ -1,10 +1,11 @@
 import * as colors from "@std/fmt/colors";
-import * as path from "@std/path";
 import { ulid } from "@std/ulid";
+import { Paths } from "@stewpot/feeds/cli";
 
 /** unique identifier for feed source (ulid) */
 export type FeedID = string;
 
+/** content-type from response header */
 export type FeedContentType =
   | "application/xml"
   | "application/json"
@@ -48,25 +49,32 @@ export interface FetchResults {
 export class FilePersistence {
   public filePath: string;
 
-  constructor(filename = "feeds.json") {
-    this.filePath = path.join(Deno.cwd(), filename);
+  constructor(private paths: Paths) {
+    this.filePath = paths.sources;
   }
 
   async ensureFile(): Promise<boolean | undefined> {
     try {
-      const fileInfo = await Deno.stat(this.filePath);
-      return fileInfo.isFile;
+      const file = await Deno.readTextFile(this.filePath);
+      if (file === "") {
+        this.writeFile();
+      }
+      return true;
     } catch (error) {
       if (error instanceof Deno.errors.NotFound) {
-        await Deno.writeTextFile(this.filePath, "[]");
-        console.log(
-          colors.green("OK!"),
-          `created new feeds file at ${this.filePath}`,
-        );
-        return;
+        this.writeFile();
+        return true;
       }
       throw error;
     }
+  }
+
+  async writeFile(): Promise<void> {
+    await Deno.writeTextFile(this.filePath, "[]");
+    console.log(
+      colors.green("OK!"),
+      `created new feeds file at ${this.filePath}`,
+    );
   }
 
   async loadFeeds(): Promise<FeedData[]> {
@@ -74,6 +82,7 @@ export class FilePersistence {
 
     try {
       const text = await Deno.readTextFile(this.filePath);
+      if (text === "") throw new Error("file contents is not valid JSON");
       const data = JSON.parse(text);
 
       if (!Array.isArray(data)) {
@@ -94,6 +103,36 @@ export class FilePersistence {
   async saveFeeds(feeds: FeedData[]): Promise<void> {
     const text = JSON.stringify(feeds, null, 2);
     await Deno.writeTextFile(this.filePath, text);
+  }
+}
+
+type StorageType = { type: "feeds" } | { type: "items" };
+
+interface StorageContract {
+  load(type: StorageType): Promise<FeedData[]>;
+  save(type: StorageType): Promise<void>;
+}
+
+export interface ConfigContract {
+  storage:
+    | {
+      type: "fs";
+      path: string;
+    }
+    | {
+      type: "kv";
+      path?: string;
+    };
+}
+
+export const defineConfig = (config: ConfigContract) => config;
+
+function createStorage(config: ConfigContract["storage"]) {
+  switch (config.type) {
+    case "fs":
+      return;
+    case "kv":
+      return;
   }
 }
 

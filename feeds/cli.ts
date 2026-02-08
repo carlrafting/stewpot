@@ -1,6 +1,9 @@
 import { parseArgs } from "@std/cli";
+import { ensureDir } from "@std/fs";
+import { join as joinPath } from "@std/path/join";
 import * as colors from "@std/fmt/colors";
 import {
+  defineConfig,
   discoverFeed,
   type FeedData,
   fetchFeedItemsFromURL,
@@ -9,6 +12,70 @@ import {
   parseInputToURL,
 } from "./main.ts";
 import denoJSON from "./deno.json" with { type: "json" };
+
+const ENV_VAR = "STEWPOT_FEEDS_CLI_DIR";
+const PARENT_DIR = ".stewpot";
+const ROOT_DIR = "feeds";
+const SOURCES_FILENAME = "feeds.json";
+const ITEMS_FILENAME = "items.json";
+
+/** paths used for file & kv storage */
+export interface Paths {
+  root: string;
+  sources: string;
+  config?: string;
+  items?: string;
+}
+
+async function resolvePaths(): Promise<Paths | undefined> {
+  const root = resolveRootDirectory();
+
+  if (!root) return;
+
+  await ensureDir(root);
+  const sources = joinPath(root, SOURCES_FILENAME);
+
+  return {
+    root,
+    sources,
+  };
+}
+
+function resolveRootDirectory(): string | undefined {
+  const env = Deno.env;
+  const parent = PARENT_DIR;
+  const root = ROOT_DIR;
+
+  const override = env.get(ENV_VAR);
+  if (override) return override;
+
+  const home = resolveUserHomeDirectory();
+  if (home) {
+    return joinPath(home, parent, root);
+  }
+}
+
+/** resolves a user home directory (linux, mac/darwin & windows) */
+export function resolveUserHomeDirectory(): string {
+  const env = Deno.env;
+  const os = Deno.build.os;
+
+  if (os === "windows") {
+    const home = env.get("USERPROFILE");
+    if (home) {
+      return home;
+    }
+  }
+
+  if (os === "linux" || os === "darwin") {
+    const home = env.get("HOME");
+    if (home) {
+      return home;
+    }
+  }
+
+  throw new Error("unable to resolve user home directory");
+}
 
 export class CommandError extends Error {
   constructor(
@@ -35,7 +102,7 @@ ${colors.green("Description")}:
   Small CLI program for managing & consuming feeds of different kinds (RSS/Atom/JSON).
 
 ${colors.green("Usage")}:
-  deno -RWN @stewpot/feeds/cli <command>
+  deno -RWNE ${import.meta.url} <command>
 
 ${colors.green("Commands")}:
   ${colors.yellow("list")}          - list subscribed feed sources
@@ -210,11 +277,13 @@ export type ParsedArguments = {
   _: Array<string | number>;
 };
 
-export async function main(args: string[]): Promise<number> {
+export async function main(
+  args: string[],
+  store: FilePersistence,
+): Promise<number> {
   const [command, ...rest] = args;
   const parsedArgs = parseArgs(rest);
 
-  const store = new FilePersistence();
   const feeds = await store.loadFeeds();
 
   switch (command) {
@@ -239,7 +308,10 @@ export async function main(args: string[]): Promise<number> {
 
 if (import.meta.main) {
   try {
-    const code = await main(Deno.args);
+    const paths = await resolvePaths();
+    if (!paths) throw "couldn't resolve paths";
+    const store = new FilePersistence(paths);
+    const code = await main(Deno.args, store);
     Deno.exit(code);
   } catch (error) {
     if (error instanceof CommandError) {
