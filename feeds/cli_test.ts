@@ -21,6 +21,10 @@ Deno.test.beforeAll(async () => {
   store = new FilePersistence(paths);
 });
 
+Deno.test.afterAll(async () => {
+  await Deno.remove(paths.root, { recursive: true });
+});
+
 Deno.test("no arguments should display help and exit with 0", async () => {
   const code = await main([], store);
   assertEquals(code, 0);
