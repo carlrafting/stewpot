@@ -41,7 +41,18 @@ const parsers: Parser[] = [];
 
 /** parsers should implement the following methods */
 export interface Parser {
+  /**
+   * takes contentType and text body and returns boolean
+   *
+   * @param contentType feed source response header content-type
+   * @param text string text body
+   */
   capable(contentType: string, text: string): boolean;
+  /**
+   * parse string body
+   *
+   * @param text string body to parse
+   */
   parse(text: string): FeedItem[];
 }
 
@@ -209,7 +220,7 @@ export class FilePersistence {
   }
 
   /**
-   * hello world
+   * update feed source metadata
    *
    * @param feed feed source data to update
    */
