@@ -16,6 +16,7 @@ export type FeedContentType =
   | "text/xml"
   | "text/json";
 
+/** what format the feed uses, unknown if it can't be determined  */
 export type FeedFormat = "rss" | "atom" | "json" | "unknown";
 
 /**
@@ -38,11 +39,13 @@ export interface FeedData {
 
 const parsers: Parser[] = [];
 
+/** parsers should implement the following methods */
 export interface Parser {
   capable(contentType: string, text: string): boolean;
   parse(text: string): FeedItem[];
 }
 
+/** parser responsible for detecting and parsing RSS */
 export const rssParser: Parser = {
   capable(contentType, text) {
     return (contentType.includes("xml") && text.includes("<rss"));
@@ -64,6 +67,7 @@ export const rssParser: Parser = {
   },
 };
 
+/** parser responsible for detecting and parsing Atom */
 export const atomParser: Parser = {
   capable(contentType, text) {
     return (
@@ -98,13 +102,21 @@ function detectParser(contentType: string, text: string) {
   throw new Error("Unsupported feed format");
 }
 
+/** the shape a feed item will be stored as */
 export interface FeedItem {
+  /** unique identifier (guid, uid, ulid, url, href) */
   id: string;
+  /** title of the feed item */
   title: string | null;
+  /** url/link for feed item */
   url: string | null;
+  /** which date the feed item was published at */
   published: Date | null;
+  /** which date the feed item was updated at */
   updated?: Date | null;
+  /** summary for feed item */
   summary?: string | null;
+  /** content for feed item */
   content: string | null;
 }
 
@@ -119,13 +131,23 @@ export interface FetchResults {
   body: string | null;
 }
 
+/**
+ * class responsible for persisting feeds and items to filesystem
+ */
 export class FilePersistence {
+  /** filepath for storing feed source metadata */
   public filePath: string;
 
-  constructor(private paths: Paths) {
+  /**
+   * takes instance of `Paths` and assigns `filePath` to `paths.sources`
+   *
+   * @param paths instance of `Paths`
+   */
+  constructor(paths: Paths) {
     this.filePath = paths.sources;
   }
 
+  /** ensure that the file exists and has valid JSON content */
   async ensureFile(): Promise<boolean | undefined> {
     try {
       const file = await Deno.readTextFile(this.filePath);
@@ -142,6 +164,7 @@ export class FilePersistence {
     }
   }
 
+  /** writes empty JSON array to filePath and logs a message */
   async writeFile(): Promise<void> {
     await Deno.writeTextFile(this.filePath, "[]");
     console.log(
@@ -150,6 +173,7 @@ export class FilePersistence {
     );
   }
 
+  /** load feed sources and returns them */
   async loadFeeds(): Promise<FeedData[]> {
     await this.ensureFile();
 
@@ -173,32 +197,53 @@ export class FilePersistence {
     }
   }
 
+  /** stringifies array of `FeedData` and writes to `filePath` */
   async saveFeeds(feeds: FeedData[]): Promise<void> {
     const text = JSON.stringify(feeds, null, 2);
     await Deno.writeTextFile(this.filePath, text);
   }
+
+  /**
+   * hello world
+   *
+   * @param feed feed source data to update
+   */
+  async updateFeed(feed: FeedData): Promise<void> {}
+
+  /**
+   * hello world
+   *
+   * @param feedID id string for feed source
+   * @param items array of FeedItem to save/store
+   */
+  async saveItems(feedID: FeedData["id"], items: FeedItem[]): Promise<void> {
+  }
 }
 
-type StorageType = { type: "feeds" } | { type: "items" };
+type StorageType = { type: "source" } | { type: "items" };
 
 interface StorageContract {
-  load(type: StorageType): Promise<FeedData[]>;
+  load(type: StorageType): Promise<FeedData[] | FeedItem[]>;
   save(type: StorageType): Promise<void>;
 }
 
-export interface ConfigContract {
-  storage:
-    | {
-      type: "fs";
-      path: string;
-    }
-    | {
-      type: "kv";
-      path?: string;
-    };
+/** config type for filesystem (fs) storage */
+type FsStorageConfig = {
+  type: "fs";
+  path: string;
+};
+
+/** config type for kv storage */
+type KvStorageConfig = {
+  type: "kv";
+  path?: string;
+};
+
+interface ConfigContract {
+  storage: FsStorageConfig | KvStorageConfig;
 }
 
-export const defineConfig = (config: ConfigContract) => config;
+const defineConfig = (config: ConfigContract): ConfigContract => config;
 
 function createStorage(config: ConfigContract["storage"]) {
   switch (config.type) {
@@ -260,6 +305,11 @@ function detectFeedFormatFromContentType(
   return "unknown";
 }
 
+/**
+ * fetch metadata for feed source
+ *
+ * @param url URL instance to fetch metadata from
+ */
 export async function fetchFeedMetadata(url: URL): Promise<FeedData> {
   let title = null;
 
@@ -356,7 +406,7 @@ export async function fetchFeedItemsFromURL(
 }
 
 /**
- * responsible for fetching response body in chunks from a URL instance
+ * fetch response body in chunks from a URL instance
  *
  * @param url
  */
@@ -375,6 +425,11 @@ export async function* fetchResponseBodyInChunksFromURL(
   }
 }
 
+/**
+ * parse input string and return URL instance
+ *
+ * @param input url string input
+ */
 export function parseInputToURL(input: string): URL | undefined {
   if (!input.startsWith("http://") && !input.startsWith("https://")) {
     input = `https://${input}`;
