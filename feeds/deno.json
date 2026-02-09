@@ -14,7 +14,8 @@
     "@std/fs": "jsr:@std/fs@^1.0.22",
     "@std/path": "jsr:@std/path@^1.1.4",
     "@std/testing": "jsr:@std/testing@^1.0.17",
-    "@std/ulid": "jsr:@std/ulid@^1.0.0"
+    "@std/ulid": "jsr:@std/ulid@^1.0.0",
+    "feedsmith": "npm:feedsmith@^2.9.0"
   },
   "publish": {
     "exclude": [

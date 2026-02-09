@@ -1,7 +1,7 @@
 import * as colors from "@std/fmt/colors";
 import { ulid } from "@std/ulid";
-import { Paths } from "@stewpot/feeds/cli";
-import { parseAtomFeed, parseRssFeed } from "npm:feedsmith";
+import type { Paths } from "@stewpot/feeds/cli";
+import { parseAtomFeed, parseRssFeed } from "feedsmith";
 
 /** unique identifier for feed source (ulid) */
 export type FeedID = string;
