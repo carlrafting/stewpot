@@ -124,10 +124,15 @@ export interface FeedItem {
  * the shape of results returned by `fetchFeedItemsFromURL`
  */
 export interface FetchResults {
+  /** if feed source `Response` was modified or not */
   status: "modified" | "not-modified";
+  /** feed source response content-type header  */
   contentType: string | null;
+  /** etag header for feed source response */
   etag: string | null;
+  /** last-modified header for feed source response */
   lastModified: string | null;
+  /** body for feed source response */
   body: string | null;
 }
 
@@ -408,7 +413,7 @@ export async function fetchFeedItemsFromURL(
 /**
  * fetch response body in chunks from a URL instance
  *
- * @param url
+ * @param url URL instance to fecth response body chunks from
  */
 export async function* fetchResponseBodyInChunksFromURL(
   url: URL,

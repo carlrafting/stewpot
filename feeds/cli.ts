@@ -279,6 +279,12 @@ export type ParsedArguments = {
   _: Array<string | number>;
 };
 
+/**
+ * main cli function
+ *
+ * @param args typically `Deno.args`
+ * @param store the store used to persist feed sources and items to the filesystem
+ */
 export async function main(
   args: string[],
   store: FilePersistence,
