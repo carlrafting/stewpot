@@ -3,7 +3,6 @@ import { ensureDir } from "@std/fs";
 import { join as joinPath } from "@std/path/join";
 import * as colors from "@std/fmt/colors";
 import {
-  defineConfig,
   discoverFeed,
   type FeedData,
   fetchFeedItemsFromURL,
@@ -23,9 +22,13 @@ export { ENV_VAR, ITEMS_FILENAME, PARENT_DIR, ROOT_DIR, SOURCES_FILENAME };
 
 /** paths used for file & kv storage */
 export interface Paths {
+  /** path to root directory */
   root: string;
+  /** path to sources file */
   sources: string;
+  /** path to config file */
   config?: string;
+  /** path items directory */
   items?: string;
 }
 
