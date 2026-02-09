@@ -279,6 +279,7 @@ export async function discoverFeed(url: string): Promise<string | undefined> {
     "/feed.rss",
     "/feed.atom",
     "/feed.json",
+    "/feed/index.xml",
   ];
 
   for (const path of commonPaths) {
