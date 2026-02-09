@@ -1,9 +1,12 @@
 import * as colors from "@std/fmt/colors";
-import * as path from "@std/path";
 import { ulid } from "@std/ulid";
+import type { Paths } from "@stewpot/feeds/cli";
+import { parseAtomFeed, parseRssFeed } from "feedsmith";
 
+/** unique identifier for feed source (ulid) */
 export type FeedID = string;
 
+/** content-type from response header */
 export type FeedContentType =
   | "application/xml"
   | "application/json"
@@ -13,6 +16,7 @@ export type FeedContentType =
   | "text/xml"
   | "text/json";
 
+/** what format the feed uses, unknown if it can't be determined  */
 export type FeedFormat = "rss" | "atom" | "json" | "unknown";
 
 /**
@@ -33,45 +37,154 @@ export interface FeedData {
   lastModified?: string | null;
 }
 
+const parsers: Parser[] = [];
+
+/** parsers should implement the following methods */
+export interface Parser {
+  capable(contentType: string, text: string): boolean;
+  parse(text: string): FeedItem[];
+}
+
+/** parser responsible for detecting and parsing RSS */
+export const rssParser: Parser = {
+  capable(contentType, text) {
+    return (contentType.includes("xml") && text.includes("<rss"));
+  },
+  parse(text) {
+    const items: FeedItem[] = [];
+    const parsed = parseRssFeed(text);
+    if (!parsed.items) return items;
+    for (const item of parsed.items) {
+      items.push({
+        id: item.guid?.value ?? ulid(),
+        title: item.title ?? null,
+        content: item?.content?.encoded ?? null,
+        url: item?.link ?? null,
+        published: item?.pubDate ? new Date(item?.pubDate) : null,
+      });
+    }
+    return items;
+  },
+};
+
+/** parser responsible for detecting and parsing Atom */
+export const atomParser: Parser = {
+  capable(contentType, text) {
+    return (
+      contentType?.includes("xml") && text.includes("<feed")
+    );
+  },
+  parse(text) {
+    const items: FeedItem[] = [];
+    const parsed = parseAtomFeed(text);
+    if (!parsed.entries) return items;
+    for (const entry of parsed.entries) {
+      items.push({
+        id: entry?.id ?? ulid(),
+        title: entry?.title ?? null,
+        summary: entry?.summary ?? null,
+        content: entry?.content ?? null,
+        url: entry?.links?.[0].href ?? null,
+        published: entry?.published ? new Date(entry.published) : null,
+        updated: entry?.updated ? new Date(entry.updated) : null,
+      });
+    }
+    return items;
+  },
+};
+
+function detectParser(contentType: string, text: string) {
+  for (const parser of parsers) {
+    if (parser.capable(contentType, text)) {
+      return parser;
+    }
+  }
+  throw new Error("Unsupported feed format");
+}
+
+/** the shape a feed item will be stored as */
+export interface FeedItem {
+  /** unique identifier (guid, uid, ulid, url, href) */
+  id: string;
+  /** title of the feed item */
+  title: string | null;
+  /** url/link for feed item */
+  url: string | null;
+  /** which date the feed item was published at */
+  published: Date | null;
+  /** which date the feed item was updated at */
+  updated?: Date | null;
+  /** summary for feed item */
+  summary?: string | null;
+  /** content for feed item */
+  content: string | null;
+}
+
 /**
  * the shape of results returned by `fetchFeedItemsFromURL`
  */
 export interface FetchResults {
+  /** if feed source `Response` was modified or not */
   status: "modified" | "not-modified";
+  /** feed source response content-type header  */
   contentType: string | null;
+  /** etag header for feed source response */
   etag: string | null;
+  /** last-modified header for feed source response */
   lastModified: string | null;
+  /** body for feed source response */
   body: string | null;
 }
 
+/**
+ * class responsible for persisting feeds and items to filesystem
+ */
 export class FilePersistence {
-  private filePath: string;
+  /** filepath for storing feed source metadata */
+  public filePath: string;
 
-  constructor(filename = "feeds.json") {
-    this.filePath = path.join(Deno.cwd(), filename);
+  /**
+   * takes instance of `Paths` and assigns `filePath` to `paths.sources`
+   *
+   * @param paths instance of `Paths`
+   */
+  constructor(paths: Paths) {
+    this.filePath = paths.sources;
   }
 
+  /** ensure that the file exists and has valid JSON content */
   async ensureFile(): Promise<boolean | undefined> {
     try {
-      const fileInfo = await Deno.stat(this.filePath);
-      return fileInfo.isFile;
+      const file = await Deno.readTextFile(this.filePath);
+      if (file === "") {
+        this.writeFile();
+      }
+      return true;
     } catch (error) {
       if (error instanceof Deno.errors.NotFound) {
-        await Deno.writeTextFile(this.filePath, "[]");
-        console.log(
-          colors.green("OK!"),
-          `created new feeds file at ${this.filePath}`,
-        );
+        this.writeFile();
+        return true;
       }
       throw error;
     }
   }
 
+  /** writes empty JSON array to filePath and logs a message */
+  async writeFile(): Promise<void> {
+    await Deno.writeTextFile(this.filePath, "[]");
+    console.log(
+      colors.green("OK!"),
+      `created new feeds file at ${this.filePath}`,
+    );
+  }
+
+  /** load feed sources and returns them */
   async loadFeeds(): Promise<FeedData[]> {
     await this.ensureFile();
 
     try {
       const text = await Deno.readTextFile(this.filePath);
+      if (text === "") throw new Error("file contents is not valid JSON");
       const data = JSON.parse(text);
 
       if (!Array.isArray(data)) {
@@ -89,9 +202,60 @@ export class FilePersistence {
     }
   }
 
+  /** stringifies array of `FeedData` and writes to `filePath` */
   async saveFeeds(feeds: FeedData[]): Promise<void> {
     const text = JSON.stringify(feeds, null, 2);
     await Deno.writeTextFile(this.filePath, text);
+  }
+
+  /**
+   * hello world
+   *
+   * @param feed feed source data to update
+   */
+  async updateFeed(feed: FeedData): Promise<void> {}
+
+  /**
+   * hello world
+   *
+   * @param feedID id string for feed source
+   * @param items array of FeedItem to save/store
+   */
+  async saveItems(feedID: FeedData["id"], items: FeedItem[]): Promise<void> {
+  }
+}
+
+type StorageType = { type: "source" } | { type: "items" };
+
+interface StorageContract {
+  load(type: StorageType): Promise<FeedData[] | FeedItem[]>;
+  save(type: StorageType): Promise<void>;
+}
+
+/** config type for filesystem (fs) storage */
+type FsStorageConfig = {
+  type: "fs";
+  path: string;
+};
+
+/** config type for kv storage */
+type KvStorageConfig = {
+  type: "kv";
+  path?: string;
+};
+
+interface ConfigContract {
+  storage: FsStorageConfig | KvStorageConfig;
+}
+
+const defineConfig = (config: ConfigContract): ConfigContract => config;
+
+function createStorage(config: ConfigContract["storage"]) {
+  switch (config.type) {
+    case "fs":
+      return;
+    case "kv":
+      return;
   }
 }
 
@@ -146,8 +310,12 @@ function detectFeedFormatFromContentType(
   return "unknown";
 }
 
+/**
+ * fetch metadata for feed source
+ *
+ * @param url URL instance to fetch metadata from
+ */
 export async function fetchFeedMetadata(url: URL): Promise<FeedData> {
-  let format: FeedFormat = "unknown";
   let title = null;
 
   const id: FeedID = ulid();
@@ -162,7 +330,7 @@ export async function fetchFeedMetadata(url: URL): Promise<FeedData> {
   const etag = headers.get("etag");
   const contentType = headers.get("content-type") ?? "";
 
-  format = detectFeedFormatFromContentType(contentType);
+  const format: FeedFormat = detectFeedFormatFromContentType(contentType);
 
   if (format === "rss" || format === "atom") {
     const text = await response.text();
@@ -243,9 +411,9 @@ export async function fetchFeedItemsFromURL(
 }
 
 /**
- * responsible for fetching response body in chunks from a URL instance
+ * fetch response body in chunks from a URL instance
  *
- * @param url
+ * @param url URL instance to fecth response body chunks from
  */
 export async function* fetchResponseBodyInChunksFromURL(
   url: URL,
@@ -262,6 +430,11 @@ export async function* fetchResponseBodyInChunksFromURL(
   }
 }
 
+/**
+ * parse input string and return URL instance
+ *
+ * @param input url string input
+ */
 export function parseInputToURL(input: string): URL | undefined {
   if (!input.startsWith("http://") && !input.startsWith("https://")) {
     input = `https://${input}`;
