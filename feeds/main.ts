@@ -1,7 +1,7 @@
 import * as colors from "@std/fmt/colors";
 import { ulid } from "@std/ulid";
 import { Paths } from "@stewpot/feeds/cli";
-import { parseRssFeed } from "npm:feedsmith";
+import { parseAtomFeed, parseRssFeed } from "npm:feedsmith";
 
 /** unique identifier for feed source (ulid) */
 export type FeedID = string;
@@ -53,11 +53,36 @@ export const rssParser: Parser = {
     if (!parsed.items) return items;
     for (const item of parsed.items) {
       items.push({
-        id: ulid(),
-        title: item.title ?? "",
-        content: item?.content?.encoded ?? "",
-        url: item?.link ?? "",
-        published: item?.pubDate ? new Date(item?.pubDate) : new Date(),
+        id: item.guid?.value ?? ulid(),
+        title: item.title ?? null,
+        content: item?.content?.encoded ?? null,
+        url: item?.link ?? null,
+        published: item?.pubDate ? new Date(item?.pubDate) : null,
+      });
+    }
+    return items;
+  },
+};
+
+export const atomParser: Parser = {
+  capable(contentType, text) {
+    return (
+      contentType?.includes("xml") && text.includes("<feed")
+    );
+  },
+  parse(text) {
+    const items: FeedItem[] = [];
+    const parsed = parseAtomFeed(text);
+    if (!parsed.entries) return items;
+    for (const entry of parsed.entries) {
+      items.push({
+        id: entry?.id ?? ulid(),
+        title: entry?.title ?? null,
+        summary: entry?.summary ?? null,
+        content: entry?.content ?? null,
+        url: entry?.links?.[0].href ?? null,
+        published: entry?.published ? new Date(entry.published) : null,
+        updated: entry?.updated ? new Date(entry.updated) : null,
       });
     }
     return items;
@@ -75,12 +100,12 @@ function detectParser(contentType: string, text: string) {
 
 export interface FeedItem {
   id: string;
-  title: string;
-  url: string;
-  published: Date;
-  updated?: Date;
-  summary?: string;
-  content: string;
+  title: string | null;
+  url: string | null;
+  published: Date | null;
+  updated?: Date | null;
+  summary?: string | null;
+  content: string | null;
 }
 
 /**

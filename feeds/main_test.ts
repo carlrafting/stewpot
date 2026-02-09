@@ -1,5 +1,6 @@
 import { assertEquals } from "@std/assert/equals";
 import {
+  atomParser,
   discoverFeed,
   type FeedData,
   type FeedFormat,
@@ -59,7 +60,7 @@ Deno.test("FilePersistence saves and loads feeds correctly", async () => {
 });
 
 Deno.test("rss parser works correctly", async () => {
-  const rss = await Deno.readTextFile("test_fixtures/rss.xml");
+  const rss = await Deno.readTextFile("fixtures/rss.xml");
   const items = rssParser.parse(rss);
   assertEquals(items?.length, 5);
   assertEquals(
@@ -69,5 +70,19 @@ Deno.test("rss parser works correctly", async () => {
   assertEquals(
     items?.[0].url,
     "http://www.nasa.gov/press-release/louisiana-students-to-hear-from-nasa-astronauts-aboard-space-station",
+  );
+});
+
+Deno.test("atom parser works correctly", async () => {
+  const atom = await Deno.readTextFile("fixtures/atom.xml");
+  const items = atomParser.parse(atom);
+  assertEquals(items?.length, 2);
+  assertEquals(
+    items?.[0].title,
+    "Atom-Powered Robots Run Amok",
+  );
+  assertEquals(
+    items?.[0].url,
+    "http://example.org/2003/12/13/atom03",
   );
 });

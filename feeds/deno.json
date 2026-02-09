@@ -17,6 +17,9 @@
     "@std/ulid": "jsr:@std/ulid@^1.0.0"
   },
   "publish": {
-    "exclude": ["*_test.ts"]
+    "exclude": [
+      "*_test.ts",
+      "fixtures"
+    ]
   }
 }
