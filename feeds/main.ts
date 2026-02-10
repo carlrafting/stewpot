@@ -3,6 +3,11 @@ import { ulid } from "@std/ulid";
 import type { Paths } from "@stewpot/feeds/cli";
 import { parseAtomFeed, parseRssFeed } from "feedsmith";
 
+/**
+ * This is the main module. It handles everything related to feeds.
+ * @module
+ */
+
 /** unique identifier for feed source (ulid) */
 export type FeedID = string;
 
@@ -155,7 +160,7 @@ export class FilePersistence {
   public filePath: string;
 
   /**
-   * takes instance of `Paths` and assigns `filePath` to `paths.sources`
+   * takes instance of {@linkcode Paths} and assigns `paths.sources` to `filePath`
    *
    * @param paths instance of `Paths`
    */
@@ -273,6 +278,7 @@ function createStorage(config: ConfigContract["storage"]) {
 /**
  * simple & dumb feed discovery function
  *
+ * @example
  * ```ts
  * const results = await discoverFeeds("https://example.com")
  * ```

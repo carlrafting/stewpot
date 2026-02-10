@@ -12,6 +12,11 @@ import {
 } from "./main.ts";
 import denoJSON from "./deno.json" with { type: "json" };
 
+/**
+ * This module contains code related to CLI
+ * @module
+ */
+
 /** defines where data are stored */
 const ENV_VAR = "STEWPOT_FEEDS_CLI_DIR";
 /** parent directory within user home directory */
@@ -65,8 +70,7 @@ function resolveRootDirectory(): string | undefined {
   }
 }
 
-/** resolves a user home directory (linux, mac/darwin & windows) */
-export function resolveUserHomeDirectory(): string {
+function resolveUserHomeDirectory(): string {
   const env = Deno.env;
   const os = Deno.build.os;
 
@@ -149,7 +153,7 @@ ${colors.green("Commands")}:
   return 0;
 }
 
-export const listCommand = async (
+const listCommand = async (
   args: ParsedArguments,
   feeds: FeedData[],
   store: FilePersistence,
@@ -182,7 +186,7 @@ export const listCommand = async (
   return 0;
 };
 
-export const subscribeCommand = async (
+const subscribeCommand = async (
   args: ParsedArguments,
   feeds: FeedData[],
   store: FilePersistence,
@@ -232,7 +236,7 @@ export const subscribeCommand = async (
   return 0;
 };
 
-export const unsubscribeCommand = async (
+const unsubscribeCommand = async (
   args: ParsedArguments,
   feeds: FeedData[],
   store: FilePersistence,
@@ -256,7 +260,7 @@ export const unsubscribeCommand = async (
   return 0;
 };
 
-export const fetchCommand = async (
+const fetchCommand = async (
   args: ParsedArguments,
   feeds: FeedData[],
   store: FilePersistence,
@@ -307,7 +311,7 @@ const notImplementedCommand = () => {
   }
 };
 
-export type ParsedArguments = {
+type ParsedArguments = {
   [x: string]: unknown;
   _: Array<string | number>;
 };
