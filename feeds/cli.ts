@@ -3,7 +3,6 @@ import { ensureDir } from "@std/fs";
 import { join as joinPath } from "@std/path/join";
 import * as colors from "@std/fmt/colors";
 import {
-  defineConfig,
   discoverFeed,
   type FeedData,
   fetchFeedItemsFromURL,
@@ -13,19 +12,33 @@ import {
 } from "./main.ts";
 import denoJSON from "./deno.json" with { type: "json" };
 
+/**
+ * This module contains code related to CLI
+ * @module
+ */
+
+/** defines where data are stored */
 const ENV_VAR = "STEWPOT_FEEDS_CLI_DIR";
+/** parent directory within user home directory */
 const PARENT_DIR = ".stewpot";
+/** where data and config are stored */
 const ROOT_DIR = "feeds";
+/** where feed sources metadata are stored */
 const SOURCES_FILENAME = "feeds.json";
+/** where feed items are stored */
 const ITEMS_FILENAME = "items.json";
 
 export { ENV_VAR, ITEMS_FILENAME, PARENT_DIR, ROOT_DIR, SOURCES_FILENAME };
 
 /** paths used for file & kv storage */
 export interface Paths {
+  /** path to root directory */
   root: string;
+  /** path to sources file */
   sources: string;
+  /** path to config file */
   config?: string;
+  /** path items directory */
   items?: string;
 }
 
@@ -57,8 +70,7 @@ function resolveRootDirectory(): string | undefined {
   }
 }
 
-/** resolves a user home directory (linux, mac/darwin & windows) */
-export function resolveUserHomeDirectory(): string {
+function resolveUserHomeDirectory(): string {
   const env = Deno.env;
   const os = Deno.build.os;
 
@@ -79,7 +91,20 @@ export function resolveUserHomeDirectory(): string {
   throw new Error("unable to resolve user home directory");
 }
 
+/**
+ * thrown whenever there is a command error
+ */
 export class CommandError extends Error {
+  /**
+   * @example
+   *
+   * ```ts
+   * throw new CommandError("this is my command error!");
+   * ```
+   *
+   * @param message error message
+   * @param exitCode exit code process should exit with
+   */
   constructor(
     message: string,
     public exitCode: number = 1,
@@ -88,7 +113,19 @@ export class CommandError extends Error {
   }
 }
 
+/**
+ * thrown whenever a command is not implemented yet
+ */
 class NotImplementedError extends Error {
+  /**
+   * @example
+   *
+   * ```ts
+   * throw new NotImplementedError();
+   * ```
+   *
+   * @param message override default error message
+   */
   constructor(
     message: string = "Not Implemented!",
   ) {
@@ -116,7 +153,7 @@ ${colors.green("Commands")}:
   return 0;
 }
 
-export const listCommand = async (
+const listCommand = async (
   args: ParsedArguments,
   feeds: FeedData[],
   store: FilePersistence,
@@ -149,7 +186,7 @@ export const listCommand = async (
   return 0;
 };
 
-export const subscribeCommand = async (
+const subscribeCommand = async (
   args: ParsedArguments,
   feeds: FeedData[],
   store: FilePersistence,
@@ -199,7 +236,7 @@ export const subscribeCommand = async (
   return 0;
 };
 
-export const unsubscribeCommand = async (
+const unsubscribeCommand = async (
   args: ParsedArguments,
   feeds: FeedData[],
   store: FilePersistence,
@@ -223,7 +260,7 @@ export const unsubscribeCommand = async (
   return 0;
 };
 
-export const fetchCommand = async (
+const fetchCommand = async (
   args: ParsedArguments,
   feeds: FeedData[],
   store: FilePersistence,
@@ -274,7 +311,7 @@ const notImplementedCommand = () => {
   }
 };
 
-export type ParsedArguments = {
+type ParsedArguments = {
   [x: string]: unknown;
   _: Array<string | number>;
 };

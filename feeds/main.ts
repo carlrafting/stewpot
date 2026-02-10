@@ -3,6 +3,11 @@ import { ulid } from "@std/ulid";
 import type { Paths } from "@stewpot/feeds/cli";
 import { parseAtomFeed, parseRssFeed } from "feedsmith";
 
+/**
+ * This is the main module. It handles everything related to feeds.
+ * @module
+ */
+
 /** unique identifier for feed source (ulid) */
 export type FeedID = string;
 
@@ -41,7 +46,18 @@ const parsers: Parser[] = [];
 
 /** parsers should implement the following methods */
 export interface Parser {
+  /**
+   * takes contentType and text body and returns boolean
+   *
+   * @param contentType feed source response header content-type
+   * @param text string text body
+   */
   capable(contentType: string, text: string): boolean;
+  /**
+   * parse string body
+   *
+   * @param text string body to parse
+   */
   parse(text: string): FeedItem[];
 }
 
@@ -144,7 +160,7 @@ export class FilePersistence {
   public filePath: string;
 
   /**
-   * takes instance of `Paths` and assigns `filePath` to `paths.sources`
+   * takes instance of {@linkcode Paths} and assigns `paths.sources` to `filePath`
    *
    * @param paths instance of `Paths`
    */
@@ -209,7 +225,7 @@ export class FilePersistence {
   }
 
   /**
-   * hello world
+   * update feed source metadata
    *
    * @param feed feed source data to update
    */
@@ -262,6 +278,7 @@ function createStorage(config: ConfigContract["storage"]) {
 /**
  * simple & dumb feed discovery function
  *
+ * @example
  * ```ts
  * const results = await discoverFeeds("https://example.com")
  * ```
@@ -279,6 +296,7 @@ export async function discoverFeed(url: string): Promise<string | undefined> {
     "/feed.rss",
     "/feed.atom",
     "/feed.json",
+    "/feed/index.xml",
   ];
 
   for (const path of commonPaths) {
