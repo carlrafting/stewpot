@@ -40,6 +40,39 @@ export interface FeedData {
   etag?: string | null;
   /** reponse header last-modified header (optional) */
   lastModified?: string | null;
+  /** response body */
+  body?: string | null;
+}
+
+/** the shape a feed item will be stored as */
+export interface FeedItem {
+  /** unique identifier (guid, uid, ulid, url, href) */
+  id: string;
+  /** foreign key */
+  feed: FeedID;
+  /** title of the feed item */
+  title: string | null;
+  /** url/link for feed item */
+  url: string | null;
+  /** which date the feed item was published at */
+  published: Date | null;
+  /** which date the feed item was updated at */
+  updated?: Date | null;
+  /** summary for feed item */
+  summary?: string | null;
+  /** content for feed item */
+  content: string | null;
+}
+
+/**
+ * the shape of results returned by `fetchFeedItemsFromURL`
+ */
+export interface FetchResults extends FeedData {
+  /** if feed source `Response` was modified or not */
+  fetch: {
+    status: "modified" | "not-modified";
+  };
+  contentType: string | null;
 }
 
 const parsers: Parser[] = [];
@@ -116,40 +149,6 @@ function detectParser(contentType: string, text: string) {
     }
   }
   throw new Error("Unsupported feed format");
-}
-
-/** the shape a feed item will be stored as */
-export interface FeedItem {
-  /** unique identifier (guid, uid, ulid, url, href) */
-  id: string;
-  /** title of the feed item */
-  title: string | null;
-  /** url/link for feed item */
-  url: string | null;
-  /** which date the feed item was published at */
-  published: Date | null;
-  /** which date the feed item was updated at */
-  updated?: Date | null;
-  /** summary for feed item */
-  summary?: string | null;
-  /** content for feed item */
-  content: string | null;
-}
-
-/**
- * the shape of results returned by `fetchFeedItemsFromURL`
- */
-export interface FetchResults {
-  /** if feed source `Response` was modified or not */
-  status: "modified" | "not-modified";
-  /** feed source response content-type header  */
-  contentType: string | null;
-  /** etag header for feed source response */
-  etag: string | null;
-  /** last-modified header for feed source response */
-  lastModified: string | null;
-  /** body for feed source response */
-  body: string | null;
 }
 
 /**
@@ -232,7 +231,7 @@ export class FilePersistence {
   async updateFeed(feed: FeedData): Promise<void> {}
 
   /**
-   * hello world
+   * save feed items
    *
    * @param feedID id string for feed source
    * @param items array of FeedItem to save/store
