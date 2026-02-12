@@ -1,6 +1,6 @@
 import * as colors from "@std/fmt/colors";
 import { ulid } from "@std/ulid";
-import type { Paths } from "@stewpot/feeds/cli";
+import type { Paths } from "./cli.ts";
 import { parseAtomFeed, parseJsonFeed, parseRssFeed } from "feedsmith";
 import type { Atom, DeepPartial, Json, Rdf, Rss } from "feedsmith/types";
 import { dirname } from "@std/path/dirname";
