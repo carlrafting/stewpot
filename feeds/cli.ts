@@ -194,7 +194,11 @@ ${colors.green("Description")}:
   Small CLI program for managing & consuming feeds of different kinds (RSS/Atom/JSON).
 
 ${colors.green("Usage")}:
-  deno -RWNE ${denoJSON.name}/cli <command>
+  Run directly from JSR:
+    $ deno -RWNE jsr:${denoJSON.name}/cli <command>
+  
+  When installed on system:
+    $ feeds <command>
 
 ${colors.green("Commands")}:
   ${colors.yellow("list")}          - list subscribed feed sources
