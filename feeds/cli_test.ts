@@ -1,6 +1,6 @@
-import { assertEquals, assertGreater, assertRejects } from "@std/assert";
-import { CommandError, main, type Paths } from "./cli.ts";
-import { FilePersistence } from "@stewpot/feeds";
+import { assertEquals, assertGreater } from "@std/assert";
+import { CONFIG_FILENAME, configExists } from "./cli.ts";
+import { join } from "@std/path/join";
 
 function run(args: string[], options: Deno.CommandOptions = {}) {
   return new Deno.Command(Deno.execPath(), {
@@ -8,31 +8,6 @@ function run(args: string[], options: Deno.CommandOptions = {}) {
     ...options,
   });
 }
-
-let paths: Paths;
-let store: FilePersistence;
-
-Deno.test.beforeAll(async () => {
-  paths = {
-    root: await Deno.makeTempDir(),
-    sources: await Deno.makeTempFile(),
-  };
-
-  store = new FilePersistence(paths);
-});
-
-Deno.test.afterAll(async () => {
-  await Deno.remove(paths.root, { recursive: true });
-});
-
-Deno.test("no arguments should display help and exit with 0", async () => {
-  const code = await main([], store);
-  assertEquals(code, 0);
-});
-
-Deno.test("unknown subcommand throws a CommandError", async () => {
-  await assertRejects(async () => await main(["wat"], store), CommandError);
-});
 
 Deno.test(
   "listCommand should list feed sources if there are more than 0",
@@ -45,3 +20,19 @@ Deno.test(
     assertGreater(results.stdout.length, 0);
   },
 );
+
+Deno.test("should confirm if config file exists or not", async (t) => {
+  await t.step("exists", async () => {
+    const tempDir = await Deno.makeTempDir();
+    const path = join(tempDir, CONFIG_FILENAME);
+    await Deno.writeTextFile(path, "");
+    const results = await configExists(path);
+    assertEquals(results, true);
+  });
+  await t.step("notexists", async () => {
+    const tempDir = await Deno.makeTempDir();
+    const path = join(tempDir, CONFIG_FILENAME);
+    const results = await configExists(path);
+    assertEquals(results, false);
+  });
+});

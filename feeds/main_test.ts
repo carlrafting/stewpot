@@ -1,12 +1,10 @@
 import { assertEquals } from "@std/assert/equals";
 import {
-  atomParser,
   discoverFeed,
   type FeedData,
   type FeedFormat,
   FilePersistence,
   parseInputToURL,
-  rssParser,
 } from "./main.ts";
 import { type Paths, SOURCES_FILENAME } from "./cli.ts";
 import { join } from "@std/path/join";
@@ -41,7 +39,7 @@ Deno.test("FilePersistence saves and loads feeds correctly", async () => {
     root,
     sources: join(root, SOURCES_FILENAME),
   };
-  const store = new FilePersistence(paths);
+  const store = new FilePersistence(paths.sources);
   const id = ulid();
   const format: FeedFormat = "unknown";
   const feeds: FeedData[] = [
@@ -57,32 +55,4 @@ Deno.test("FilePersistence saves and loads feeds correctly", async () => {
 
   assertEquals(loaded, feeds);
   assertEquals(loaded.length, feeds.length);
-});
-
-Deno.test("rss parser works correctly", async () => {
-  const rss = await Deno.readTextFile("fixtures/rss.xml");
-  const items = rssParser.parse(rss);
-  assertEquals(items?.length, 5);
-  assertEquals(
-    items?.[0].title,
-    "Louisiana Students to Hear from NASA Astronauts Aboard Space Station",
-  );
-  assertEquals(
-    items?.[0].url,
-    "http://www.nasa.gov/press-release/louisiana-students-to-hear-from-nasa-astronauts-aboard-space-station",
-  );
-});
-
-Deno.test("atom parser works correctly", async () => {
-  const atom = await Deno.readTextFile("fixtures/atom.xml");
-  const items = atomParser.parse(atom);
-  assertEquals(items?.length, 2);
-  assertEquals(
-    items?.[0].title,
-    "Atom-Powered Robots Run Amok",
-  );
-  assertEquals(
-    items?.[0].url,
-    "http://example.org/2003/12/13/atom03",
-  );
 });

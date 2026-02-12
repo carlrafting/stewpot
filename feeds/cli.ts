@@ -5,12 +5,16 @@ import * as colors from "@std/fmt/colors";
 import {
   discoverFeed,
   type FeedData,
+  type FeedItem,
   fetchFeedItemsFromURL,
   fetchFeedMetadata,
+  type FetchResults,
   FilePersistence,
+  mapToFeedItems,
   parseInputToURL,
 } from "./main.ts";
 import denoJSON from "./deno.json" with { type: "json" };
+import { parseFeed } from "feedsmith";
 
 /**
  * This module contains code related to CLI
@@ -18,17 +22,32 @@ import denoJSON from "./deno.json" with { type: "json" };
  */
 
 /** defines where data are stored */
-const ENV_VAR = "STEWPOT_FEEDS_CLI_DIR";
+const ENV_CLI_DIR = "STEWPOT_FEEDS_CLI_ROOT";
 /** parent directory within user home directory */
-const PARENT_DIR = ".stewpot";
+const PARENT_DIRNAME = ".stewpot";
 /** where data and config are stored */
-const ROOT_DIR = "feeds";
+const ROOT_DIRNAME = "feeds";
+/** where configuration is stored */
+const CONFIG_FILENAME = "config.js";
+/** previous filename for storing sources */
+const PREV_SOURCES_FILENAME = "feeds.json";
 /** where feed sources metadata are stored */
-const SOURCES_FILENAME = "feeds.json";
+const SOURCES_FILENAME = "sources.json";
 /** where feed items are stored */
 const ITEMS_FILENAME = "items.json";
+/** where KV data is stored */
+const KV_FILENAME = "kv.db";
 
-export { ENV_VAR, ITEMS_FILENAME, PARENT_DIR, ROOT_DIR, SOURCES_FILENAME };
+export {
+  CONFIG_FILENAME,
+  ENV_CLI_DIR,
+  ITEMS_FILENAME,
+  KV_FILENAME,
+  PARENT_DIRNAME,
+  PREV_SOURCES_FILENAME,
+  ROOT_DIRNAME,
+  SOURCES_FILENAME,
+};
 
 /** paths used for file & kv storage */
 export interface Paths {
@@ -40,6 +59,32 @@ export interface Paths {
   config?: string;
   /** path items directory */
   items?: string;
+  /** path to kv file */
+  kv?: string;
+}
+
+/**
+ * Checks if config exists at given path and returns boolean
+ *
+ * @param path path to config file
+ * @returns if the config file exists or not
+ * @throws `Deno.errors.NotFound` if file doesn't exists
+ */
+export async function configExists(
+  path: Paths["config"],
+): Promise<boolean> {
+  try {
+    const config = path;
+    if (config) {
+      const file = await Deno.readFile(config);
+      if (file) return true;
+    }
+  } catch (error) {
+    if (error instanceof Deno.errors.NotFound) {
+      console.error(colors.red("error"), "config file doesn't exist");
+    }
+  }
+  return false;
 }
 
 async function resolvePaths(): Promise<Paths | undefined> {
@@ -48,20 +93,26 @@ async function resolvePaths(): Promise<Paths | undefined> {
   if (!root) return;
 
   await ensureDir(root);
+  const config = joinPath(root, CONFIG_FILENAME);
   const sources = joinPath(root, SOURCES_FILENAME);
+  const items = joinPath(root, ITEMS_FILENAME);
+  const kv = joinPath(root, KV_FILENAME);
 
   return {
     root,
+    config,
     sources,
+    items,
+    kv,
   };
 }
 
 function resolveRootDirectory(): string | undefined {
   const env = Deno.env;
-  const parent = PARENT_DIR;
-  const root = ROOT_DIR;
+  const parent = PARENT_DIRNAME;
+  const root = ROOT_DIRNAME;
 
-  const override = env.get(ENV_VAR);
+  const override = env.get(ENV_CLI_DIR);
   if (override) return override;
 
   const home = resolveUserHomeDirectory();
@@ -119,7 +170,6 @@ export class CommandError extends Error {
 class NotImplementedError extends Error {
   /**
    * @example
-   *
    * ```ts
    * throw new NotImplementedError();
    * ```
@@ -135,13 +185,13 @@ class NotImplementedError extends Error {
 
 function help() {
   console.log(`
-${colors.cyan("@stewpot/feeds")} - v${denoJSON.version}
+${colors.cyan(denoJSON.name)} - v${denoJSON.version}
 
 ${colors.green("Description")}:
   Small CLI program for managing & consuming feeds of different kinds (RSS/Atom/JSON).
 
 ${colors.green("Usage")}:
-  deno -RWNE ${import.meta.url} <command>
+  deno -RWNE ${denoJSON.name}/cli <command>
 
 ${colors.green("Commands")}:
   ${colors.yellow("list")}          - list subscribed feed sources
@@ -164,18 +214,7 @@ const listCommand = async (
   }
 
   if (args?.update) {
-    const updated: FeedData[] = [];
-    for (const feed of feeds) {
-      const url = new URL(feed.url);
-      console.log(
-        colors.cyan("info"),
-        `fetching and updating feed source metadata for ${url.host}`,
-      );
-      const metadata = await fetchFeedMetadata(url);
-      updated.push(metadata);
-    }
-    store.saveFeeds(updated);
-    console.log(colors.green("done"), `saved changes to ${store.filePath}`);
+    await updateFeedSource(feeds, store);
     return 0;
   }
 
@@ -218,7 +257,7 @@ const subscribeCommand = async (
       url.href = feedURL;
     }
     const ok = prompt(
-      `subscribe to discovered feed for "${oldHref}" at "${url.href}"? [y/N]`,
+      `subscribe to discovered feed for "${url.hostname}" at "${url.href}"? [y/N]`,
     )?.toLocaleLowerCase();
     if (ok !== "y" && ok !== "yes") {
       url.href = oldHref;
@@ -226,12 +265,35 @@ const subscribeCommand = async (
     }
   }
 
-  const feed = await fetchFeedMetadata(url);
+  const metadata: FeedData = await fetchFeedMetadata(url);
+  const fetchResults: FetchResults = await fetchFeedItemsFromURL(url, metadata);
+  const content = fetchResults.body;
 
-  feeds.push(feed);
+  if (!content || content.trim() === "") {
+    throw new Error("no content for feed source");
+  }
+
+  let parsed;
+  try {
+    parsed = parseFeed(content);
+  } catch (error) {
+    if (error) {
+      console.error(colors.red("error"), { error });
+      return 1;
+    }
+    throw error;
+  }
+
+  const items: FeedItem[] = mapToFeedItems(parsed, content, metadata, url);
+
+  parsed = null;
+
+  feeds.push(metadata);
   await store.saveFeeds(feeds);
+  await store.saveItems(metadata.id, items, feeds);
+  console.log(colors.green("done"), `saved feed items for ${url.hostname}`);
 
-  console.log(colors.green("subscribed!"), feed.url);
+  console.log(colors.green("subscribed!"), metadata.url);
 
   return 0;
 };
@@ -242,21 +304,30 @@ const unsubscribeCommand = async (
   store: FilePersistence,
 ): Promise<number> => {
   const [input] = args._;
-
   if (typeof input !== "string") {
     console.error(colors.red("error"), "invalid input format!");
     return 1;
   }
-
   const url = parseInputToURL(input);
+  const exists = feeds.find((value) =>
+    new URL(value.url).hostname === url?.hostname
+  );
+  if (!exists) {
+    console.error(
+      colors.red("error"),
+      `feed source doesn't exist for ${url?.hostname}`,
+    );
+    return 1;
+  }
   const filtered = feeds.filter((item) =>
     new URL(item.url).hostname !== url?.hostname
   );
-  if (filtered.length > 0) {
+  if (filtered.length >= 0) {
     await store.saveFeeds(filtered);
     console.log(colors.green("ok"), `unsubscribed to ${url?.href}`);
-    return 0;
   }
+  await store.removeItems(exists?.id);
+  console.log(colors.green("done"), `remove feed items for ${url?.hostname}`);
   return 0;
 };
 
@@ -271,30 +342,50 @@ const fetchCommand = async (
   }
 
   for (const feed of feeds) {
-    const { url } = feed;
     try {
-      const results = await fetchFeedItemsFromURL(new URL(url), feed);
-
-      if (results.status === "not-modified") {
-        console.log("houston, we have a problem");
+      const url = new URL(feed.url);
+      const exists = feeds.find((value) =>
+        new URL(value.url).hostname === url?.hostname
+      );
+      const metadata: FeedData = await fetchFeedMetadata(url);
+      const results: FetchResults = await fetchFeedItemsFromURL(
+        url,
+        feed,
+      );
+      const status = results.fetch.status;
+      if (status === "not-modified") continue;
+      const body = results.body;
+      if (!body) {
+        console.warn(
+          colors.yellow("warning"),
+          `empty body for feed ${feed.url}`,
+        );
         continue;
       }
-
-      if (
-        results.body &&
-        results.contentType?.includes("json")
-      ) {
-        const json = JSON.parse(results.body);
-        console.log({ json });
+      let parsed;
+      try {
+        parsed = parseFeed(body);
+      } catch (error) {
+        if (error) {
+          console.error(colors.red("error"), { error });
+          return 1;
+        }
+        throw error;
       }
-    } catch (_error) {
-      console.error(
-        colors.red("error"),
-        `something went wrong while fetching items from ${url}`,
-      );
-      return 1;
+      const items: FeedItem[] = mapToFeedItems(parsed, body, metadata, url);
+      store.saveItems(feed.id, items, feeds);
+      parsed = null;
+      console.log(colors.green("ok"), `saved feed items for ${url.hostname}`);
+    } catch (error) {
+      throw error;
     }
   }
+
+  store.saveFeeds(feeds);
+  console.log(
+    colors.cyan("info"),
+    `fetched and saved metadata for feed sources`,
+  );
 
   return 0;
 };
@@ -316,13 +407,22 @@ type ParsedArguments = {
   _: Array<string | number>;
 };
 
-/**
- * main cli function
- *
- * @param args typically `Deno.args`
- * @param store the store used to persist feed sources and items to the filesystem
- */
-export async function main(
+async function updateFeedSource(feeds: FeedData[], store: FilePersistence) {
+  const updated: FeedData[] = [];
+  for (const feed of feeds) {
+    const url = new URL(feed.url);
+    console.log(
+      colors.cyan("info"),
+      `fetching and updating feed source metadata for ${url.hostname}`,
+    );
+    const metadata = await fetchFeedMetadata(url);
+    updated.push(metadata);
+  }
+  store.saveFeeds(updated);
+  console.log(colors.green("done"), `saved changes to ${store.filePath}`);
+}
+
+async function main(
   args: string[],
   store: FilePersistence,
 ): Promise<number> {
@@ -355,7 +455,7 @@ if (import.meta.main) {
   try {
     const paths = await resolvePaths();
     if (!paths) throw "couldn't resolve paths";
-    const store = new FilePersistence(paths);
+    const store = new FilePersistence(paths.sources);
     const code = await main(Deno.args, store);
     Deno.exit(code);
   } catch (error) {
