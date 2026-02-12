@@ -1,6 +1,6 @@
 import * as colors from "@std/fmt/colors";
 import { ulid } from "@std/ulid";
-import type { Paths } from "./cli.ts";
+import { ITEMS_DIRNAME, type Paths } from "./cli.ts";
 import { parseAtomFeed, parseJsonFeed, parseRssFeed } from "feedsmith";
 import type { Atom, DeepPartial, Json, Rdf, Rss } from "feedsmith/types";
 import { dirname } from "@std/path/dirname";
@@ -255,7 +255,7 @@ export class FilePersistence {
     }
     const text = JSON.stringify(items, null, 2);
     const root = dirname(this.filePath);
-    const path = join(root, "items", `${feed.id}.json`);
+    const path = join(root, ITEMS_DIRNAME, `${feed.id}.json`);
     await ensureFile(path);
     await Deno.writeTextFile(path, text, { create: true });
   }
@@ -267,7 +267,7 @@ export class FilePersistence {
    */
   async loadItems(id: FeedID): Promise<FeedItem[]> {
     const root = dirname(this.filePath);
-    const path = join(root, "items", `${id}.json`);
+    const path = join(root, ITEMS_DIRNAME, `${id}.json`);
     let items: FeedItem[] = [];
     try {
       const file = await Deno.readTextFile(path);
@@ -287,46 +287,12 @@ export class FilePersistence {
   async removeItems(id: FeedID): Promise<void> {
     const recursive = true;
     const root = dirname(this.filePath);
-    const path = join(root, "items", `${id}.json`);
+    const path = join(root, ITEMS_DIRNAME, `${id}.json`);
     try {
       await Deno.remove(path, { recursive });
     } catch (error) {
       console.error({ error });
     }
-  }
-}
-
-type StorageType = { type: "source" } | { type: "items" };
-
-interface StorageContract {
-  load(type: StorageType): Promise<FeedData[] | FeedItem[]>;
-  save(type: StorageType): Promise<void>;
-}
-
-/** config type for filesystem (fs) storage */
-type FsStorageConfig = {
-  type: "fs";
-  path: string;
-};
-
-/** config type for kv storage */
-type KvStorageConfig = {
-  type: "kv";
-  path?: string;
-};
-
-interface ConfigContract {
-  storage: FsStorageConfig | KvStorageConfig;
-}
-
-const defineConfig = (config: ConfigContract): ConfigContract => config;
-
-function createStorage(config: ConfigContract["storage"], paths: Paths) {
-  switch (config.type) {
-    case "fs":
-      return new FilePersistence(paths.sources);
-    case "kv":
-      throw "Sorry! KV Storage not implemented yet.";
   }
 }
 

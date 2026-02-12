@@ -35,12 +35,15 @@ const PREV_SOURCES_FILENAME = "feeds.json";
 const SOURCES_FILENAME = "sources.json";
 /** where feed items are stored */
 const ITEMS_FILENAME = "items.json";
+/** where feed items are stored */
+const ITEMS_DIRNAME = "items";
 /** where KV data is stored */
 const KV_FILENAME = "kv.db";
 
 export {
   CONFIG_FILENAME,
   ENV_CLI_DIR,
+  ITEMS_DIRNAME,
   ITEMS_FILENAME,
   KV_FILENAME,
   PARENT_DIRNAME,
