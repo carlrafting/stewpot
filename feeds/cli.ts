@@ -145,20 +145,7 @@ function resolveUserHomeDirectory(): string {
   throw new Error("unable to resolve user home directory");
 }
 
-/**
- * thrown whenever there is a command error
- */
-export class CommandError extends Error {
-  /**
-   * @example
-   *
-   * ```ts
-   * throw new CommandError("this is my command error!");
-   * ```
-   *
-   * @param message error message
-   * @param exitCode exit code process should exit with
-   */
+class CommandError extends Error {
   constructor(
     message: string,
     public exitCode: number = 1,
