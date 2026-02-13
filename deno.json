@@ -8,5 +8,8 @@
     "./ui",
     "./middleware",
     "./routes"
+  ],
+  "unstable": [
+    "raw-imports"
   ]
 }
