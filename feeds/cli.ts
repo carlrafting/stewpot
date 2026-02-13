@@ -425,10 +425,11 @@ async function readerCommand(
   args: ParsedArguments,
   feeds: FeedData[],
   store: FilePersistence,
+  paths: Paths,
 ): Promise<void> {
   const controller = new AbortController();
   const signal = controller.signal;
-  const handler = await app(args, feeds, store);
+  const handler = await app(args, feeds, store, paths);
   const port = 8000;
   const serveOptions: Deno.ServeInit | Deno.ServeTcpOptions = {
     port,
@@ -485,6 +486,7 @@ const upgradeCommand = async () => {
 async function main(
   args: string[],
   store: FilePersistence,
+  paths: Paths,
 ): Promise<number | void> {
   const [command, ...rest] = args;
   const parsedArgs = parseArgs(rest);
@@ -501,7 +503,7 @@ async function main(
     case "fetch":
       return await fetchCommand(parsedArgs, feeds, store);
     case "reader":
-      return await readerCommand(parsedArgs, feeds, store);
+      return await readerCommand(parsedArgs, feeds, store, paths);
     case "upgrade":
       return await upgradeCommand();
     case "--help":
@@ -518,7 +520,7 @@ if (import.meta.main) {
     const paths = await resolvePaths();
     if (!paths) throw "couldn't resolve paths";
     const store = new FilePersistence(paths.sources);
-    const code = await main(Deno.args, store);
+    const code = await main(Deno.args, store, paths);
     if (typeof code === "number") Deno.exit(code);
   } catch (error) {
     if (error instanceof CommandError) {
