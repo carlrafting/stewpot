@@ -1,9 +1,10 @@
-import { join } from "@std/path/join";
 import type { ParsedArguments } from "./cli.ts";
 import type { FeedData, FeedItem, FilePersistence } from "./main.ts";
 import denoConfig from "./deno.json" with { type: "json" };
 
-const css = await Deno.readTextFile(join("assets", "./styles.css"));
+const css = await Deno.readTextFile(
+  new URL(import.meta.resolve("./assets/styles.css")),
+);
 
 interface HtmlDocument {
   doctype: "html";
