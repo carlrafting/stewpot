@@ -14,10 +14,13 @@ below.
 deno install -RWNE -g jsr:@stewpot/feeds/cli
 ```
 
-## CLI Update
+## CLI Upgrade
 
 Update to newer versions by running the following in your terminal.
 
 ```sh
-deno install --reload -f -RWNE -g jsr:@stewpot/feeds/cli
+$ feeds upgrade
+┏ ⚠️  Deno requests run access to "/home/johndoe/.deno/bin/deno".
+✅ Granted run access to "/home/johndoe/.deno/bin/deno".
+✅ successfully upgraded to latest version
 ```

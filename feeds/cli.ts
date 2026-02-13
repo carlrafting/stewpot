@@ -468,7 +468,11 @@ const upgradeCommand = async () => {
   });
   const info = await command.output();
   if (info.success) {
-    console.log(colors.cyan("✅"), "successfully upgraded to latest version");
+    console.log(
+      "✅",
+      colors.cyan(pkg.name),
+      "was successfully upgraded to latest version",
+    );
     return info.code;
   }
   console.log(
