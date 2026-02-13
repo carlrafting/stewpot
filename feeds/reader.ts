@@ -2,8 +2,9 @@ import type { ParsedArguments } from "./cli.ts";
 import type { FeedData, FeedItem, FilePersistence } from "./main.ts";
 import denoConfig from "./deno.json" with { type: "json" };
 
-const css = await Deno.readTextFile(
-  new URL(import.meta.resolve("./assets/styles.css")),
+const styles = new URL(
+  "./assets/styles.css",
+  import.meta.url,
 );
 
 interface HtmlDocument {
@@ -26,18 +27,26 @@ interface TemplateData {
   body: string;
 }
 
-const template = {
-  headers: {
-    "content-type": "text/html; charset=utf-8",
-  },
-  header(content: string): string {
-    return ["<header>", content, "</header>"].join("\n");
-  },
-  main(content: string): string {
-    return ["<main class=flow>", content, "</main>"].join("\n");
-  },
-  html(data: TemplateData) {
-    return `
+export async function app(
+  args: ParsedArguments,
+  feeds: FeedData[],
+  store: FilePersistence,
+): Promise<Deno.ServeDefaultExport> {
+  const css: string = await Deno.readTextFile(
+    styles,
+  );
+  const template = {
+    headers: {
+      "content-type": "text/html; charset=utf-8",
+    },
+    header(content: string): string {
+      return ["<header>", content, "</header>"].join("\n");
+    },
+    main(content: string): string {
+      return ["<main class=flow>", content, "</main>"].join("\n");
+    },
+    html(data: TemplateData) {
+      return `
 <!doctype html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -53,14 +62,8 @@ ${css.trim()}
 </header>
 ${data.body}
   `.trim();
-  },
-};
-
-export async function app(
-  args: ParsedArguments,
-  feeds: FeedData[],
-  store: FilePersistence,
-): Promise<Deno.ServeDefaultExport> {
+    },
+  };
   const data = new Map();
   for (const feed of feeds) {
     const items: FeedItem[] = await store.loadItems(feed.id);
