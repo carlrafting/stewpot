@@ -462,9 +462,6 @@ const upgradeCommand = async () => {
     "-g",
     `jsr:${pkg.name}/cli`,
   ];
-  console.log({
-    args,
-  });
   const command = new Deno.Command(Deno.execPath(), {
     args,
     signal,
