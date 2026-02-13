@@ -440,8 +440,6 @@ export async function fetchFeedItemsFromURL(
   const lastModified = response.headers.get("last-modified");
   const body = await response.text();
 
-  console.log({ body });
-
   return {
     id,
     url: url.href,
