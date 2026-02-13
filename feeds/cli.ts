@@ -14,6 +14,7 @@ import {
   parseInputToURL,
 } from "./main.ts";
 import denoJSON from "./deno.json" with { type: "json" };
+import app from "./reader.ts";
 import { parseFeed } from "feedsmith";
 
 /**
@@ -367,7 +368,8 @@ const fetchCommand = async (
         throw error;
       }
       const items: FeedItem[] = mapToFeedItems(parsed, body, metadata, url);
-      store.saveItems(feed.id, items, feeds);
+      await store.saveFeeds(feeds);
+      await store.saveItems(feed.id, items, feeds);
       parsed = null;
       console.log(colors.green("ok"), `saved feed items for ${url.hostname}`);
     } catch (error) {
@@ -395,8 +397,10 @@ const notImplementedCommand = () => {
     throw error;
   }
 };
-
-type ParsedArguments = {
+/**
+ * the type returned by {@linkcode parseArgs}
+ */
+export type ParsedArguments = {
   [x: string]: unknown;
   _: Array<string | number>;
 };
@@ -416,10 +420,40 @@ async function updateFeedSource(feeds: FeedData[], store: FilePersistence) {
   console.log(colors.green("done"), `saved changes to ${store.filePath}`);
 }
 
+async function readerCommand(
+  args: ParsedArguments,
+  feeds: FeedData[],
+  store: FilePersistence,
+): Promise<void> {
+  const controller = new AbortController();
+  const signal = controller.signal;
+  const handler = await app(args, feeds, store);
+  const port = 8000;
+  const serveOptions: Deno.ServeInit | Deno.ServeTcpOptions = {
+    port,
+    signal,
+    onListen({ port, hostname }) {
+      console.log(
+        colors.cyan("info"),
+        `Serving reader at http://${hostname}:${port}`,
+      );
+      console.log(colors.cyan("info"), "Press Ctrl+C to exit");
+    },
+  };
+  const server = Deno.serve(serveOptions, handler.fetch);
+  await server.finished.then(() =>
+    console.log(colors.cyan("info"), "closed reader")
+  );
+  // Deno.addSignalListener("SIGINT", () => controller.abort());
+  // Deno.addSignalListener("SIGTERM", () => controller.abort());
+  console.log(colors.cyan("info"), "shutting down reader");
+  controller.abort();
+}
+
 async function main(
   args: string[],
   store: FilePersistence,
-): Promise<number> {
+): Promise<number | void> {
   const [command, ...rest] = args;
   const parsedArgs = parseArgs(rest);
 
@@ -434,8 +468,8 @@ async function main(
       return await unsubscribeCommand(parsedArgs, feeds, store);
     case "fetch":
       return await fetchCommand(parsedArgs, feeds, store);
-    case "read":
-      return notImplementedCommand();
+    case "reader":
+      return await readerCommand(parsedArgs, feeds, store);
     case "--help":
     case "-h":
     case undefined:
@@ -451,7 +485,7 @@ if (import.meta.main) {
     if (!paths) throw "couldn't resolve paths";
     const store = new FilePersistence(paths.sources);
     const code = await main(Deno.args, store);
-    Deno.exit(code);
+    if (typeof code === "number") Deno.exit(code);
   } catch (error) {
     if (error instanceof CommandError) {
       console.error(colors.red("error"), error.message);

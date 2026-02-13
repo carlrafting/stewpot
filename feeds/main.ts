@@ -268,15 +268,14 @@ export class FilePersistence {
   async loadItems(id: FeedID): Promise<FeedItem[]> {
     const root = dirname(this.filePath);
     const path = join(root, ITEMS_DIRNAME, `${id}.json`);
-    let items: FeedItem[] = [];
     try {
       const file = await Deno.readTextFile(path);
-      const parsed = JSON.parse(file);
-      items = parsed.items;
+      const parsedJSON = JSON.parse(file);
+      const items: FeedItem[] = parsedJSON;
+      return items;
     } catch (error) {
       throw error;
     }
-    return items;
   }
 
   /**
