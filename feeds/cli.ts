@@ -13,7 +13,7 @@ import {
   mapToFeedItems,
   parseInputToURL,
 } from "./main.ts";
-import denoJSON from "./deno.json" with { type: "json" };
+import pkg from "./deno.json" with { type: "json" };
 import app from "./reader.ts";
 import { parseFeed } from "feedsmith";
 
@@ -176,14 +176,14 @@ class NotImplementedError extends Error {
 
 function help() {
   console.log(`
-${colors.cyan(denoJSON.name)} - v${denoJSON.version}
+${colors.cyan(pkg.name)} - v${pkg.version}
 
 ${colors.green("Description")}:
   Small CLI program for managing & consuming feeds of different kinds (RSS/Atom/JSON).
 
 ${colors.green("Usage")}:
   Run directly from JSR:
-    $ deno -RWNE jsr:${denoJSON.name}/cli <command>
+    $ deno -RWNE jsr:${pkg.name}/cli <command>
   
   When installed on system:
     $ feeds <command>
@@ -194,6 +194,7 @@ ${colors.green("Commands")}:
   ${colors.yellow("unsubscribe")}   - delete feed source
   ${colors.yellow("fetch")}         - update feed source
   ${colors.yellow("read")}          - read feed source
+  ${colors.yellow("upgrade")}       - upgrade cli to latest version
   `);
   return 0;
 }
@@ -450,6 +451,37 @@ async function readerCommand(
   controller.abort();
 }
 
+const upgradeCommand = async () => {
+  const controller = new AbortController();
+  const signal = controller.signal;
+  const args = [
+    "install",
+    "--reload",
+    "-f",
+    "-RWNE",
+    "-g",
+    `jsr:${pkg.name}/cli`,
+  ];
+  const command = new Deno.Command(Deno.execPath(), {
+    args,
+    signal,
+  });
+  const info = await command.output();
+  if (info.success) {
+    console.log(
+      "✅",
+      colors.cyan(pkg.name),
+      "was successfully upgraded to latest version",
+    );
+    return info.code;
+  }
+  console.log(
+    colors.red("error"),
+    "there was a problem upgrading to the latest version",
+  );
+  return 1;
+};
+
 async function main(
   args: string[],
   store: FilePersistence,
@@ -470,6 +502,8 @@ async function main(
       return await fetchCommand(parsedArgs, feeds, store);
     case "reader":
       return await readerCommand(parsedArgs, feeds, store);
+    case "upgrade":
+      return await upgradeCommand();
     case "--help":
     case "-h":
     case undefined:
