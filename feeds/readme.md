@@ -20,7 +20,7 @@ Update to newer versions by running the following in your terminal.
 
 ```sh
 $ feeds upgrade
-┏ ⚠️  Deno requests run access to "/home/johndoe/.deno/bin/deno".
-✅ Granted run access to "/home/johndoe/.deno/bin/deno".
-✅ successfully upgraded to latest version
+┏ ⚠️  Deno requests run access to "/home/user/.deno/bin/deno".
+✅ Granted run access to "/home/user/.deno/bin/deno".
+✅ @stewpot/feeds was successfully upgraded to latest version
 ```
