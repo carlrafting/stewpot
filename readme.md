@@ -4,11 +4,9 @@
 └─┘ ┴ └─┘└┴┘┴  └─┘ ┴
 ```
 
-Stewpot is a curated collection of lightweight, interoperable packages for
-building web applications in Deno. Each package represents a distinct part of
-the modern web stack: ui, feeds, routing, middleware, and more. Each package,
-combined like ingredients in a flavorful stew. Designed for composability,
-clarity, and minimalism.
+Stewpot is a project that consist of different packages for building systems
+with Deno. UI, Web Feeds, Routing and Middleware is what there is so far, and
+more is coming as it usually goes.
 
 # Packages
 
@@ -18,5 +16,3 @@ clarity, and minimalism.
 - [@stewpot/routes](/routes/)
 
 ---
-
-[![Deno Deploy](https://github.com/carlrafting/stewpot/actions/workflows/deploy.yml/badge.svg)](https://github.com/carlrafting/stewpot/actions/workflows/deploy.yml)
