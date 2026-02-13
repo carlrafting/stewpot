@@ -1,11 +1,7 @@
-import type { ParsedArguments } from "./cli.ts";
+import type { ParsedArguments, Paths } from "./cli.ts";
 import type { FeedData, FeedItem, FilePersistence } from "./main.ts";
 import denoConfig from "./deno.json" with { type: "json" };
-
-const styles = new URL(
-  "./assets/styles.css",
-  import.meta.url,
-);
+import css from "./assets/styles.css" with { type: "text" };
 
 interface HtmlDocument {
   doctype: "html";
@@ -31,10 +27,8 @@ export async function app(
   args: ParsedArguments,
   feeds: FeedData[],
   store: FilePersistence,
+  paths: Paths,
 ): Promise<Deno.ServeDefaultExport> {
-  const css: string = await Deno.readTextFile(
-    styles,
-  );
   const template = {
     headers: {
       "content-type": "text/html; charset=utf-8",
