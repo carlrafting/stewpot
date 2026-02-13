@@ -193,7 +193,7 @@ ${colors.green("Commands")}:
   ${colors.yellow("subscribe")}     - subscribe to new feed source
   ${colors.yellow("unsubscribe")}   - delete feed source
   ${colors.yellow("fetch")}         - update feed source
-  ${colors.yellow("read")}          - read feed source
+  ${colors.yellow("reader")}        - start http server for reading feeds
   ${colors.yellow("upgrade")}       - upgrade cli to latest version
   `);
   return 0;
