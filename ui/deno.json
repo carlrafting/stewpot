@@ -1,6 +1,7 @@
 {
   "name": "@stewpot/ui",
   "version": "0.0.0",
+  "license": "MIT",
   "tasks": {
     "dev": "deno serve --watch=templates/,core/,components/ -R serve.ts",
     "test": "deno test -RW"
