@@ -184,7 +184,7 @@ ${colors.green("Description")}:
 ${colors.green("Usage")}:
   Run directly from JSR:
     $ deno -RWNE jsr:${pkg.name}/cli <command>
-  
+
   When installed on system:
     $ feeds <command>
 
@@ -443,13 +443,16 @@ async function readerCommand(
     },
   };
   const server = Deno.serve(serveOptions, handler.fetch);
-  await server.finished.then(() =>
-    console.log(colors.cyan("info"), "closed reader")
+  Deno.addSignalListener("SIGINT", async () => {
+    console.log("\n");
+    console.log(colors.cyan("info"), "shutting down reader...");
+    await server.shutdown();
+  });
+  await server.finished;
+  console.log(
+    colors.green("done"),
+    "reader shutdown was finished successfully",
   );
-  // Deno.addSignalListener("SIGINT", () => controller.abort());
-  // Deno.addSignalListener("SIGTERM", () => controller.abort());
-  console.log(colors.cyan("info"), "shutting down reader");
-  controller.abort();
 }
 
 const upgradeCommand = async () => {
