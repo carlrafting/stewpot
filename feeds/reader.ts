@@ -30,6 +30,9 @@ export async function app(
 ): Promise<Deno.ServeDefaultExport> {
   const fetchStyles = await fetch(
     new URL("./assets/styles.css", import.meta.url),
+    {
+      cache: "no-cache",
+    },
   );
   const css = await fetchStyles.text();
   const template = {
@@ -70,7 +73,7 @@ ${data.body}
     fetch(request: Request): Response {
       const url = new URL(request.url);
       if (url.pathname === "/") {
-        const title = `${denoConfig.name} - ${denoConfig.version}`;
+        const title = `${denoConfig.name} - v${denoConfig.version}`;
 
         const main = template.main(`${
           feeds.map((feed) => {
@@ -79,7 +82,7 @@ ${data.body}
             const count = `<span class="count">${items.length} items</span>`;
             return [
               "<details>",
-              '<summary class="bgcolor pi">',
+              '<summary class="bgcolor pi rounded">',
               hostname,
               count,
               "</summary>",

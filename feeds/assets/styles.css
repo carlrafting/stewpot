@@ -16,7 +16,7 @@ body {
   margin: var(--root);
 }
 
-details {}
+/* details {} */
 
 details > summary {
   list-style: none;
@@ -42,4 +42,8 @@ details > summary {
 
 .pi {
   padding-inline: var(--root);
+}
+
+.rounded {
+  border-radius: calc(var(--root) / 4);
 }
