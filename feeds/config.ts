@@ -53,7 +53,7 @@ export async function loadConfig(
   return defaultConfig.default;
 }
 
-async function writeConfigToPath(path: string) {
+async function _writeConfigToPath(path: string) {
   const fileUrl = new URL("./assets/config.default.ts", import.meta.url);
   const response = await fetch(fileUrl);
   const textFile = await response.text();
