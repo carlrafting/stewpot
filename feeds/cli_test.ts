@@ -1,6 +1,8 @@
 import { assertEquals, assertGreater } from "@std/assert";
-import { CONFIG_FILENAME, configExists } from "./cli.ts";
 import { join } from "@std/path/join";
+import { assertSnapshot } from "@std/testing/snapshot";
+import { CONFIG_FILENAME } from "./cli.ts";
+import { loadConfig } from "./config.ts";
 
 function run(args: string[], options: Deno.CommandOptions = {}) {
   return new Deno.Command(Deno.execPath(), {
@@ -21,18 +23,18 @@ Deno.test(
   },
 );
 
-Deno.test("should confirm if config file exists or not", async (t) => {
+Deno.test("should load config file it exists", async (t) => {
   await t.step("exists", async () => {
     const tempDir = await Deno.makeTempDir();
     const path = join(tempDir, CONFIG_FILENAME);
     await Deno.writeTextFile(path, "");
-    const results = await configExists(path);
-    assertEquals(results, true);
+    const results = await loadConfig(path);
+    await assertSnapshot(t, results);
   });
-  await t.step("notexists", async () => {
+  await t.step("notexists", async (t) => {
     const tempDir = await Deno.makeTempDir();
     const path = join(tempDir, CONFIG_FILENAME);
-    const results = await configExists(path);
-    assertEquals(results, false);
+    const results = await loadConfig(path);
+    await assertSnapshot(t, results);
   });
 });

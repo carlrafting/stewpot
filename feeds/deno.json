@@ -20,7 +20,8 @@
   "publish": {
     "exclude": [
       "*_test.ts",
-      "fixtures"
+      "fixtures",
+      "__snapshots__"
     ]
   }
 }

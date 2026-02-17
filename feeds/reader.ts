@@ -1,5 +1,6 @@
 import type { ParsedArguments, Paths } from "./cli.ts";
-import type { FeedData, FeedItem, FilePersistence } from "./main.ts";
+import type { FeedData, FeedItem } from "./main.ts";
+import type { FilePersistence } from "./storage.ts";
 import denoConfig from "./deno.json" with { type: "json" };
 
 interface HtmlDocument {

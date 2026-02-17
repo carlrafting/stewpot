@@ -9,13 +9,15 @@ import {
   fetchFeedItemsFromURL,
   fetchFeedMetadata,
   type FetchResults,
-  FilePersistence,
   mapToFeedItems,
   parseInputToURL,
 } from "./main.ts";
 import pkg from "./deno.json" with { type: "json" };
 import app from "./reader.ts";
+import { loadConfig } from "./config.ts";
 import { parseFeed } from "feedsmith";
+import { createStorage, FilePersistence } from "./storage.ts";
+// import defaultConfig from "./assets/config.default.ts";
 
 /**
  * This module contains code related to CLI
@@ -65,30 +67,6 @@ export interface Paths {
   items?: string;
   /** path to kv file */
   kv?: string;
-}
-
-/**
- * Checks if config exists at given path and returns boolean
- *
- * @param path path to config file
- * @returns if the config file exists or not
- * @throws `Deno.errors.NotFound` if file doesn't exists
- */
-export async function configExists(
-  path: Paths["config"],
-): Promise<boolean> {
-  try {
-    const config = path;
-    if (config) {
-      const file = await Deno.readFile(config);
-      if (file) return true;
-    }
-  } catch (error) {
-    if (error instanceof Deno.errors.NotFound) {
-      console.error(colors.red("error"), "config file doesn't exist");
-    }
-  }
-  return false;
 }
 
 async function resolvePaths(): Promise<Paths | undefined> {
@@ -522,7 +500,8 @@ if (import.meta.main) {
   try {
     const paths = await resolvePaths();
     if (!paths) throw "couldn't resolve paths";
-    const store = new FilePersistence(paths.sources);
+    const config = await loadConfig(paths.config);
+    const store = createStorage(config?.storage, paths);
     const code = await main(Deno.args, store, paths);
     if (typeof code === "number") Deno.exit(code);
   } catch (error) {
