@@ -96,7 +96,7 @@ export class FsStorage implements Storage {
    *
    * @param feed feed source data to update
    */
-  async updateFeed(feed: FeedData, feeds: FeedData[]): Promise<void> {
+  updateFeed(feed: FeedData, feeds: FeedData[]): void {
     const index: number = feeds.findIndex((f) => f.id === feed.id);
     if (index === -1) {
       throw new Error(`feed not found: ${feed.id}`);
@@ -182,7 +182,7 @@ export class KvStorage implements Storage {
   async saveItems(
     feedID: FeedData["id"],
     items: FeedItem[],
-    feeds: FeedData[],
+    _feeds: FeedData[],
   ): Promise<void> {
     const kv = this.kv;
     await kv.set(["items", feedID], items);
