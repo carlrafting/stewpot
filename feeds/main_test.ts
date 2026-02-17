@@ -1,14 +1,5 @@
 import { assertEquals } from "@std/assert/equals";
-import {
-  discoverFeed,
-  type FeedData,
-  type FeedFormat,
-  parseInputToURL,
-} from "./main.ts";
-import { type Paths, SOURCES_FILENAME } from "./cli.ts";
-import { join } from "@std/path/join";
-import { ulid } from "@std/ulid";
-import { FsStorage } from "./storage.ts";
+import { discoverFeed, parseInputToURL } from "./main.ts";
 
 Deno.test("should normalize domain string input to URL", function normalizeSubscribeInputDomain() {
   const input = "example.com";
