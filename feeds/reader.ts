@@ -1,6 +1,6 @@
 import type { ParsedArguments, Paths } from "./cli.ts";
 import type { FeedData, FeedItem } from "./main.ts";
-import { FsStorage, KvStorage } from "./storage.ts";
+import type { FsStorage, KvStorage } from "./storage.ts";
 import denoConfig from "./deno.json" with { type: "json" };
 
 interface HtmlDocument {
@@ -24,10 +24,10 @@ interface TemplateData {
 }
 
 export async function app(
-  args: ParsedArguments,
+  _args: ParsedArguments,
   feeds: FeedData[],
   store: FsStorage | KvStorage,
-  paths: Paths,
+  _paths: Paths,
 ): Promise<Deno.ServeDefaultExport> {
   const fetchStyles = await fetch(
     new URL("./assets/styles.css", import.meta.url),
@@ -66,11 +66,9 @@ ${data.body}
     },
   };
   const data = new Map();
-  if (store instanceof FsStorage) {
-    for (const feed of feeds) {
-      const items: FeedItem[] = await store.loadItems(feed.id);
-      data.set(feed.id, items);
-    }
+  for (const feed of feeds) {
+    const items: FeedItem[] = await store.loadItems(feed.id);
+    data.set(feed.id, items);
   }
   return {
     fetch(request: Request): Response {
