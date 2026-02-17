@@ -16,8 +16,7 @@ import pkg from "./deno.json" with { type: "json" };
 import app from "./reader.ts";
 import { loadConfig } from "./config.ts";
 import { parseFeed } from "feedsmith";
-import { createStorage, FilePersistence } from "./storage.ts";
-// import defaultConfig from "./assets/config.default.ts";
+import { createStorage, type FilePersistence } from "./storage.ts";
 
 /**
  * This module contains code related to CLI
@@ -440,7 +439,7 @@ const upgradeCommand = async () => {
     "install",
     "--reload",
     "-f",
-    "-RWNE",
+    "-RW",
     "-g",
     `jsr:${pkg.name}/cli`,
   ];
