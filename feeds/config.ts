@@ -11,7 +11,7 @@ export type KvStorageConfig = {
   type: "kv";
 };
 
-export interface ConfigContract {
+export interface Configuration {
   storage?: FsStorageConfig | KvStorageConfig;
   reader?: {
     port?: 8000;
@@ -24,7 +24,7 @@ export interface ConfigContract {
  * @param config object that should implement the ConfigContract interface
  * @returns the config
  */
-export const defineConfig = (config: ConfigContract): ConfigContract => config;
+export const defineConfig = (config: Configuration): Configuration => config;
 
 /**
  * Loads the config exists at given path and returns file content
@@ -35,7 +35,7 @@ export const defineConfig = (config: ConfigContract): ConfigContract => config;
  */
 export async function loadConfig(
   path: Paths["config"],
-): Promise<ConfigContract> {
+): Promise<Configuration> {
   try {
     const config = path;
     if (config) {

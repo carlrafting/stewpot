@@ -8,7 +8,7 @@ import {
 import { type Paths, SOURCES_FILENAME } from "./cli.ts";
 import { join } from "@std/path/join";
 import { ulid } from "@std/ulid";
-import { FilePersistence } from "./storage.ts";
+import { FsStorage } from "./storage.ts";
 
 Deno.test("should normalize domain string input to URL", function normalizeSubscribeInputDomain() {
   const input = "example.com";

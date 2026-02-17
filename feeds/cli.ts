@@ -14,9 +14,9 @@ import {
 } from "./main.ts";
 import pkg from "./deno.json" with { type: "json" };
 import app from "./reader.ts";
-import { loadConfig } from "./config.ts";
+import { Configuration, loadConfig } from "./config.ts";
 import { parseFeed } from "feedsmith";
-import { createStorage, type FilePersistence } from "./storage.ts";
+import { createStorage, FsStorage, KvStorage } from "./storage.ts";
 
 /**
  * This module contains code related to CLI
@@ -179,7 +179,7 @@ ${colors.green("Commands")}:
 const listCommand = async (
   args: ParsedArguments,
   feeds: FeedData[],
-  store: FilePersistence,
+  store: FsStorage | KvStorage,
 ): Promise<number> => {
   if (feeds.length === 0) {
     console.error(colors.red("error"), "there are no feeds");
@@ -201,7 +201,7 @@ const listCommand = async (
 const subscribeCommand = async (
   args: ParsedArguments,
   feeds: FeedData[],
-  store: FilePersistence,
+  store: FsStorage | KvStorage,
 ): Promise<number> => {
   const [input] = args._;
 
@@ -262,8 +262,8 @@ const subscribeCommand = async (
   parsed = null;
 
   feeds.push(metadata);
-  await store.saveFeeds(feeds);
-  await store.saveItems(metadata.id, items, feeds);
+    await store.saveFeeds(feeds);
+    await store.saveItems(metadata.id, items, feeds);
   console.log(colors.green("done"), `saved feed items for ${url.hostname}`);
 
   console.log(colors.green("subscribed!"), metadata.url);
@@ -274,7 +274,7 @@ const subscribeCommand = async (
 const unsubscribeCommand = async (
   args: ParsedArguments,
   feeds: FeedData[],
-  store: FilePersistence,
+  store: FsStorage | KvStorage,
 ): Promise<number> => {
   const [input] = args._;
   if (typeof input !== "string") {
@@ -307,7 +307,7 @@ const unsubscribeCommand = async (
 const fetchCommand = async (
   args: ParsedArguments,
   feeds: FeedData[],
-  store: FilePersistence,
+  store: FsStorage | KvStorage,
 ): Promise<number> => {
   if (feeds.length === 0) {
     console.error(colors.red("error"), "feeds empty, nothing to fetch");
@@ -346,8 +346,8 @@ const fetchCommand = async (
         throw error;
       }
       const items: FeedItem[] = mapToFeedItems(parsed, body, metadata, url);
-      await store.saveFeeds(feeds);
-      await store.saveItems(feed.id, items, feeds);
+        await store.saveFeeds(feeds);
+        await store.saveItems(feed.id, items, feeds);
       parsed = null;
       console.log(colors.green("ok"), `saved feed items for ${url.hostname}`);
     } catch (error) {
@@ -355,7 +355,6 @@ const fetchCommand = async (
     }
   }
 
-  store.saveFeeds(feeds);
   console.log(
     colors.cyan("info"),
     `fetched and saved metadata for feed sources`,
@@ -383,26 +382,31 @@ export type ParsedArguments = {
   _: Array<string | number>;
 };
 
+async function updateFeedSource(
+  feeds: FeedData[],
+  store: FsStorage | KvStorage,
+) {
 async function updateFeedSource(feeds: FeedData[], store: FilePersistence) {
-  const updated: FeedData[] = [];
-  for (const feed of feeds) {
-    const url = new URL(feed.url);
-    console.log(
-      colors.cyan("info"),
-      `fetching and updating feed source metadata for ${url.hostname}`,
-    );
-    const metadata = await fetchFeedMetadata(url);
-    updated.push(metadata);
-  }
-  store.saveFeeds(updated);
-  console.log(colors.green("done"), `saved changes to ${store.filePath}`);
+    const updated: FeedData[] = [];
+    for (const feed of feeds) {
+      const url = new URL(feed.url);
+      console.log(
+        colors.cyan("info"),
+        `fetching and updating feed source metadata for ${url.hostname}`,
+      );
+      const metadata = await fetchFeedMetadata(url);
+      updated.push(metadata);
+    }
+    store.saveFeeds(updated);
+    console.log(colors.green("done"), `saved changes to ${store.filePath}`);
 }
 
 async function readerCommand(
+  config: Configuration,
+  paths: Paths,
   args: ParsedArguments,
   feeds: FeedData[],
-  store: FilePersistence,
-  paths: Paths,
+  store: FsStorage | KvStorage,
 ): Promise<void> {
   const controller = new AbortController();
   const signal = controller.signal;
@@ -466,7 +470,8 @@ const upgradeCommand = async () => {
 
 async function main(
   args: string[],
-  store: FilePersistence,
+  config: Configuration,
+  store: FsStorage | KvStorage,
   paths: Paths,
 ): Promise<number | void> {
   const [command, ...rest] = args;
@@ -484,7 +489,7 @@ async function main(
     case "fetch":
       return await fetchCommand(parsedArgs, feeds, store);
     case "reader":
-      return await readerCommand(parsedArgs, feeds, store, paths);
+      return await readerCommand(config, paths, parsedArgs, feeds, store);
     case "upgrade":
       return await upgradeCommand();
     case "--help":
@@ -501,8 +506,8 @@ if (import.meta.main) {
     const paths = await resolvePaths();
     if (!paths) throw "couldn't resolve paths";
     const config = await loadConfig(paths.config);
-    const store = createStorage(config?.storage, paths);
-    const code = await main(Deno.args, store, paths);
+    const store = await createStorage(config?.storage, paths);
+    const code = await main(Deno.args, config, store, paths);
     if (typeof code === "number") Deno.exit(code);
   } catch (error) {
     if (error instanceof CommandError) {

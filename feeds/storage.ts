@@ -4,20 +4,25 @@ import { ensureFile } from "@std/fs/ensure-file";
 import * as colors from "@std/fmt/colors";
 import { ITEMS_DIRNAME } from "./cli.ts";
 import type { Paths } from "./cli.ts";
-import type { ConfigContract } from "./config.ts";
+import type { Configuration } from "./config.ts";
 import type { FeedData, FeedID, FeedItem } from "./main.ts";
 
-export type StorageType = { type: "source" } | { type: "items" };
-
-export interface StorageContract {
-  load(type: StorageType): Promise<FeedData[] | FeedItem[]>;
-  save(type: StorageType): Promise<void>;
+export interface Storage {
+  loadFeeds(): Promise<FeedData[]>;
+  saveFeeds(feeds: FeedData[]): Promise<void>;
+  loadItems(id: FeedID): Promise<FeedItem[]>;
+  saveItems(
+    feedID: FeedData["id"],
+    items: FeedItem[],
+    feeds: FeedData[],
+  ): Promise<void>;
+  removeItems(id: FeedID): Promise<void>;
 }
 
 /**
  * class responsible for persisting feeds and items to filesystem
  */
-export class FilePersistence {
+export class FsStorage implements Storage {
   /** filepath for storing feed source metadata */
   public filePath: string;
 
@@ -156,15 +161,48 @@ export class FilePersistence {
   }
 }
 
-export function createStorage(
-  config: ConfigContract["storage"],
+export class KvStorage implements Storage {
+  constructor(private kv: Deno.Kv) {}
+
+  async loadFeeds(): Promise<FeedData[]> {
+    const data = await this.kv.get<FeedData[]>(["feeds"]);
+    return data.value ?? [];
+  }
+
+  async saveFeeds(feeds: FeedData[]): Promise<void> {
+    await this.kv.set(["feeds"], feeds);
+  }
+
+  async loadItems(id: FeedID): Promise<FeedItem[]> {
+    const kv = this.kv;
+    const data = await kv.get<FeedItem[]>(["items", id]);
+    return data.value ?? [];
+  }
+
+  async saveItems(
+    feedID: FeedData["id"],
+    items: FeedItem[],
+    feeds: FeedData[],
+  ): Promise<void> {
+    const kv = this.kv;
+    await kv.set(["items", feedID], items);
+  }
+
+  async removeItems(id: FeedID): Promise<void> {
+    await this.kv.delete(["items", id]);
+  }
+}
+
+export async function createStorage(
+  config: Configuration["storage"],
   paths: Paths,
-): FilePersistence {
-  /* switch (config?.type) {
-    case "fs":
-      return new FilePersistence(paths.sources);
-    case "kv":
-      throw "Sorry! KV Storage not implemented yet.";
-  } */
-  return new FilePersistence(paths.sources);
+): Promise<FsStorage | KvStorage> {
+  if (!config?.type) {
+    throw new Error("storage config type must be either kv or fs");
+  }
+  if (config.type === "kv") {
+    const kv = await Deno.openKv(paths.kv);
+    return new KvStorage(kv);
+  }
+  return new FsStorage(paths.sources);
 }

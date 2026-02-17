@@ -10,6 +10,7 @@
     "./routes"
   ],
   "unstable": [
-    "raw-imports"
+    "raw-imports",
+    "kv"
   ]
 }
