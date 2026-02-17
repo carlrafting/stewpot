@@ -371,7 +371,7 @@ async function updateFeedSource(
 }
 
 async function readerCommand(
-  config: Configuration,
+  _config: Configuration,
   paths: Paths,
   args: ParsedArguments,
   feeds: FeedData[],
