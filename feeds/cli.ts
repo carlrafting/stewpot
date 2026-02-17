@@ -14,9 +14,9 @@ import {
 } from "./main.ts";
 import pkg from "./deno.json" with { type: "json" };
 import app from "./reader.ts";
-import { Configuration, loadConfig } from "./config.ts";
+import { type Configuration, loadConfig } from "./config.ts";
+import { createStorage, type FsStorage, type KvStorage } from "./storage.ts";
 import { parseFeed } from "feedsmith";
-import { createStorage, FsStorage, KvStorage } from "./storage.ts";
 
 /**
  * This module contains code related to CLI
@@ -262,8 +262,8 @@ const subscribeCommand = async (
   parsed = null;
 
   feeds.push(metadata);
-    await store.saveFeeds(feeds);
-    await store.saveItems(metadata.id, items, feeds);
+  await store.saveFeeds(feeds);
+  await store.saveItems(metadata.id, items, feeds);
   console.log(colors.green("done"), `saved feed items for ${url.hostname}`);
 
   console.log(colors.green("subscribed!"), metadata.url);
@@ -305,7 +305,7 @@ const unsubscribeCommand = async (
 };
 
 const fetchCommand = async (
-  args: ParsedArguments,
+  _args: ParsedArguments,
   feeds: FeedData[],
   store: FsStorage | KvStorage,
 ): Promise<number> => {
@@ -317,9 +317,9 @@ const fetchCommand = async (
   for (const feed of feeds) {
     try {
       const url = new URL(feed.url);
-      const exists = feeds.find((value) =>
-        new URL(value.url).hostname === url?.hostname
-      );
+      // const exists = feeds.find((value) =>
+      //   new URL(value.url).hostname === url?.hostname
+      // );
       const metadata: FeedData = await fetchFeedMetadata(url);
       const results: FetchResults = await fetchFeedItemsFromURL(
         url,
@@ -346,8 +346,8 @@ const fetchCommand = async (
         throw error;
       }
       const items: FeedItem[] = mapToFeedItems(parsed, body, metadata, url);
-        await store.saveFeeds(feeds);
-        await store.saveItems(feed.id, items, feeds);
+      await store.saveFeeds(feeds);
+      await store.saveItems(feed.id, items, feeds);
       parsed = null;
       console.log(colors.green("ok"), `saved feed items for ${url.hostname}`);
     } catch (error) {
@@ -363,17 +363,6 @@ const fetchCommand = async (
   return 0;
 };
 
-const notImplementedCommand = () => {
-  try {
-    throw new NotImplementedError();
-  } catch (error) {
-    if (Error?.isError(error)) {
-      console.error(colors.red("error"), error.message);
-      return 1;
-    }
-    throw error;
-  }
-};
 /**
  * the type returned by {@linkcode parseArgs}
  */
@@ -384,21 +373,20 @@ export type ParsedArguments = {
 
 async function updateFeedSource(
   feeds: FeedData[],
-  store: FsStorage | KvStorage,
+  store: KvStorage | FsStorage,
 ) {
-async function updateFeedSource(feeds: FeedData[], store: FilePersistence) {
-    const updated: FeedData[] = [];
-    for (const feed of feeds) {
-      const url = new URL(feed.url);
-      console.log(
-        colors.cyan("info"),
-        `fetching and updating feed source metadata for ${url.hostname}`,
-      );
-      const metadata = await fetchFeedMetadata(url);
-      updated.push(metadata);
-    }
-    store.saveFeeds(updated);
-    console.log(colors.green("done"), `saved changes to ${store.filePath}`);
+  const updated: FeedData[] = [];
+  for (const feed of feeds) {
+    const url = new URL(feed.url);
+    console.log(
+      colors.cyan("info"),
+      `fetching and updating feed source metadata for ${url.hostname}`,
+    );
+    const metadata = await fetchFeedMetadata(url);
+    updated.push(metadata);
+  }
+  await store.saveFeeds(updated);
+  console.log(colors.green("done"), `saved changes to store`);
 }
 
 async function readerCommand(
