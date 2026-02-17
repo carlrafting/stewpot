@@ -132,25 +132,6 @@ class CommandError extends Error {
   }
 }
 
-/**
- * thrown whenever a command is not implemented yet
- */
-class NotImplementedError extends Error {
-  /**
-   * @example
-   * ```ts
-   * throw new NotImplementedError();
-   * ```
-   *
-   * @param message override default error message
-   */
-  constructor(
-    message: string = "Not Implemented!",
-  ) {
-    super(message);
-  }
-}
-
 function help() {
   console.log(`
 ${colors.cyan(pkg.name)} - v${pkg.version}
