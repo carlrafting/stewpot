@@ -35,7 +35,14 @@ export async function app(
       cache: "no-cache",
     },
   );
+  const fetchScripts = await fetch(
+    new URL("./assets/reader.js", import.meta.url),
+    {
+      cache: "no-cache",
+    },
+  );
   const css = await fetchStyles.text();
+  const js = await fetchScripts.text();
   const template = {
     headers: {
       "content-type": "text/html; charset=utf-8",
@@ -49,17 +56,18 @@ export async function app(
     html(data: TemplateData) {
       return `
 <!doctype html>
+<html lang="en">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
 ${css.trim()}
 </style>
+<script type="module">
+${js.trim()}
+</script>
 <title>${data.title}</title>
 <body class="flow">
 <header>
-<a href="#">${denoConfig.name}</a>
-<span class="version">v${denoConfig.version}</span>
-<a href="https://jsr.io/${denoConfig.name}">JSR</a>
 </header>
 ${data.body}
   `.trim();
@@ -76,29 +84,41 @@ ${data.body}
       if (url.pathname === "/") {
         const title = `${denoConfig.name} - v${denoConfig.version}`;
 
-        const main = template.main(`${
-          feeds.map((feed) => {
-            const hostname = `<h3>${new URL(feed.url).hostname}</h3>`;
-            const items: FeedItem[] = data.get(feed.id);
-            const count = `<span class="count">${items.length} items</span>`;
-            return [
-              "<details>",
-              '<summary class="bgcolor pi rounded">',
-              hostname,
-              count,
-              "</summary>",
-              "<ul>",
-              items.map((item) =>
-                `<li><a href="${item.url}">${item.title}</a> <time>${
-                  item.published ?? item.updated
-                }</time></li>`
-              ).join("\n"),
-              "</ul>",
-              "</details>",
-            ].join("\n");
-          }).join("\n")
-        }`);
-        const footer = `<footer></footer>`
+        const main = template.main(
+          `<h1>Feed Sources</h1>\n
+          <menu>
+            <li><button type="button" name="toggle-state" value="expand">Expand All</button></li>
+            <li><button type="button" name="toggle-state" value="collapse">Collapse All</button></li>
+          </menu>
+          ${
+            feeds.map((feed) => {
+              const hostname = `<h3>${new URL(feed.url).hostname}</h3>`;
+              const items: FeedItem[] = data.get(feed.id);
+              const count = `<span class="count">${items.length} items</span>`;
+              return [
+                "<details>",
+                '<summary class="bgcolor pi rounded">',
+                hostname,
+                count,
+                "</summary>",
+                "<ul>",
+                items.map((item) =>
+                  `<li><a href="${item.url}">${item.title}</a> <time>${
+                    item.published ?? item.updated
+                  }</time></li>`
+                ).join("\n"),
+                "</ul>",
+                "</details>",
+              ].join("\n");
+            }).join("\n")
+          }`,
+        );
+        const footer = `<footer>
+          <a href="/">${denoConfig.name}</a>
+          <span class="version">v${denoConfig.version}</span>
+          <a href="https://jsr.io/${denoConfig.name}">JSR Package</a>
+          <a href="https://github.com/carlrafting/stewpot">Github Repository</a>
+        </footer>`
           .trim();
         const body = [
           main,

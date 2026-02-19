@@ -23,5 +23,19 @@
       "fixtures",
       "__snapshots__"
     ]
+  },
+  "tasks": {
+    "dev": {
+      "description": "Run CLI reader application for development",
+      "command": "deno -RWEN --watch=assets cli.ts reader"
+    }
+  },
+  "compilerOptions": {
+    "checkJs": true,
+    "lib": [
+      "deno.window",
+      "deno.unstable",
+      "dom"
+    ]
   }
 }
