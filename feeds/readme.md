@@ -24,3 +24,8 @@ $ feeds upgrade
 ✅ Granted run access to "/home/user/.deno/bin/deno".
 ✅ @stewpot/feeds was successfully upgraded to latest version
 ```
+
+## Documentation
+
+Currently [there is some documentation](./docs.md) for running `@stewpot/feeds`
+cli as a system service.
