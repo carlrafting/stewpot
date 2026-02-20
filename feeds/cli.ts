@@ -14,7 +14,7 @@ import {
 } from "./main.ts";
 import pkg from "./deno.json" with { type: "json" };
 import app from "./reader.ts";
-import { type Configuration, loadConfig } from "./config.ts";
+import { type Configuration, loadConfig, writeConfigToPath } from "./config.ts";
 import { createStorage, type FsStorage, type KvStorage } from "./storage.ts";
 import { parseFeed } from "feedsmith";
 
@@ -147,6 +147,7 @@ ${colors.green("Usage")}:
     $ feeds <command>
 
 ${colors.green("Commands")}:
+  ${colors.yellow("init")}          - init cli config
   ${colors.yellow("list")}          - list subscribed feed sources
   ${colors.yellow("subscribe")}     - subscribe to new feed source
   ${colors.yellow("unsubscribe")}   - delete feed source
@@ -156,6 +157,25 @@ ${colors.green("Commands")}:
   `);
   return 0;
 }
+
+const initCommand = async (
+  paths: Paths,
+  args: ParsedArguments,
+): Promise<number> => {
+  if (paths.config) {
+    try {
+      const file = await Deno.open(paths.config, { read: true });
+      console.log(colors.cyan("info"), "config already exists!");
+      file.close();
+    } catch {
+      await writeConfigToPath(paths.config);
+      console.log(colors.cyan("info"), `wrote config file to ${paths.config}`);
+    }
+    return 0;
+  }
+  console.error(colors.red("error"), "config file path was undefined");
+  return 1;
+};
 
 const listCommand = async (
   args: ParsedArguments,
@@ -449,6 +469,8 @@ async function main(
   const feeds = await store.loadFeeds();
 
   switch (command) {
+    case "init":
+      return await initCommand(paths, parsedArgs);
     case "list":
       return await listCommand(parsedArgs, feeds, store);
     case "subscribe":
