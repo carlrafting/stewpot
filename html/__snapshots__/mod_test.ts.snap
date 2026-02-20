@@ -1,0 +1,9 @@
+export const snapshot = {};
+
+snapshot[`html should create link element correctly 1`] = `'<link href="/foo/bar">'`;
+
+snapshot[`html should create header element correctly 1`] = `
+'<header class="foo">
+This is my content
+</header>'
+`;
