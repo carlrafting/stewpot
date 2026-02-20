@@ -35,7 +35,7 @@ const CONFIG_FILENAME = "config.js";
 const PREV_SOURCES_FILENAME = "feeds.json";
 /** where feed sources metadata are stored */
 const SOURCES_FILENAME = "sources.json";
-/** where feed items are stored */
+/** where feed items are stored @deprecated */
 const ITEMS_FILENAME = "items.json";
 /** where feed items are stored */
 const ITEMS_DIRNAME = "items";
@@ -76,7 +76,7 @@ async function resolvePaths(): Promise<Paths | undefined> {
   await ensureDir(root);
   const config = joinPath(root, CONFIG_FILENAME);
   const sources = joinPath(root, SOURCES_FILENAME);
-  const items = joinPath(root, ITEMS_FILENAME);
+  const items = joinPath(root, ITEMS_DIRNAME);
   const kv = joinPath(root, KV_FILENAME);
 
   return {
