@@ -1,12 +1,60 @@
+import { escape as e } from "@std/html";
+
 interface HtmlDocument {
   doctype: "html";
+  lang?: string;
   meta: {
     charset: "utf-8";
     viewport: "width=device-width, initial-scale=1.0";
   };
   title: string;
-  body: string;
+  html?: boolean;
+  body?: string[];
 }
+
+function buildHtmlDocument(document: HtmlDocument) {
+  const output = [];
+  const keys = Object.keys(document);
+  const values = Object.values(document);
+  const entries = Object.entries(document);
+  // console.log({ entries });
+  for (const [key, value] of entries) {
+    if (document.doctype === value) {
+      output.push(`<!${key} ${value}>`);
+      continue;
+    }
+    if (document.meta === value) {
+      for (const [name, val] of Object.entries(document.meta)) {
+        output.push(`<${key} ${name}="${val}">`);
+      }
+    }
+    let lang: string | null = null;
+    if (document.lang === value) {
+      lang = value;
+      continue;
+    }
+    if (document.html === value) {
+      output.push(`<${key} ${lang ? `lang=${lang}` : ""}>`);
+    }
+  }
+  return output;
+}
+
+console.log(buildHtmlDocument({
+  doctype: "html",
+  lang: "en",
+  html: true,
+  meta: {
+    charset: "utf-8",
+    viewport: "width=device-width, initial-scale=1.0",
+  },
+  title: "Hello World",
+  body: [
+    "<h1>",
+    "Hello World",
+    "</h1>",
+  ],
+}));
 
 /**
  * Interface for HTML Attributes
@@ -32,6 +80,7 @@ export function html(
   content: string | null,
   newLine: boolean = true,
   selfClose: boolean = false,
+  escape: boolean = false,
 ): string {
   const attrs = Object.entries(attributes).map(([key, value]) =>
     `${key}="${value}"`
@@ -43,7 +92,7 @@ export function html(
   }
   return [
     `<${element} ${attrs}>`,
-    content,
+    escape && content ? e(content) : content,
     `</${element}>`,
   ].join(newLine ? "\n" : "");
 }
