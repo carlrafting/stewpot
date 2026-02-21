@@ -28,3 +28,26 @@ Deno.test("html should create link element correctly", (t) => {
   assertEquals(link, '<link href="/foo/bar">');
   assertSnapshot(t, link);
 });
+
+// Deno.test("buildHtmlDocument should create expected output", (t) => {
+//   const result = buildHtmlDocument({
+//     doctype: "html",
+//     lang: "en",
+//     html: {
+//       children: [],
+//     },
+//     meta: {
+//       charset: "utf-8",
+//       viewport: "width=device-width, initial-scale=1.0",
+//     },
+//     title: "Hello World",
+//     body: {
+//       children: [
+//         "<h1>",
+//         "Hello World",
+//         "</h1>",
+//       ],
+//     },
+//   });
+//   assertSnapshot(t, result);
+// });
