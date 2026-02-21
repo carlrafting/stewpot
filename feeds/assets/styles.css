@@ -1,15 +1,19 @@
 :root {
   --root: 1rem;
+  --line-height: 1.5;
   --border-radius: calc(var(--root) / 4);
   --color-white: oklch(90% 0 0);
   --color-gray: oklch(25% 0 0);
   --color-black: oklch(0 0 0);
   --color-blue: oklch(from dodgerblue calc(l - 0.2) calc(c + 0.1) h);
+  --color-green: oklch(from limegreen l c h);
+  --color-yellow: oklch(from yellow l c h);
+  --color-orange: oklch(from orange l c h);
   --color-text: var(--color-white);
   --color-bg: var(--color-gray);
   --color-overlay: color-mix(in oklab, var(--color-bg) 90%, var(--color-text));
   --color-primary: var(--color-blue);
-  --button-padding: 0.5rem 0.75rem;
+  --button-padding: 0.5lh 0.75rem;
 }
 
 @media (prefers-color-scheme: light) {
@@ -19,13 +23,34 @@
   }
 }
 
+html,
+body,
+button,
+input,
+textarea,
+select,
+menu,
+ul,
+ol,
+table,
+tr,
+th,
+td,
+figure,
+figcaption,
+details,
+summary {
+  margin: 0;
+  padding: 0;
+}
+
 html {
   color-scheme: light dark;
   font-family:
     system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
     Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
-  font-size: 1.125rem;
-  line-height: 1.5;
+  font-size: calc(var(--root) * 1.125);
+  line-height: var(--line-height);
   color: var(--color-text);
   background-color: var(--color-bg);
 }
@@ -38,8 +63,6 @@ select {
   font-size: inherit;
   font-size: 1rem;
   line-height: 1.125;
-  margin: 0;
-  padding: 0;
   border: none;
   color: var(--color-text);
   background-color: transparent;
@@ -60,6 +83,10 @@ menu {
   list-style: none;
   display: flex;
   gap: calc(var(--root) / 2);
+
+  & > li:nth-child(2) {
+    margin-inline-start: auto;
+  }
 }
 
 details {
@@ -101,4 +128,9 @@ details {
 .br,
 .rounded {
   border-radius: var(--border-radius);
+}
+
+.primary {
+  color: var(--color-white);
+  background-color: var(--color-blue);
 }

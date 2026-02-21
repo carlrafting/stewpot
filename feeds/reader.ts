@@ -1,22 +1,8 @@
+import { html } from "@stewpot/html";
 import type { ParsedArguments, Paths } from "./cli.ts";
 import type { FeedData, FeedItem } from "./main.ts";
 import type { FsStorage, KvStorage } from "./storage.ts";
 import denoConfig from "./deno.json" with { type: "json" };
-
-interface HtmlDocument {
-  doctype: "html";
-  meta: {
-    charset: "utf-8";
-    viewport: "width=device-width, initial-scale=1.0";
-  };
-  title: string;
-  body: string;
-}
-
-interface HtmlAttribute {
-  key: string;
-  value: unknown;
-}
 
 interface TemplateData {
   title: string;
@@ -44,9 +30,6 @@ export async function app(
   const css = await fetchStyles.text();
   const js = await fetchScripts.text();
   const template = {
-    headers: {
-      "content-type": "text/html; charset=utf-8",
-    },
     header(content: string): string {
       return ["<header>", content, "</header>"].join("\n");
     },
@@ -78,6 +61,8 @@ ${data.body}
     const items: FeedItem[] = await store.loadItems(feed.id);
     data.set(feed.id, items);
   }
+  const subscribeButton =
+    `<button type="button" name="subscribe" class="primary">Subscribe</button>`;
   return {
     fetch(request: Request): Response {
       const url = new URL(request.url);
@@ -96,7 +81,7 @@ ${data.body}
               const items: FeedItem[] = data.get(feed.id);
               const count = `<span class="count">${items.length} items</span>`;
               return [
-                "<details>",
+                '<details class="flow">',
                 '<summary class="bgcolor pi rounded">',
                 hostname,
                 count,
@@ -131,7 +116,9 @@ ${data.body}
         return new Response(
           html,
           {
-            headers: template.headers,
+            headers: {
+              "content-type": "text/html; charset=utf-8",
+            },
           },
         );
       }
