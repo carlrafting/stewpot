@@ -71,10 +71,14 @@ ${data.body}
 
         const main = template.main(
           `<h1>Feed Sources</h1>\n
-          <menu>
+          <toggle-details>
+            <button type="button" name="toggle-state" value="expand">Expand All</button>
+            <button type="button" name="toggle-state" value="collapse">Collapse All</button>
+          </toggle-details>
+          <!--<menu>
             <li><button type="button" name="toggle-state" value="expand">Expand All</button></li>
             <li><button type="button" name="toggle-state" value="collapse">Collapse All</button></li>
-          </menu>
+          </menu>-->
           ${
             feeds.map((feed) => {
               const hostname = `<h3>${new URL(feed.url).hostname}</h3>`;

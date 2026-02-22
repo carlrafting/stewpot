@@ -89,6 +89,11 @@ menu {
   }
 }
 
+toggle-details {
+  display: flex;
+  gap: calc(var(--root) / 2);
+}
+
 details {
   & > summary {
     list-style: none;

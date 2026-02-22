@@ -1,8 +1,7 @@
-const details = document.querySelectorAll("details");
-const menu = document.querySelector("menu");
-
-const clickHandler = (e) => {
-  const target = e.target;
+const clickHandler = (event) => {
+  console.log({ event });
+  const details = document.querySelectorAll("details");
+  const target = event.target;
   if (target && target.name === "toggle-state") {
     const value = target.value;
     if (!value) return;
@@ -23,4 +22,11 @@ const clickHandler = (e) => {
   }
 };
 
-menu?.addEventListener("click", clickHandler);
+class ToggleDetails extends HTMLElement {
+  constructor() {
+    super();
+    this.addEventListener("click", clickHandler);
+  }
+}
+
+customElements.define("toggle-details", ToggleDetails);
