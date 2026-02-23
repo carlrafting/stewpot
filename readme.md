@@ -18,5 +18,7 @@ more is coming as it usually goes.
   [![JSR](https://jsr.io/badges/@stewpot/middleware)](https://jsr.io/@stewpot/middleware)
 - [@stewpot/routes](/routes/)
   [![JSR](https://jsr.io/badges/@stewpot/routes)](https://jsr.io/@stewpot/routes)
+- [@stewpot/html](/html/)
+  [![JSR](https://jsr.io/badges/@stewpot/html)](https://jsr.io/@stewpot/html)
 
 ---
