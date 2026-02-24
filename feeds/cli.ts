@@ -6,14 +6,11 @@ import {
   discoverFeed,
   type FeedData,
   type FeedItem,
-  fetchAllFeeds,
   fetchFeedItemsFromURL,
   fetchFeedMetadata,
   type FetchResults,
-  fetchSingleFeed,
   mapToFeedItems,
   parseInputToURL,
-  tryFetchAndParse,
 } from "./main.ts";
 import pkg from "./deno.json" with { type: "json" };
 import app from "./reader.ts";
