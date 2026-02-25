@@ -14,7 +14,7 @@ import {
 } from "./main.ts";
 import pkg from "./deno.json" with { type: "json" };
 import app from "./reader.ts";
-import { type Configuration, loadConfig } from "./config.ts";
+import { type Configuration, loadConfig, writeConfigToPath } from "./config.ts";
 import { createStorage, type FsStorage, type KvStorage } from "./storage.ts";
 import { parseFeed } from "feedsmith";
 
@@ -35,7 +35,7 @@ const CONFIG_FILENAME = "config.js";
 const PREV_SOURCES_FILENAME = "feeds.json";
 /** where feed sources metadata are stored */
 const SOURCES_FILENAME = "sources.json";
-/** where feed items are stored */
+/** where feed items are stored @deprecated */
 const ITEMS_FILENAME = "items.json";
 /** where feed items are stored */
 const ITEMS_DIRNAME = "items";
@@ -76,7 +76,7 @@ async function resolvePaths(): Promise<Paths | undefined> {
   await ensureDir(root);
   const config = joinPath(root, CONFIG_FILENAME);
   const sources = joinPath(root, SOURCES_FILENAME);
-  const items = joinPath(root, ITEMS_FILENAME);
+  const items = joinPath(root, ITEMS_DIRNAME);
   const kv = joinPath(root, KV_FILENAME);
 
   return {
@@ -147,6 +147,7 @@ ${colors.green("Usage")}:
     $ feeds <command>
 
 ${colors.green("Commands")}:
+  ${colors.yellow("init")}          - init cli config
   ${colors.yellow("list")}          - list subscribed feed sources
   ${colors.yellow("subscribe")}     - subscribe to new feed source
   ${colors.yellow("unsubscribe")}   - delete feed source
@@ -156,6 +157,25 @@ ${colors.green("Commands")}:
   `);
   return 0;
 }
+
+const initCommand = async (
+  paths: Paths,
+  args: ParsedArguments,
+): Promise<number> => {
+  if (paths.config) {
+    try {
+      const file = await Deno.open(paths.config, { read: true });
+      console.log(colors.cyan("info"), "config already exists!");
+      file.close();
+    } catch {
+      await writeConfigToPath(paths.config);
+      console.log(colors.cyan("info"), `wrote config file to ${paths.config}`);
+    }
+    return 0;
+  }
+  console.error(colors.red("error"), "config file path was undefined");
+  return 1;
+};
 
 const listCommand = async (
   args: ParsedArguments,
@@ -285,61 +305,165 @@ const unsubscribeCommand = async (
   return 0;
 };
 
+type TryFetchAndParseResults = {
+  metadata: FeedData;
+  parsed: {
+    format: "rss";
+    feed: import("feedsmith/types").DeepPartial<
+      import("feedsmith/types").Rss.Feed<string>
+    >;
+  } | {
+    format: "atom";
+    feed: import("feedsmith/types").DeepPartial<
+      import("feedsmith/types").Atom.Feed<string>
+    >;
+  } | {
+    format: "rdf";
+    feed: import("feedsmith/types").DeepPartial<
+      import("feedsmith/types").Rdf.Feed<string>
+    >;
+  } | {
+    format: "json";
+    feed: import("feedsmith/types").DeepPartial<
+      import("feedsmith/types").Json.Feed<string>
+    >;
+  };
+  body: string;
+  url: URL;
+};
+
+async function tryFetchAndParse(
+  feed: FeedData,
+): Promise<
+  TryFetchAndParseResults | undefined
+> {
+  try {
+    const url = new URL(feed.url);
+    const metadata: FeedData = await fetchFeedMetadata(url);
+    const results: FetchResults = await fetchFeedItemsFromURL(
+      url,
+      feed,
+    );
+    const status = results.fetch.status;
+    if (status === "not-modified") return;
+    const body = results.body;
+    if (!body) {
+      console.warn(
+        colors.yellow("warning"),
+        `empty body for feed ${feed.url}`,
+      );
+      return;
+    }
+    try {
+      const parsed = parseFeed(body);
+      return {
+        metadata,
+        parsed,
+        body,
+        url,
+      };
+    } catch (error) {
+      if (error) {
+        console.error(colors.red("error"), { error });
+        return;
+      }
+      throw error;
+    }
+  } catch (error) {
+    if (error) {
+      console.error(colors.red("error"), { error });
+      return;
+    }
+    throw error;
+  }
+}
+
+async function processFetchAndParseResult(
+  feed: FeedData,
+  results: TryFetchAndParseResults,
+  store: FsStorage | KvStorage,
+  feeds: FeedData[],
+) {
+  const items: FeedItem[] = mapToFeedItems(
+    results.parsed,
+    results.body,
+    results.metadata,
+    results.url,
+  );
+  await store.saveItems(feed.id, items, feeds);
+}
+
+async function fetchSingleFeed(
+  input: string | number,
+  feeds: FeedData[],
+  store: FsStorage | KvStorage,
+): Promise<TryFetchAndParseResults | undefined> {
+  if (typeof input !== "string") return;
+  const url = parseInputToURL(input);
+  if (!url) return;
+  const exists = feeds.find((value) =>
+    new URL(value.url).hostname === url?.hostname
+  );
+  if (!exists) {
+    console.error(
+      colors.red("error"),
+      "Couldn't find a feed source with the provided URL.",
+      url.hostname,
+    );
+    return;
+  }
+  const results = await tryFetchAndParse(exists);
+  if (!results) return;
+  await processFetchAndParseResult(exists, results, store, feeds);
+  return results;
+}
+
+async function fetchAllFeeds(
+  feeds: FeedData[],
+  store: FsStorage | KvStorage,
+): Promise<void> {
+  for (const feed of feeds) {
+    const results = await tryFetchAndParse(feed);
+    if (!results) continue;
+    await processFetchAndParseResult(feed, results, store, feeds);
+    console.log(
+      colors.green("ok"),
+      `saved feed items for ${results.url.hostname}`,
+    );
+  }
+}
+
 const fetchCommand = async (
-  _args: ParsedArguments,
+  args: ParsedArguments,
   feeds: FeedData[],
   store: FsStorage | KvStorage,
 ): Promise<number> => {
+  const [input] = args._;
+
   if (feeds.length === 0) {
     console.error(colors.red("error"), "feeds empty, nothing to fetch");
     return 1;
   }
 
-  for (const feed of feeds) {
-    try {
-      const url = new URL(feed.url);
-      // const exists = feeds.find((value) =>
-      //   new URL(value.url).hostname === url?.hostname
-      // );
-      const metadata: FeedData = await fetchFeedMetadata(url);
-      const results: FetchResults = await fetchFeedItemsFromURL(
-        url,
-        feed,
-      );
-      const status = results.fetch.status;
-      if (status === "not-modified") continue;
-      const body = results.body;
-      if (!body) {
-        console.warn(
-          colors.yellow("warning"),
-          `empty body for feed ${feed.url}`,
-        );
-        continue;
-      }
-      let parsed;
-      try {
-        parsed = parseFeed(body);
-      } catch (error) {
-        if (error) {
-          console.error(colors.red("error"), { error });
-          return 1;
-        }
-        throw error;
-      }
-      const items: FeedItem[] = mapToFeedItems(parsed, body, metadata, url);
-      await store.saveFeeds(feeds);
-      await store.saveItems(feed.id, items, feeds);
-      parsed = null;
-      console.log(colors.green("ok"), `saved feed items for ${url.hostname}`);
-    } catch (error) {
-      throw error;
-    }
+  if (!input) {
+    await fetchAllFeeds(feeds, store);
+    await store.saveFeeds(feeds);
+    console.log(
+      colors.cyan("info"),
+      `fetched and saved metadata for feed sources`,
+    );
+    return 0;
   }
 
-  console.log(
-    colors.cyan("info"),
-    `fetched and saved metadata for feed sources`,
-  );
+  const results = await fetchSingleFeed(input, feeds, store);
+
+  if (results) {
+    await store.saveFeeds(feeds);
+    console.log(
+      colors.green("ok"),
+      `saved feed items for ${results.url.hostname}`,
+    );
+  }
 
   return 0;
 };
@@ -449,6 +573,8 @@ async function main(
   const feeds = await store.loadFeeds();
 
   switch (command) {
+    case "init":
+      return await initCommand(paths, parsedArgs);
     case "list":
       return await listCommand(parsedArgs, feeds, store);
     case "subscribe":

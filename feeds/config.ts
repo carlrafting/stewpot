@@ -41,11 +41,11 @@ export async function loadConfig(
     if (config) {
       console.log(colors.cyan("info"), `loading config at ${config}`);
       const configModule = await import(config);
-      return configModule;
+      return configModule.default;
     }
   } catch {
     // if (error instanceof Deno.errors.NotFound) {}
-    console.error(colors.red("error"), `no config found at ${path}`);
+    console.error(colors.yellow("warning"), `no config found at ${path}`);
   }
   console.log(colors.cyan("info"), "using default configuration");
   const configUrl = new URL("./assets/config.default.ts", import.meta.url);
@@ -53,10 +53,14 @@ export async function loadConfig(
   return defaultConfig.default;
 }
 
-async function _writeConfigToPath(path: string) {
+/**
+ * takes a path string and write config file to that path
+ *
+ * @param path to write config file to
+ */
+export async function writeConfigToPath(path: string) {
   const fileUrl = new URL("./assets/config.default.ts", import.meta.url);
   const response = await fetch(fileUrl);
   const textFile = await response.text();
   await Deno.writeTextFile(path, textFile);
-  console.log(colors.cyan("info"), `wrote config file to ${path}`);
 }
