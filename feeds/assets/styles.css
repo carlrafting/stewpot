@@ -78,17 +78,6 @@ body {
   margin: var(--root);
 }
 
-menu {
-  padding: 0;
-  list-style: none;
-  display: flex;
-  gap: calc(var(--root) / 2);
-
-  & > li:nth-child(2) {
-    margin-inline-start: auto;
-  }
-}
-
 toggle-details {
   display: flex;
   gap: calc(var(--root) / 2);
