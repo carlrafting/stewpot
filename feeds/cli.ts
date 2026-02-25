@@ -495,7 +495,7 @@ async function updateFeedSource(
 }
 
 async function readerCommand(
-  _config: Configuration,
+  config: Configuration,
   paths: Paths,
   args: ParsedArguments,
   feeds: FeedData[],
@@ -504,7 +504,7 @@ async function readerCommand(
   const controller = new AbortController();
   const signal = controller.signal;
   const handler = await app(args, feeds, store, paths);
-  const port = 8000;
+  const port = (args.port || config?.reader?.port) ?? 8000;
   const serveOptions: Deno.ServeInit | Deno.ServeTcpOptions = {
     port,
     signal,

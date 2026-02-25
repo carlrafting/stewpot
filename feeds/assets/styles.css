@@ -23,6 +23,12 @@
   }
 }
 
+@property --pi {
+  syntax: "<length>";
+  initial-value: var(--root);
+  inherits: true;
+}
+
 html,
 body,
 button,
@@ -108,7 +114,7 @@ details {
 }
 
 .flow > * + * {
-  margin-block-start: var(--root);
+  margin-block-start: var(--flow, 1lh);
 }
 
 .bgcolor {
@@ -116,7 +122,7 @@ details {
 }
 
 .pi {
-  padding-inline: var(--root);
+  padding-inline: var(--pi, var(--root));
 }
 
 .br,
@@ -127,4 +133,37 @@ details {
 .primary {
   color: var(--color-white);
   background-color: var(--color-blue);
+}
+
+.tac {
+  text-align: center;
+}
+
+.has-divider::after {
+  content: "";
+  display: block;
+  height: 1px;
+  background-color: var(--color-overlay);
+  margin-block-start: calc(1lh / 2);
+}
+
+/* Inline | https://feeds.localhost/# */
+
+details[open] {
+  --color-details: oklch(
+    from
+    light-dark(oklch(100% 0 0), oklch(38% 0 0))
+    l
+    c
+    h
+    /
+    90%
+  );
+  background-color: var(--color-details);
+  padding-inline: calc(var(--root) * 1.5);
+  padding-block-end: 1lh;
+
+  & > summary {
+    margin-inline: -1.5rem;
+  }
 }
