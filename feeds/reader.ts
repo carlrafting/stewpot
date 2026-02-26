@@ -70,22 +70,18 @@ ${data.body}
         const title = `${denoConfig.name} - v${denoConfig.version}`;
 
         const main = template.main(
-          `<h1>Feed Sources</h1>\n
+          `<h1 class="tac has-divider">Feed Sources</h1>\n
           <toggle-details>
             <button type="button" name="toggle-state" value="expand">Expand All</button>
             <button type="button" name="toggle-state" value="collapse">Collapse All</button>
           </toggle-details>
-          <!--<menu>
-            <li><button type="button" name="toggle-state" value="expand">Expand All</button></li>
-            <li><button type="button" name="toggle-state" value="collapse">Collapse All</button></li>
-          </menu>-->
           ${
             feeds.map((feed) => {
               const hostname = `<h3>${new URL(feed.url).hostname}</h3>`;
               const items: FeedItem[] = data.get(feed.id);
               const count = `<span class="count">${items.length} items</span>`;
               return [
-                '<details class="flow">',
+                '<details class="br flow">',
                 '<summary class="bgcolor pi rounded">',
                 hostname,
                 count,
