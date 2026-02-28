@@ -1,5 +1,5 @@
 import { html } from "@stewpot/html";
-import type { ParsedArguments, Paths } from "./cli.ts";
+import type { Input, Options, Paths } from "./cli.ts";
 import type { FeedData, FeedItem } from "./main.ts";
 import type { FsStorage, KvStorage } from "./storage.ts";
 import denoConfig from "./deno.json" with { type: "json" };
@@ -10,7 +10,8 @@ interface TemplateData {
 }
 
 export async function app(
-  _args: ParsedArguments,
+  _input: Input,
+  _options: Options,
   feeds: FeedData[],
   store: FsStorage | KvStorage,
   _paths: Paths,

@@ -123,6 +123,14 @@ function resolveUserHomeDirectory(): string {
   throw new Error("unable to resolve user home directory");
 }
 
+/**
+ * the type returned by {@linkcode parseArgs}
+ */
+export type ParsedArguments = {
+  [x: string]: unknown;
+  _: Array<string | number>;
+};
+
 class CommandError extends Error {
   constructor(
     message: string,
@@ -132,17 +140,21 @@ class CommandError extends Error {
   }
 }
 
-type Input = string[];
-type Options = { [x: string]: unknown };
-type InputWithOptions = { input: Input; options: Options };
+export type Input = string[];
+export type Options = { [x: string]: unknown };
+export type InputWithOptions = { input: Input; options: Options };
 
-type Command = {
+export type Command = {
   name: string;
   description: string;
   args?: string[];
   deps?: Map<string, unknown>;
   help?: string;
-  run(input: Input, options: Options, ...rest: unknown[]): Promise<number>;
+  run(
+    input: Input,
+    options: Options,
+    ...rest: unknown[]
+  ): Promise<number | void>;
 };
 
 const init: Command = {
@@ -166,25 +178,6 @@ const init: Command = {
     console.error(colors.red("error"), "config file path was undefined");
     return 1;
   },
-};
-
-const initCommand = async (
-  paths: Paths,
-  args: ParsedArguments,
-): Promise<number> => {
-  if (paths.config) {
-    try {
-      const file = await Deno.open(paths.config, { read: true });
-      console.log(colors.cyan("info"), "config already exists!");
-      file.close();
-    } catch {
-      await writeConfigToPath(paths.config);
-      console.log(colors.cyan("info"), `wrote config file to ${paths.config}`);
-    }
-    return 0;
-  }
-  console.error(colors.red("error"), "config file path was undefined");
-  return 1;
 };
 
 const list: Command = {
@@ -214,141 +207,126 @@ const list: Command = {
   },
 };
 
-const listCommand = async (
-  args: ParsedArguments,
-  feeds: FeedData[],
-  store: FsStorage | KvStorage,
-): Promise<number> => {
-  if (feeds.length === 0) {
-    console.error(colors.red("error"), "there are no feeds");
-    return 1;
-  }
-
-  if (args?.update) {
-    await updateFeedSource(feeds, store);
-    return 0;
-  }
-
-  for (const feed of feeds) {
-    console.dir(feed);
-  }
-
-  return 0;
-};
-
-/* const subscribe: Command = {
+const subscribe: Command = {
   name: "subscribe",
   description: "subscribe to new feed source",
   help: "foobar",
-  async run(options, ...rest) {
+  async run(
+    _input: Input,
+    _options: Options,
+    args: ParsedArguments,
+    feeds: FeedData[],
+    store: Storage,
+  ) {
+    const [input] = args._;
+
+    if (typeof input !== "string") {
+      console.error(colors.red("error"), "invalid input format!");
+      return 1;
+    }
+
+    const url = parseInputToURL(input);
+
+    if (!url) {
+      return 1;
+    }
+
+    const exists = feeds.find((value) => value.url === url?.href);
+
+    if (exists) {
+      console.error(colors.red("error"), "URL already exists!");
+      return 1;
+    }
+
+    if (url?.pathname === "/") {
+      const oldHref = url.href;
+      const feedURL = await discoverFeed(url.href);
+      if (feedURL && feedURL !== url.href) {
+        url.href = feedURL;
+      }
+      const ok = prompt(
+        `subscribe to discovered feed for "${url.hostname}" at "${url.href}"? [y/N]`,
+      )?.toLocaleLowerCase();
+      if (ok !== "y" && ok !== "yes") {
+        url.href = oldHref;
+        return 1;
+      }
+    }
+
+    const metadata: FeedData = await fetchFeedMetadata(url);
+    const fetchResults: FetchResults = await fetchFeedItemsFromURL(
+      url,
+      metadata,
+    );
+    const content = fetchResults.body;
+
+    if (!content || content.trim() === "") {
+      throw new Error("no content for feed source");
+    }
+
+    let parsed;
+    try {
+      parsed = parseFeed(content);
+    } catch (error) {
+      if (error) {
+        console.error(colors.red("error"), { error });
+        return 1;
+      }
+      throw error;
+    }
+
+    const items: FeedItem[] = mapToFeedItems(parsed, content, metadata, url);
+
+    parsed = null;
+
+    feeds.push(metadata);
+    await store.saveFeeds(feeds);
+    await store.saveItems(metadata.id, items, feeds);
+    console.log(colors.green("done"), `saved feed items for ${url.hostname}`);
+
+    console.log(colors.green("subscribed!"), metadata.url);
+
     return 0;
   },
-}; */
-
-const subscribeCommand = async (
-  args: ParsedArguments,
-  feeds: FeedData[],
-  store: FsStorage | KvStorage,
-): Promise<number> => {
-  const [input] = args._;
-
-  if (typeof input !== "string") {
-    console.error(colors.red("error"), "invalid input format!");
-    return 1;
-  }
-
-  const url = parseInputToURL(input);
-
-  if (!url) {
-    return 1;
-  }
-
-  const exists = feeds.find((value) => value.url === url?.href);
-
-  if (exists) {
-    console.error(colors.red("error"), "URL already exists!");
-    return 1;
-  }
-
-  if (url?.pathname === "/") {
-    const oldHref = url.href;
-    const feedURL = await discoverFeed(url.href);
-    if (feedURL && feedURL !== url.href) {
-      url.href = feedURL;
-    }
-    const ok = prompt(
-      `subscribe to discovered feed for "${url.hostname}" at "${url.href}"? [y/N]`,
-    )?.toLocaleLowerCase();
-    if (ok !== "y" && ok !== "yes") {
-      url.href = oldHref;
-      return 1;
-    }
-  }
-
-  const metadata: FeedData = await fetchFeedMetadata(url);
-  const fetchResults: FetchResults = await fetchFeedItemsFromURL(url, metadata);
-  const content = fetchResults.body;
-
-  if (!content || content.trim() === "") {
-    throw new Error("no content for feed source");
-  }
-
-  let parsed;
-  try {
-    parsed = parseFeed(content);
-  } catch (error) {
-    if (error) {
-      console.error(colors.red("error"), { error });
-      return 1;
-    }
-    throw error;
-  }
-
-  const items: FeedItem[] = mapToFeedItems(parsed, content, metadata, url);
-
-  parsed = null;
-
-  feeds.push(metadata);
-  await store.saveFeeds(feeds);
-  await store.saveItems(metadata.id, items, feeds);
-  console.log(colors.green("done"), `saved feed items for ${url.hostname}`);
-
-  console.log(colors.green("subscribed!"), metadata.url);
-
-  return 0;
 };
 
-const unsubscribeCommand = async (
-  args: ParsedArguments,
-  feeds: FeedData[],
-  store: FsStorage | KvStorage,
-): Promise<number> => {
-  const [input] = args._;
-  if (typeof input !== "string") {
-    console.error(colors.red("error"), "invalid input format!");
-    return 1;
-  }
-  const url = parseInputToURL(input);
-  const exists = feeds.find((value) =>
-    new URL(value.url).hostname === url?.hostname
-  );
-  if (!exists) {
-    console.error(
-      colors.red("error"),
-      `feed source doesn't exist for ${url?.hostname}`,
+const unsubscribe: Command = {
+  name: "unsubscribe",
+  description: "unsubscribe to feed source",
+  async run(
+    _input: Input,
+    _options: Options,
+    args: ParsedArguments,
+    feeds: FeedData[],
+    store: Storage,
+  ): Promise<number | void> {
+    const [input] = args._;
+    if (typeof input !== "string") {
+      console.error(colors.red("error"), "invalid input format!");
+      return 1;
+    }
+    const url = parseInputToURL(input);
+    const exists = feeds.find((value) =>
+      new URL(value.url).hostname === url?.hostname
     );
-    return 1;
-  }
-  const filtered = feeds.filter((item) =>
-    new URL(item.url).hostname !== url?.hostname
-  );
-  if (filtered.length >= 0) {
-    await store.saveFeeds(filtered);
-    console.log(colors.green("ok"), `unsubscribed to ${url?.href}`);
-  }
-  await store.removeItems(exists?.id);
-  console.log(colors.green("done"), `remove feed items for ${url?.hostname}`);
-  return 0;
+    if (!exists) {
+      console.error(
+        colors.red("error"),
+        `feed source doesn't exist for ${url?.hostname}`,
+      );
+      return 1;
+    }
+    const filtered = feeds.filter((item) =>
+      new URL(item.url).hostname !== url?.hostname
+    );
+    if (filtered.length >= 0) {
+      await store.saveFeeds(filtered);
+      console.log(colors.green("ok"), `unsubscribed to ${url?.href}`);
+    }
+    await store.removeItems(exists?.id);
+    console.log(colors.green("done"), `remove feed items for ${url?.hostname}`);
+    return 0;
+  },
 };
 
 type TryFetchAndParseResults = {
@@ -519,49 +497,6 @@ const fetch: Command = {
   },
 };
 
-const fetchCommand = async (
-  args: ParsedArguments,
-  feeds: FeedData[],
-  store: FsStorage | KvStorage,
-): Promise<number> => {
-  const [input] = args._;
-
-  if (feeds.length === 0) {
-    console.error(colors.red("error"), "feeds empty, nothing to fetch");
-    return 1;
-  }
-
-  if (!input) {
-    await fetchAllFeeds(feeds, store);
-    await store.saveFeeds(feeds);
-    console.log(
-      colors.cyan("info"),
-      `fetched and saved metadata for feed sources`,
-    );
-    return 0;
-  }
-
-  const results = await fetchSingleFeed(input, feeds, store);
-
-  if (results) {
-    await store.saveFeeds(feeds);
-    console.log(
-      colors.green("ok"),
-      `saved feed items for ${results.url.hostname}`,
-    );
-  }
-
-  return 0;
-};
-
-/**
- * the type returned by {@linkcode parseArgs}
- */
-export type ParsedArguments = {
-  [x: string]: unknown;
-  _: Array<string | number>;
-};
-
 async function updateFeedSource(
   feeds: FeedData[],
   store: KvStorage | FsStorage,
@@ -580,40 +515,45 @@ async function updateFeedSource(
   console.log(colors.green("done"), `saved changes to store`);
 }
 
-async function readerCommand(
-  config: Configuration,
-  paths: Paths,
-  args: ParsedArguments,
-  feeds: FeedData[],
-  store: FsStorage | KvStorage,
-): Promise<void> {
-  const controller = new AbortController();
-  const signal = controller.signal;
-  const handler = await app(args, feeds, store, paths);
-  const port = (args.port || config?.reader?.port) ?? 8000;
-  const serveOptions: Deno.ServeTcpOptions = {
-    port,
-    signal,
-    onListen({ port, hostname }) {
-      console.log(
-        colors.cyan("info"),
-        `Serving reader at http://${hostname}:${port}`,
-      );
-      console.log(colors.cyan("info"), "Press Ctrl+C to exit");
-    },
-  } as Deno.ServeTcpOptions;
-  const server = Deno.serve(serveOptions, handler.fetch);
-  Deno.addSignalListener("SIGINT", async () => {
-    console.log("\n");
-    console.log(colors.cyan("info"), "shutting down reader...");
-    await server.shutdown();
-  });
-  await server.finished;
-  console.log(
-    colors.green("done"),
-    "reader shutdown was finished successfully",
-  );
-}
+const reader: Command = {
+  name: "reader",
+  description: "start http server for reading feeds",
+  async run(
+    input: Input,
+    options: Options,
+    config: Configuration,
+    paths: Paths,
+    feeds: FeedData[],
+    store: FsStorage | KvStorage,
+  ): Promise<void> {
+    const controller = new AbortController();
+    const signal = controller.signal;
+    const handler = await app(input, options, feeds, store, paths);
+    const port = (options.port || config?.reader?.port) ?? 8000;
+    const serveOptions: Deno.ServeTcpOptions = {
+      port,
+      signal,
+      onListen({ port, hostname }) {
+        console.log(
+          colors.cyan("info"),
+          `Serving reader at http://${hostname}:${port}`,
+        );
+        console.log(colors.cyan("info"), "Press Ctrl+C to exit");
+      },
+    } as Deno.ServeTcpOptions;
+    const server = Deno.serve(serveOptions, handler.fetch);
+    Deno.addSignalListener("SIGINT", async () => {
+      console.log("\n");
+      console.log(colors.cyan("info"), "shutting down reader...");
+      await server.shutdown();
+    });
+    await server.finished;
+    console.log(
+      colors.green("done"),
+      "reader shutdown was finished successfully",
+    );
+  },
+};
 
 const upgrade: Command = {
   name: "upgrade",
@@ -655,38 +595,6 @@ const upgrade: Command = {
   },
 };
 
-const upgradeCommand = async () => {
-  const controller = new AbortController();
-  const signal = controller.signal;
-  const args = [
-    "install",
-    "--reload",
-    "-f",
-    "-RWNE",
-    "--allow-run",
-    "-g",
-    `jsr:${pkg.name}/cli`,
-  ];
-  const command = new Deno.Command(Deno.execPath(), {
-    args,
-    signal,
-  });
-  const info = await command.output();
-  if (info.success) {
-    console.log(
-      "✅",
-      colors.cyan(pkg.name),
-      "was successfully upgraded to latest version",
-    );
-    return info.code;
-  }
-  console.log(
-    colors.red("error"),
-    "there was a problem upgrading to the latest version",
-  );
-  return 1;
-};
-
 const parseArgsOptions: ParseOptions = {
   boolean: ["help", "force", "quiet", "silent"],
   default: {
@@ -701,8 +609,8 @@ const parseArgsOptions: ParseOptions = {
 const handleArgs = (
   args: ParsedArguments,
 ): InputWithOptions => {
-  const input = args._ as string[];
   const { _, ...options } = args;
+  const input = _ as string[];
   return {
     input,
     options,
@@ -726,32 +634,37 @@ async function main(
 
   switch (command) {
     case "init":
-      // return await initCommand(paths, parsedArgs);
       return await init.run(input, options, paths);
     case "list":
-      // return await listCommand(parsedArgs, feeds, store);
       return await list.run(input, options, feeds, store);
     case "subscribe":
-      return await subscribeCommand(parsedArgs, feeds, store);
+      return await subscribe.run(input, options, parsedArgs, feeds, store);
     case "unsubscribe":
-      return await unsubscribeCommand(parsedArgs, feeds, store);
+      return await unsubscribe.run(input, options, parsedArgs, feeds, store);
     case "fetch":
       return await fetch.run(rest, options, feeds, store);
     case "reader":
-      return await readerCommand(config, paths, parsedArgs, feeds, store);
+      return await reader.run(
+        input,
+        options,
+        config,
+        paths,
+        parsedArgs,
+        feeds,
+        store,
+      );
     case "upgrade":
-      // return await upgradeCommand();
       return await upgrade.run(input, options);
     case "--help":
     case "-h":
     case undefined:
-      return help();
+      return printHelp();
     default:
       throw new CommandError(`unknown command: ${command}`);
   }
 }
 
-function help() {
+function printHelp() {
   console.log(`
 ${colors.cyan(pkg.name)} - v${pkg.version}
 
@@ -766,13 +679,13 @@ ${colors.green("Usage")}:
     $ feeds <command>
 
 ${colors.green("Commands")}:
-  ${colors.yellow("init")}          - init cli config
-  ${colors.yellow("list")}          - list subscribed feed sources
-  ${colors.yellow("subscribe")}     - subscribe to new feed source
-  ${colors.yellow("unsubscribe")}   - delete feed source
-  ${colors.yellow("fetch")}         - update feed source
-  ${colors.yellow("reader")}        - start http server for reading feeds
-  ${colors.yellow("upgrade")}       - upgrade cli to latest version
+  ${colors.yellow(init.name)}             - ${init.description}
+  ${colors.yellow(list.name)}             - ${list.description}
+  ${colors.yellow(subscribe.name)}        - ${subscribe.description}
+  ${colors.yellow(unsubscribe.name)}      - ${unsubscribe.description}
+  ${colors.yellow(fetch.name)}            - ${fetch.description}
+  ${colors.yellow(reader.name)}           - ${reader.description}
+  ${colors.yellow(upgrade.name)}          - ${upgrade.description}
   `);
   return 0;
 }
