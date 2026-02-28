@@ -1,6 +1,14 @@
 import * as colors from "@std/fmt/colors";
 import { ulid } from "@std/ulid";
-import { parseAtomFeed, parseJsonFeed, parseRssFeed } from "feedsmith";
+import {
+  detectAtomFeed,
+  detectJsonFeed,
+  detectRssFeed,
+  parseAtomFeed,
+  parseFeed,
+  parseJsonFeed,
+  parseRssFeed,
+} from "feedsmith";
 import type { Atom, DeepPartial, Json, Rdf, Rss } from "feedsmith/types";
 
 export { defineConfig } from "./config.ts";
@@ -189,17 +197,14 @@ export async function discoverFeed(url: string): Promise<string | undefined> {
   }
 }
 
-/** NOTE: this is a bit too optimistic */
-function detectFeedFormatFromContentType(
-  contentType: string,
-): FeedFormat {
-  if (contentType?.includes("rss")) {
-    return "rss";
-  }
-  if (contentType?.includes("atom")) {
+function detectFeedFormat(value: string): FeedFormat {
+  if (detectAtomFeed(value)) {
     return "atom";
   }
-  if (contentType?.includes("json")) {
+  if (detectRssFeed(value)) {
+    return "rss";
+  }
+  if (detectJsonFeed(value)) {
     return "json";
   }
   return "unknown";
@@ -221,9 +226,8 @@ export async function fetchFeedMetadata(url: URL): Promise<FeedData> {
   const headers = response.headers;
   const lastModified = headers.get("last-modified");
   const etag = headers.get("etag");
-  const contentType = headers.get("content-type") ?? "";
-
-  const format: FeedFormat = detectFeedFormatFromContentType(contentType);
+  const text = await response.text();
+  const format: FeedFormat = detectFeedFormat(text);
 
   return {
     id,
@@ -286,15 +290,11 @@ export async function fetchFeedItemsFromURL(
     throw new Error(`failed to fetch feed: ${response.status}`);
   } */
 
+  const body = await response.text();
   const contentType = response.headers.get("content-type") ?? "";
-  // console.log({ contentType });
-  // if (!contentType.includes("xml") && !contentType.includes("json")) {
-  //   throw new Error("resource does not appear to be a feed");
-  // }
-  const format = detectFeedFormatFromContentType(contentType);
+  const format: FeedFormat = detectFeedFormat(body);
   const etag = response.headers.get("etag");
   const lastModified = response.headers.get("last-modified");
-  const body = await response.text();
 
   return {
     id,
