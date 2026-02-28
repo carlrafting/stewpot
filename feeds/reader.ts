@@ -1,8 +1,9 @@
 import { html } from "@stewpot/html";
-import type { Input, Options, Paths } from "./cli.ts";
+import type { Deps, Input, Options, ParsedArguments, Paths } from "./cli.ts";
 import type { FeedData, FeedItem } from "./main.ts";
 import type { FsStorage, KvStorage } from "./storage.ts";
 import denoConfig from "./deno.json" with { type: "json" };
+import type { Configuration } from "./config.ts";
 
 interface TemplateData {
   title: string;
@@ -12,9 +13,12 @@ interface TemplateData {
 export async function app(
   _input: Input,
   _options: Options,
+  _deps: Deps,
+  _config: Configuration,
+  _paths: Paths,
+  args: ParsedArguments,
   feeds: FeedData[],
   store: FsStorage | KvStorage,
-  _paths: Paths,
 ): Promise<Deno.ServeDefaultExport> {
   const fetchStyles = await fetch(
     new URL("./assets/styles.css", import.meta.url),

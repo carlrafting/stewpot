@@ -141,16 +141,23 @@ class CommandError extends Error {
 }
 
 /** input as array of strings */
-export type Input = string[];
+export type Input = readonly string[];
 /** options that are returned by {@linkcode parseArgs} and {@linkcode handleArgs} */
 export type Options = { [x: string]: unknown };
 /** a combined type with convinient access to both input and options */
 export type InputWithOptions = { input: Input; options: Options };
 
+export type Deps = {
+  feeds: FeedData[];
+  store: FsStorage | KvStorage;
+  paths: Paths;
+  config: Configuration;
+};
+
 /**
  * The type that represents a CLI Command
  */
-export type Command = {
+export type Command<CommandOptions = Options | unknown> = {
   /** what name should the command have */
   name: string;
   /** a helpful description of what the command does */
@@ -160,7 +167,8 @@ export type Command = {
   /** method that invokes the command */
   run(
     input: Input,
-    options: Options,
+    options: CommandOptions,
+    deps: Deps,
     ...rest: unknown[]
   ): Promise<number | void>;
 };
@@ -168,7 +176,12 @@ export type Command = {
 const init: Command = {
   name: "init",
   description: "init cli config",
-  async run(input: Input, options: Options, paths: Paths): Promise<number> {
+  async run(
+    _input: Input,
+    _options: Options,
+    _deps: Deps,
+    paths: Paths,
+  ): Promise<number> {
     if (paths.config) {
       try {
         const file = await Deno.open(paths.config, { read: true });
@@ -194,6 +207,7 @@ const list: Command = {
   async run(
     input: Input,
     options: Options,
+    deps: Deps,
     feeds: FeedData[],
     store: FsStorage | KvStorage,
   ): Promise<number> {
@@ -218,10 +232,10 @@ const list: Command = {
 const subscribe: Command = {
   name: "subscribe",
   description: "subscribe to new feed source",
-  help: "foobar",
   async run(
     _input: Input,
     _options: Options,
+    _deps: Deps,
     args: ParsedArguments,
     feeds: FeedData[],
     store: Storage,
@@ -304,6 +318,7 @@ const unsubscribe: Command = {
   async run(
     _input: Input,
     _options: Options,
+    _deps: Deps,
     args: ParsedArguments,
     feeds: FeedData[],
     store: Storage,
@@ -471,6 +486,7 @@ const fetch: Command = {
   async run(
     rest: Input,
     options: Options,
+    deps: Deps,
     feeds: FeedData[],
     store: FsStorage | KvStorage,
   ): Promise<number> {
@@ -529,14 +545,25 @@ const reader: Command = {
   async run(
     input: Input,
     options: Options,
+    deps: Deps,
     config: Configuration,
     paths: Paths,
+    args: ParsedArguments,
     feeds: FeedData[],
     store: FsStorage | KvStorage,
   ): Promise<void> {
     const controller = new AbortController();
     const signal = controller.signal;
-    const handler = await app(input, options, feeds, store, paths);
+    const handler = await app(
+      input,
+      options,
+      deps,
+      config,
+      paths,
+      args,
+      feeds,
+      store,
+    );
     const port = (options.port || config?.reader?.port) ?? 8000;
     const serveOptions: Deno.ServeTcpOptions = {
       port,
@@ -639,24 +666,44 @@ async function main(
   const [command, ...rest] = input;
   // console.log(input, options, command, rest);
   // return;
-
   const feeds = await store.loadFeeds();
+  const deps: Deps = {
+    feeds,
+    store,
+    paths,
+    config,
+  };
 
   switch (command) {
     case "init":
-      return await init.run(input, options, paths);
+      return await init.run(input, options, deps, paths);
     case "list":
-      return await list.run(input, options, feeds, store);
+      return await list.run(input, options, deps, feeds, store);
     case "subscribe":
-      return await subscribe.run(input, options, parsedArgs, feeds, store);
+      return await subscribe.run(
+        input,
+        options,
+        deps,
+        parsedArgs,
+        feeds,
+        store,
+      );
     case "unsubscribe":
-      return await unsubscribe.run(input, options, parsedArgs, feeds, store);
+      return await unsubscribe.run(
+        input,
+        options,
+        deps,
+        parsedArgs,
+        feeds,
+        store,
+      );
     case "fetch":
-      return await fetch.run(rest, options, feeds, store);
+      return await fetch.run(rest, options, deps, feeds, store);
     case "reader":
       return await reader.run(
         input,
         options,
+        deps,
         config,
         paths,
         parsedArgs,
@@ -664,7 +711,7 @@ async function main(
         store,
       );
     case "upgrade":
-      return await upgrade.run(input, options);
+      return await upgrade.run(input, options, deps);
     case "--help":
     case "-h":
     case undefined:
