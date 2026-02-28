@@ -140,16 +140,24 @@ class CommandError extends Error {
   }
 }
 
+/** input as array of strings */
 export type Input = string[];
+/** options that are returned by {@linkcode parseArgs} and {@linkcode handleArgs} */
 export type Options = { [x: string]: unknown };
+/** a combined type with convinient access to both input and options */
 export type InputWithOptions = { input: Input; options: Options };
 
+/**
+ * The type that represents a CLI Command
+ */
 export type Command = {
+  /** what name should the command have */
   name: string;
+  /** a helpful description of what the command does */
   description: string;
-  args?: string[];
-  deps?: Map<string, unknown>;
+  /** more in-depth help instructions for command */
   help?: string;
+  /** method that invokes the command */
   run(
     input: Input,
     options: Options,
@@ -616,6 +624,8 @@ const handleArgs = (
     options,
   };
 };
+
+function bootstrap() {}
 
 async function main(
   args: string[],
