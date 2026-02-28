@@ -1,4 +1,4 @@
-import { parseArgs } from "@std/cli";
+import { parseArgs, type ParseOptions } from "@std/cli";
 import { ensureDir } from "@std/fs";
 import { join as joinPath } from "@std/path/join";
 import * as colors from "@std/fmt/colors";
@@ -132,31 +132,41 @@ class CommandError extends Error {
   }
 }
 
-function help() {
-  console.log(`
-${colors.cyan(pkg.name)} - v${pkg.version}
+type Input = string[];
+type Options = { [x: string]: unknown };
+type InputWithOptions = { input: Input; options: Options };
 
-${colors.green("Description")}:
-  Small CLI program for managing & consuming feeds of different kinds (RSS/Atom/JSON).
+type Command = {
+  name: string;
+  description: string;
+  args?: string[];
+  deps?: Map<string, unknown>;
+  help?: string;
+  run(input: Input, options: Options, ...rest: unknown[]): Promise<number>;
+};
 
-${colors.green("Usage")}:
-  Run directly from JSR:
-    $ deno -RWNE jsr:${pkg.name}/cli <command>
-
-  When installed on system:
-    $ feeds <command>
-
-${colors.green("Commands")}:
-  ${colors.yellow("init")}          - init cli config
-  ${colors.yellow("list")}          - list subscribed feed sources
-  ${colors.yellow("subscribe")}     - subscribe to new feed source
-  ${colors.yellow("unsubscribe")}   - delete feed source
-  ${colors.yellow("fetch")}         - update feed source
-  ${colors.yellow("reader")}        - start http server for reading feeds
-  ${colors.yellow("upgrade")}       - upgrade cli to latest version
-  `);
-  return 0;
-}
+const init: Command = {
+  name: "init",
+  description: "init cli config",
+  async run(input: Input, options: Options, paths: Paths): Promise<number> {
+    if (paths.config) {
+      try {
+        const file = await Deno.open(paths.config, { read: true });
+        console.log(colors.cyan("info"), "config already exists!");
+        file.close();
+      } catch {
+        await writeConfigToPath(paths.config);
+        console.log(
+          colors.cyan("info"),
+          `wrote config file to ${paths.config}`,
+        );
+      }
+      return 0;
+    }
+    console.error(colors.red("error"), "config file path was undefined");
+    return 1;
+  },
+};
 
 const initCommand = async (
   paths: Paths,
@@ -175,6 +185,33 @@ const initCommand = async (
   }
   console.error(colors.red("error"), "config file path was undefined");
   return 1;
+};
+
+const list: Command = {
+  name: "list",
+  description: "list subscribed feed sources",
+  async run(
+    input: Input,
+    options: Options,
+    feeds: FeedData[],
+    store: FsStorage | KvStorage,
+  ): Promise<number> {
+    if (feeds.length === 0) {
+      console.error(colors.red("error"), "there are no feeds");
+      return 1;
+    }
+
+    if (options?.update) {
+      await updateFeedSource(feeds, store);
+      return 0;
+    }
+
+    for (const feed of feeds) {
+      console.dir(feed);
+    }
+
+    return 0;
+  },
 };
 
 const listCommand = async (
@@ -198,6 +235,15 @@ const listCommand = async (
 
   return 0;
 };
+
+/* const subscribe: Command = {
+  name: "subscribe",
+  description: "subscribe to new feed source",
+  help: "foobar",
+  async run(options, ...rest) {
+    return 0;
+  },
+}; */
 
 const subscribeCommand = async (
   args: ParsedArguments,
@@ -433,6 +479,46 @@ async function fetchAllFeeds(
   }
 }
 
+const fetch: Command = {
+  name: "fetch",
+  description: "fetch updated feed sources and items",
+  async run(
+    rest: Input,
+    options: Options,
+    feeds: FeedData[],
+    store: FsStorage | KvStorage,
+  ): Promise<number> {
+    const [input] = rest;
+
+    if (feeds.length === 0) {
+      console.error(colors.red("error"), "feeds empty, nothing to fetch");
+      return 1;
+    }
+
+    if (!input) {
+      await fetchAllFeeds(feeds, store);
+      await store.saveFeeds(feeds);
+      console.log(
+        colors.cyan("info"),
+        `fetched and saved metadata for feed sources`,
+      );
+      return 0;
+    }
+
+    const results = await fetchSingleFeed(input, feeds, store);
+
+    if (results) {
+      await store.saveFeeds(feeds);
+      console.log(
+        colors.green("ok"),
+        `saved feed items for ${results.url.hostname}`,
+      );
+    }
+
+    return 0;
+  },
+};
+
 const fetchCommand = async (
   args: ParsedArguments,
   feeds: FeedData[],
@@ -505,7 +591,7 @@ async function readerCommand(
   const signal = controller.signal;
   const handler = await app(args, feeds, store, paths);
   const port = (args.port || config?.reader?.port) ?? 8000;
-  const serveOptions: Deno.ServeInit | Deno.ServeTcpOptions = {
+  const serveOptions: Deno.ServeTcpOptions = {
     port,
     signal,
     onListen({ port, hostname }) {
@@ -515,7 +601,7 @@ async function readerCommand(
       );
       console.log(colors.cyan("info"), "Press Ctrl+C to exit");
     },
-  };
+  } as Deno.ServeTcpOptions;
   const server = Deno.serve(serveOptions, handler.fetch);
   Deno.addSignalListener("SIGINT", async () => {
     console.log("\n");
@@ -528,6 +614,46 @@ async function readerCommand(
     "reader shutdown was finished successfully",
   );
 }
+
+const upgrade: Command = {
+  name: "upgrade",
+  description: "upgrade cli to latest version",
+  async run(
+    _input: Input,
+    _options: Options,
+    ..._rest: unknown[]
+  ): Promise<number> {
+    const controller = new AbortController();
+    const signal = controller.signal;
+    const args = [
+      "install",
+      "--reload",
+      "-f",
+      "-RWNE",
+      "--allow-run",
+      "-g",
+      `jsr:${pkg.name}/cli`,
+    ];
+    const command = new Deno.Command(Deno.execPath(), {
+      args,
+      signal,
+    });
+    const info = await command.output();
+    if (info.success) {
+      console.log(
+        "✅",
+        colors.cyan(pkg.name),
+        "was successfully upgraded to latest version",
+      );
+      return info.code;
+    }
+    console.log(
+      colors.red("error"),
+      "there was a problem upgrading to the latest version",
+    );
+    return 1;
+  },
+};
 
 const upgradeCommand = async () => {
   const controller = new AbortController();
@@ -561,32 +687,61 @@ const upgradeCommand = async () => {
   return 1;
 };
 
+const parseArgsOptions: ParseOptions = {
+  boolean: ["help", "force", "quiet", "silent"],
+  default: {
+    limit: null,
+  },
+  alias: {
+    help: "h",
+    force: "f",
+  },
+};
+
+const handleArgs = (
+  args: ParsedArguments,
+): InputWithOptions => {
+  const input = args._ as string[];
+  const { _, ...options } = args;
+  return {
+    input,
+    options,
+  };
+};
+
 async function main(
   args: string[],
   config: Configuration,
   store: FsStorage | KvStorage,
   paths: Paths,
 ): Promise<number | void> {
-  const [command, ...rest] = args;
-  const parsedArgs = parseArgs(rest);
+  const commands = [init, list, fetch];
+  const parsedArgs = parseArgs(args, parseArgsOptions);
+  const { input, options } = handleArgs(parsedArgs);
+  const [command, ...rest] = input;
+  // console.log(input, options, command, rest);
+  // return;
 
   const feeds = await store.loadFeeds();
 
   switch (command) {
     case "init":
-      return await initCommand(paths, parsedArgs);
+      // return await initCommand(paths, parsedArgs);
+      return await init.run(input, options, paths);
     case "list":
-      return await listCommand(parsedArgs, feeds, store);
+      // return await listCommand(parsedArgs, feeds, store);
+      return await list.run(input, options, feeds, store);
     case "subscribe":
       return await subscribeCommand(parsedArgs, feeds, store);
     case "unsubscribe":
       return await unsubscribeCommand(parsedArgs, feeds, store);
     case "fetch":
-      return await fetchCommand(parsedArgs, feeds, store);
+      return await fetch.run(rest, options, feeds, store);
     case "reader":
       return await readerCommand(config, paths, parsedArgs, feeds, store);
     case "upgrade":
-      return await upgradeCommand();
+      // return await upgradeCommand();
+      return await upgrade.run(input, options);
     case "--help":
     case "-h":
     case undefined:
@@ -594,6 +749,32 @@ async function main(
     default:
       throw new CommandError(`unknown command: ${command}`);
   }
+}
+
+function help() {
+  console.log(`
+${colors.cyan(pkg.name)} - v${pkg.version}
+
+${colors.green("Description")}:
+  Small CLI program for managing & consuming feeds of different kinds (RSS/Atom/JSON).
+
+${colors.green("Usage")}:
+  Run directly from JSR:
+    $ deno -RWNE jsr:${pkg.name}/cli <command>
+
+  When installed on system:
+    $ feeds <command>
+
+${colors.green("Commands")}:
+  ${colors.yellow("init")}          - init cli config
+  ${colors.yellow("list")}          - list subscribed feed sources
+  ${colors.yellow("subscribe")}     - subscribe to new feed source
+  ${colors.yellow("unsubscribe")}   - delete feed source
+  ${colors.yellow("fetch")}         - update feed source
+  ${colors.yellow("reader")}        - start http server for reading feeds
+  ${colors.yellow("upgrade")}       - upgrade cli to latest version
+  `);
+  return 0;
 }
 
 if (import.meta.main) {
