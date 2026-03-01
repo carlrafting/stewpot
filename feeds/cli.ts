@@ -241,7 +241,7 @@ const subscribe: Command = {
     feeds: FeedData[],
     store: Storage,
   ) {
-    const [input] = args._;
+    const [command, input] = args._;
 
     if (typeof input !== "string") {
       console.error(colors.red("error"), "invalid input format!");
@@ -324,7 +324,7 @@ const unsubscribe: Command = {
     feeds: FeedData[],
     store: Storage,
   ): Promise<number | void> {
-    const [input] = args._;
+    const [command, input] = args._;
     if (typeof input !== "string") {
       console.error(colors.red("error"), "invalid input format!");
       return 1;
@@ -491,7 +491,7 @@ const fetch: Command = {
     feeds: FeedData[],
     store: FsStorage | KvStorage,
   ): Promise<number> {
-    const [input] = rest;
+    const [command, input] = rest;
 
     if (feeds.length === 0) {
       console.error(colors.red("error"), "feeds empty, nothing to fetch");
@@ -661,7 +661,7 @@ async function main(
   store: FsStorage | KvStorage,
   paths: Paths,
 ): Promise<number | void> {
-  const commands = [init, list, fetch];
+  const commands = [init, list, fetch, reader, upgrade];
   const parsedArgs = parseArgs(args, parseArgsOptions);
   const { input, options } = handleArgs(parsedArgs);
   const [command, ...rest] = input;
