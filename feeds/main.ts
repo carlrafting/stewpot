@@ -148,7 +148,7 @@ export function mapToFeedItems(
           id: item?.id ?? ulid(),
           feed: metadata.id,
           title: item?.title ?? "",
-          url: url.href,
+          url: item?.url,
           content: item?.content_text ?? item?.content_html ?? null,
           published: item?.date_published,
         });
