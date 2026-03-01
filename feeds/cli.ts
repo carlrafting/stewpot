@@ -152,6 +152,7 @@ export type Deps = {
   store: FsStorage | KvStorage;
   paths: Paths;
   config: Configuration;
+  args: ParsedArguments;
 };
 
 /**
@@ -179,9 +180,9 @@ const init: Command = {
   async run(
     _input: Input,
     _options: Options,
-    _deps: Deps,
-    paths: Paths,
+    deps: Deps,
   ): Promise<number> {
+    const { paths } = deps;
     if (paths.config) {
       try {
         const file = await Deno.open(paths.config, { read: true });
@@ -672,11 +673,12 @@ async function main(
     store,
     paths,
     config,
+    args: parsedArgs,
   };
 
   switch (command) {
     case "init":
-      return await init.run(input, options, deps, paths);
+      return await init.run(input, options, deps);
     case "list":
       return await list.run(input, options, deps, feeds, store);
     case "subscribe":
