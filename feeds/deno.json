@@ -26,9 +26,25 @@
     ]
   },
   "tasks": {
-    "dev": {
+    "dev:reader": {
       "description": "Run CLI reader application for development",
-      "command": "deno -RWEN --watch=assets cli.ts reader"
+      "command": "deno -P --watch=assets cli.ts reader"
+    },
+    "doc:lint": {
+      "description": "Lint package export modules",
+      "command": "deno doc --lint main.ts cli.ts"
+    },
+    "tests": {
+      "description": "Run lints & tests",
+      "command": "deno test -P --allow-run"
+    }
+  },
+  "permissions": {
+    "default": {
+      "env": true,
+      "read": true,
+      "write": true,
+      "net": true
     }
   },
   "compilerOptions": {
