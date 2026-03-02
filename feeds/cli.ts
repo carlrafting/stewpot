@@ -485,13 +485,13 @@ const fetch: Command = {
   name: "fetch",
   description: "fetch updated feed sources and items",
   async run(
-    rest: Input,
+    _input: Input,
     options: Options,
     deps: Deps,
     feeds: FeedData[],
     store: FsStorage | KvStorage,
   ): Promise<number> {
-    const [command, input] = rest;
+    const [command, input] = _input;
 
     if (feeds.length === 0) {
       console.error(colors.red("error"), "feeds empty, nothing to fetch");
@@ -700,7 +700,7 @@ async function main(
         store,
       );
     case "fetch":
-      return await fetch.run(rest, options, deps, feeds, store);
+      return await fetch.run(input, options, deps, feeds, store);
     case "reader":
       return await reader.run(
         input,
