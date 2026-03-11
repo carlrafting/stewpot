@@ -47,6 +47,7 @@ export async function app(
 <html lang="en">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="/rss-icon.svg" type="image/svg+xml">
 <style>
 ${css.trim()}
 </style>
@@ -55,8 +56,6 @@ ${js.trim()}
 </script>
 <title>${data.title}</title>
 <body class="flow">
-<header>
-</header>
 ${data.body}
   `.trim();
     },
@@ -69,27 +68,54 @@ ${data.body}
   const subscribeButton =
     `<button type="button" name="subscribe" class="primary">Subscribe</button>`;
   return {
-    fetch(request: Request): Response {
+    async fetch(request: Request): Promise<Response> {
       const url = new URL(request.url);
+
+      if (url.pathname === "/rss-icon.svg") {
+        try {
+          const iconURL = new URL("./assets/rss-icon.svg", import.meta.url);
+          const iconResponse = await fetch(iconURL);
+          if (!iconResponse.ok) {
+            throw new Error(`couldn't fetch icon at ${iconURL}`);
+          }
+          return new Response(await iconResponse.text(), {
+            headers: {
+              "content-type": "image/svg+xml",
+            },
+          });
+        } catch (error) {
+          throw error;
+        }
+      }
+
       if (url.pathname === "/") {
         const title = `${denoConfig.name} - v${denoConfig.version}`;
 
         const main = template.main(
           `<h1 class="tac has-divider">Feed Sources</h1>\n
           <toggle-details>
-            <button type="button" name="toggle-state" value="expand">Expand All</button>
-            <button type="button" name="toggle-state" value="collapse">Collapse All</button>
+            <template>
+              <button type="button" name="toggle-state" value="expand">Expand All</button>
+              <button type="button" name="toggle-state" value="collapse">Collapse All</button>
+            </template>
           </toggle-details>
           ${
             feeds.map((feed) => {
               const hostname = `<h3>${new URL(feed.url).hostname}</h3>`;
               const items: FeedItem[] = data.get(feed.id);
+              const format =
+                `<span class="br pi format">${feed?.format}</span>`;
               const count = `<span class="count">${items.length} items</span>`;
+              const lastModified = feed.lastModified
+                ? `<span>${feed?.lastModified}</span>`
+                : "";
               return [
                 '<details class="br flow">',
-                '<summary class="bgcolor pi rounded">',
+                '<summary class="bgcolor boc pi rounded">',
                 hostname,
+                format,
                 count,
+                lastModified,
                 "</summary>",
                 "<ul>",
                 items.map((item) =>
@@ -108,6 +134,22 @@ ${data.body}
           <span class="version">v${denoConfig.version}</span>
           <a href="https://jsr.io/${denoConfig.name}">JSR Package</a>
           <a href="https://github.com/carlrafting/stewpot">Github Repository</a>
+          <toggle-theme>
+            <template>
+              <fieldset class="flow">
+                <legend>Toggle Theme</legend>
+                <button type="button" name="toggle-theme" value="auto">
+                  Auto
+                </button>
+                <button type="button" name="toggle-theme" value="light">
+                  Light
+                </button>
+                <button type="button" name="toggle-theme" value="dark">
+                  Dark
+                </button>
+              </fieldset>
+            </template>
+          </toggle-theme>
         </footer>`
           .trim();
         const body = [
@@ -131,7 +173,7 @@ ${data.body}
         status: 404,
       });
     },
-  };
+  } satisfies Deno.ServeDefaultExport;
 }
 
 export default app;
