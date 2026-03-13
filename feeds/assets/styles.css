@@ -23,14 +23,10 @@
   }
 }
 
-@property --pi {
-  syntax: "<length>";
-  initial-value: var(--root);
-  inherits: true;
-}
-
 html,
 body,
+fieldset,
+legend,
 button,
 input,
 textarea,
@@ -59,6 +55,23 @@ html {
   line-height: var(--line-height);
   color: var(--color-text);
   background-color: var(--color-bg);
+
+  @media (prefers-color-scheme: light) and (prefers-color-scheme: dark) {
+    color: var(--color-text);
+    background-color: var(--color-bg);
+  }
+
+  &:is([theme="light"]) {
+    color-scheme: only light;
+  }
+
+  &:is([theme="dark"]) {
+    color-scheme: only dark;
+  }
+}
+
+fieldset {
+  border: none;
 }
 
 button,
@@ -75,9 +88,23 @@ select {
 }
 
 button {
+  font-weight: 500;
   padding: var(--button-padding);
   background-color: var(--color-overlay);
   border-radius: var(--border-radius);
+  border: 1px solid oklch(from var(--color-text) l c h / 10%);
+
+  &:is(:disabled) {
+    opacity: 50%;
+  }
+
+  &:active:not(:disabled) {
+    background-color: color-mix(
+      in oklab,
+      var(--color-overlay),
+      oklch(0 0 0 / 25%) 20%
+    );
+  }
 }
 
 body {
@@ -90,6 +117,25 @@ toggle-details {
 }
 
 details {
+  &[open] {
+    --color-details: oklch(
+      from
+      light-dark(oklch(100% 0 0), oklch(38% 0 0))
+      l
+      c
+      h
+      /
+      90%
+    );
+    background-color: var(--color-details);
+    padding-inline: calc(var(--root) * 1.5);
+    padding-block-end: 1lh;
+
+    & > summary {
+      margin-inline: -1.5rem;
+    }
+  }
+
   & > summary {
     list-style: none;
     display: flex;
@@ -113,6 +159,20 @@ details {
   }
 }
 
+a {
+  color: oklch(from var(--color-blue) 80% calc(0.280) h);
+  text-decoration: none;
+  font-weight: bold;
+  padding-block: calc(1lh / 4);
+  padding-inline: calc(var(--root) / 2);
+
+  &:hover,
+  &:focus {
+    background-color: oklch(from var(--color-blue) 60% c h / 10%);
+    text-decoration: underline;
+  }
+}
+
 .flow > * + * {
   margin-block-start: var(--flow, 1lh);
 }
@@ -133,6 +193,7 @@ details {
 .primary {
   color: var(--color-white);
   background-color: var(--color-blue);
+  border-color: oklch(from var(--color-blue) calc(l + 0.1) c h);
 }
 
 .tac {
@@ -147,23 +208,19 @@ details {
   margin-block-start: calc(1lh / 2);
 }
 
-/* Inline | https://feeds.localhost/# */
+.count,
+.format {
+  font-size: 0.8rem;
+  color: oklch(from var(--color-text) l c h / 60%);
+}
 
-details[open] {
-  --color-details: oklch(
-    from
-    light-dark(oklch(100% 0 0), oklch(38% 0 0))
-    l
-    c
-    h
-    /
-    90%
-  );
-  background-color: var(--color-details);
-  padding-inline: calc(var(--root) * 1.5);
-  padding-block-end: 1lh;
+.format {
+  --pi: calc(var(--root) / 4);
+  text-transform: uppercase;
+  font-weight: bold;
+  border: 1px solid oklch(from var(--color-text) l c h / 25%);
+}
 
-  & > summary {
-    margin-inline: -1.5rem;
-  }
+.boc {
+  border: 1px solid oklch(from var(--color-text) l c h / 10%);
 }

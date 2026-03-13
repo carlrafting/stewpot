@@ -147,11 +147,18 @@ export type Options = { [x: string]: unknown };
 /** a combined type with convinient access to both input and options */
 export type InputWithOptions = { input: Input; options: Options };
 
+/**
+ * shared dependencies commands can make use of
+ */
 export type Deps = {
   feeds: FeedData[];
+  /** storage type used by CLI */
   store: FsStorage | KvStorage;
+  /** common paths used by CLI */
   paths: Paths;
+  /** CLI configuration {@linkcode Configuration} */
   config: Configuration;
+  /** only used for backwards compability @deprecated */
   args: ParsedArguments;
 };
 
@@ -667,9 +674,6 @@ async function main(
   const commands = [init, list, fetch, reader, upgrade];
   const parsedArgs = parseArgs(args, parseArgsOptions);
   const { input, options } = handleArgs(parsedArgs);
-  const [command, ...rest] = input;
-  // console.log(input, options, command, rest);
-  // return;
   const feeds = await store.loadFeeds();
   const deps: Deps = {
     feeds,
@@ -679,6 +683,7 @@ async function main(
     args: parsedArgs,
   };
 
+  const [command] = input;
   switch (command) {
     case "init":
       return await init.run(input, options, deps);

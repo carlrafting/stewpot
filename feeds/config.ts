@@ -11,10 +11,15 @@ export type KvStorageConfig = {
   type: "kv";
 };
 
+/** configure various aspects of CLI */
 export interface Configuration {
+  /** what kind of storage type should be used */
   storage?: FsStorageConfig | KvStorageConfig;
+  /** reader config */
   reader?: {
+    /** server hostname */
     hostname?: string;
+    /** what port the server should listen to */
     port?: number;
   };
 }

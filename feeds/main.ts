@@ -215,7 +215,9 @@ function detectFeedFormat(value: string): FeedFormat {
  *
  * @param url URL instance to fetch metadata from
  */
-export async function fetchFeedMetadata(url: URL): Promise<FeedData> {
+export async function fetchFeedMetadata(
+  url: URL,
+): Promise<FeedData> {
   const id: FeedID = ulid();
   const response = await fetch(url);
 
