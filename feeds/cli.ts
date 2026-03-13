@@ -565,8 +565,11 @@ const reader: Command = {
       feeds,
       store,
     );
+    const hostname = (options.hostname || config?.reader?.hostname) ??
+      "localhost";
     const port = (options.port || config?.reader?.port) ?? 8000;
     const serveOptions: Deno.ServeTcpOptions = {
+      hostname,
       port,
       signal,
       onListen({ port, hostname }) {

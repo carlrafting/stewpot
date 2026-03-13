@@ -14,7 +14,8 @@ export type KvStorageConfig = {
 export interface Configuration {
   storage?: FsStorageConfig | KvStorageConfig;
   reader?: {
-    port?: 8000;
+    hostname: string;
+    port?: number;
   };
 }
 
