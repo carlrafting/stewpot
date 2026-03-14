@@ -581,6 +581,19 @@ const reader: Command = {
   },
 };
 
+async function uninstall() {
+  console.log(colors.cyan("info"), "uninstall previous version...");
+  const signal = new AbortController().signal;
+  const [, name] = pkg.name.split("/");
+  const args = ["uninstall", "-g", name];
+  const command = new Deno.Command(Deno.execPath(), {
+    args,
+    signal,
+  });
+  const output = await command.output();
+  return output.success;
+}
+
 const upgrade: Command = {
   name: "upgrade",
   description: "upgrade cli to latest version",
@@ -600,6 +613,9 @@ const upgrade: Command = {
       "--allow-run",
       `jsr:${pkg.name}/cli`,
     ];
+    if (!await uninstall()) {
+      console.error(colors.cyan("info"), "nothing to cleanup");
+    }
     const command = new Deno.Command(Deno.execPath(), {
       args,
       signal,
