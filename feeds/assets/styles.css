@@ -1,226 +1,292 @@
-:root {
-  --root: 1rem;
-  --line-height: 1.5;
-  --border-radius: calc(var(--root) / 4);
-  --color-white: oklch(90% 0 0);
-  --color-gray: oklch(25% 0 0);
-  --color-black: oklch(0 0 0);
-  --color-blue: oklch(from dodgerblue calc(l - 0.2) calc(c + 0.1) h);
-  --color-green: oklch(from limegreen l c h);
-  --color-yellow: oklch(from yellow l c h);
-  --color-orange: oklch(from orange l c h);
-  --color-text: var(--color-white);
-  --color-bg: var(--color-gray);
-  --color-overlay: color-mix(in oklab, var(--color-bg) 90%, var(--color-text));
-  --color-primary: var(--color-blue);
-  --button-padding: 0.5lh 0.75rem;
-}
+@layer base, colors, utils, theme-prefs;
 
-@media (prefers-color-scheme: light) {
+@layer base {
   :root {
-    --color-bg: var(--color-white);
-    --color-text: var(--color-gray);
+    --root: 1rem;
+    --line-height: 1.5;
+    --border-radius: calc(var(--root) / 4);
+    --button-padding: 0.5lh 0.75rem;
   }
 }
 
-html,
-body,
-fieldset,
-legend,
-button,
-input,
-textarea,
-select,
-menu,
-ul,
-ol,
-table,
-tr,
-th,
-td,
-figure,
-figcaption,
-details,
-summary {
-  margin: 0;
-  padding: 0;
+@layer colors {
+  :root {
+    --red-100: oklch(0.93 0.04 25);
+    --red-200: oklch(0.9 0.06 25);
+    --red-300: oklch(0.87 0.08 25);
+    --red-400: oklch(0.8 0.13 25);
+    --red-500: oklch(0.62 0.14 25);
+    --red-600: oklch(0.54 0.13 25);
+    --red-700: oklch(0.44 0.1 25);
+    --red-800: oklch(0.36 0.08 25);
+
+    --yellow-100: oklch(0.93 0.04 90);
+    --yellow-200: oklch(0.9 0.06 90);
+    --yellow-300: oklch(0.86 0.08 90);
+    --yellow-400: oklch(0.78 0.13 90);
+    --yellow-500: oklch(0.61 0.14 90);
+    --yellow-600: oklch(0.53 0.13 90);
+    --yellow-700: oklch(0.43 0.1 90);
+    --yellow-800: oklch(0.35 0.08 90);
+
+    --green-100: oklch(0.92 0.04 150);
+    --green-200: oklch(0.89 0.06 150);
+    --green-300: oklch(0.85 0.08 150);
+    --green-400: oklch(0.77 0.13 150);
+    --green-500: oklch(0.59 0.14 150);
+    --green-600: oklch(0.52 0.13 150);
+    --green-700: oklch(0.42 0.1 150);
+    --green-800: oklch(0.34 0.08 150);
+
+    --blue-100: oklch(0.93 0.04 250);
+    --blue-200: oklch(0.9 0.06 250);
+    --blue-300: oklch(0.86 0.08 250);
+    --blue-400: oklch(0.78 0.13 250);
+    --blue-500: oklch(0.6 0.14 250);
+    --blue-600: oklch(0.53 0.13 250);
+    --blue-700: oklch(0.43 0.1 250);
+    --blue-800: oklch(0.35 0.08 250);
+
+    --purple-100: oklch(0.93 0.04 320);
+    --purple-200: oklch(0.9 0.06 320);
+    --purple-300: oklch(0.87 0.08 320);
+    --purple-400: oklch(0.8 0.13 320);
+    --purple-500: oklch(0.62 0.14 320);
+    --purple-600: oklch(0.54 0.13 320);
+    --purple-700: oklch(0.44 0.1 320);
+    --purple-800: oklch(0.36 0.08 320);
+
+    --neutral-100: oklch(20% 0 0);
+    --neutral-200: oklch(22.5% 0 0);
+    --neutral-300: oklch(25% 0 0);
+    --neutral-400: oklch(28% 0 0);
+    --neutral-500: oklch(32% 0 0);
+    --neutral-600: oklch(38% 0 0);
+    --neutral-700: oklch(44% 0 0);
+    --neutral-800: oklch(48% 0 0);
+
+    --white: oklch(100% 0 0);
+    --offwhite: oklch(90% 0 0);
+    --black: oklch(0 0 0);
+
+    --color-text: var(--offwhite);
+    --color-bg: var(--neutral-200);
+    --color-overlay: var(--neutral-400);
+    --color-primary: var(--blue-600);
+    --color-error: var(--red-400);
+
+    @media (prefers-color-scheme: light) {
+      --color-text: var(--neutral-200);
+      --color-bg: var(--offwhite);
+      --color-overlay: oklch(from var(--offwhite) 86% c h);
+      --color-primary: var(--blue-500);
+    }
+  }
 }
 
-html {
-  color-scheme: light dark;
-  font-family:
-    system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
-    Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
-  font-size: calc(var(--root) * 1.125);
-  line-height: var(--line-height);
-  color: var(--color-text);
-  background-color: var(--color-bg);
+@layer base {
+  html,
+  body,
+  fieldset,
+  legend,
+  button,
+  input,
+  textarea,
+  select,
+  menu,
+  ul,
+  ol,
+  table,
+  tr,
+  th,
+  td,
+  figure,
+  figcaption,
+  details,
+  summary {
+    margin: 0;
+    padding: 0;
+  }
 
-  @media (prefers-color-scheme: light) and (prefers-color-scheme: dark) {
+  html {
+    color-scheme: light dark;
+    font-family:
+      system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
+      Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+    font-size: calc(var(--root) * 1.125);
+    line-height: var(--line-height);
     color: var(--color-text);
     background-color: var(--color-bg);
   }
-
-  &:is([theme="light"]) {
-    color-scheme: only light;
-  }
-
-  &:is([theme="dark"]) {
-    color-scheme: only dark;
-  }
 }
 
-fieldset {
-  border: none;
-}
+@layer theme-prefs {
+  html {
+    &:is([theme="light"]) {
+      color-scheme: only light;
+    }
 
-button,
-input,
-textarea,
-select {
-  font-family: inherit;
-  font-size: inherit;
-  font-size: 1rem;
-  line-height: 1.125;
-  border: none;
-  color: var(--color-text);
-  background-color: transparent;
-}
-
-button {
-  font-weight: 500;
-  padding: var(--button-padding);
-  background-color: var(--color-overlay);
-  border-radius: var(--border-radius);
-  border: 1px solid oklch(from var(--color-text) l c h / 10%);
-
-  &:is(:disabled) {
-    opacity: 50%;
-  }
-
-  &:active:not(:disabled) {
-    background-color: color-mix(
-      in oklab,
-      var(--color-overlay),
-      oklch(0 0 0 / 25%) 20%
-    );
+    &:is([theme="dark"]) {
+      color-scheme: only dark;
+    }
   }
 }
 
-body {
-  margin: var(--root);
-}
+@layer base {
+  fieldset {
+    border: none;
+  }
 
-toggle-details {
-  display: flex;
-  gap: calc(var(--root) / 2);
-}
+  button,
+  input,
+  textarea,
+  select {
+    font-family: inherit;
+    font-size: inherit;
+    font-size: 1rem;
+    line-height: 1.125;
+    border: none;
+    color: var(--color-text);
+    background-color: transparent;
+  }
 
-details {
-  &[open] {
-    --color-details: oklch(
-      from
-      light-dark(oklch(100% 0 0), oklch(38% 0 0))
-      l
-      c
-      h
-      /
-      90%
-    );
-    background-color: var(--color-details);
-    padding-inline: calc(var(--root) * 1.5);
-    padding-block-end: 1lh;
+  button {
+    font-weight: 500;
+    padding: var(--button-padding);
+    background-color: var(--color-overlay);
+    border-radius: var(--border-radius);
+    border: 1px solid oklch(from var(--color-text) l c h / 10%);
+
+    &:is(:disabled) {
+      opacity: 50%;
+    }
+
+    &:active:not(:disabled) {
+      background-color: color-mix(
+        in oklab,
+        var(--color-overlay),
+        oklch(0 0 0 / 25%) 20%
+      );
+    }
+  }
+
+  body {
+    margin: var(--root);
+  }
+
+  toggle-details {
+    display: flex;
+    gap: calc(var(--root) / 2);
+  }
+
+  details {
+    &[open] {
+      --color-details: oklch(
+        from
+        light-dark(oklch(100% 0 0), oklch(38% 0 0))
+        l
+        c
+        h
+        /
+        90%
+      );
+      background-color: var(--color-details);
+      padding-inline: calc(var(--root) * 1.5);
+      padding-block-end: 1lh;
+
+      & > summary {
+        margin-inline: -1.5rem;
+      }
+    }
 
     & > summary {
-      margin-inline: -1.5rem;
+      list-style: none;
+      display: flex;
+      align-items: baseline;
+
+      & > * {
+        margin-inline-end: var(--root);
+      }
+
+      &::after {
+        margin-inline-start: auto;
+      }
+    }
+
+    &:not([open]) > summary::after {
+      content: "▼";
+    }
+
+    &:is([open]) > summary::after {
+      content: "▲";
     }
   }
 
-  & > summary {
-    list-style: none;
-    display: flex;
-    align-items: baseline;
+  a {
+    color: oklch(from var(--color-primary) 80% calc(0.280) h);
+    text-decoration: none;
+    font-weight: bold;
+    padding-block: calc(1lh / 4);
+    padding-inline: calc(var(--root) / 2);
 
-    & > * {
-      margin-inline-end: var(--root);
+    &:hover,
+    &:focus {
+      background-color: oklch(from var(--color-blue) 60% c h / 10%);
+      text-decoration: underline;
     }
-
-    &::after {
-      margin-inline-start: auto;
-    }
-  }
-
-  &:not([open]) > summary::after {
-    content: "▼";
-  }
-
-  &:is([open]) > summary::after {
-    content: "▲";
   }
 }
 
-a {
-  color: oklch(from var(--color-blue) 80% calc(0.280) h);
-  text-decoration: none;
-  font-weight: bold;
-  padding-block: calc(1lh / 4);
-  padding-inline: calc(var(--root) / 2);
-
-  &:hover,
-  &:focus {
-    background-color: oklch(from var(--color-blue) 60% c h / 10%);
-    text-decoration: underline;
+@layer utils {
+  .flow > * + * {
+    margin-block-start: var(--flow, 1lh);
   }
-}
 
-.flow > * + * {
-  margin-block-start: var(--flow, 1lh);
-}
+  .bgcolor {
+    background-color: var(--color-overlay);
+  }
 
-.bgcolor {
-  background-color: var(--color-overlay);
-}
+  .pi {
+    padding-inline: var(--pi, var(--root));
+  }
 
-.pi {
-  padding-inline: var(--pi, var(--root));
-}
+  .br,
+  .rounded {
+    border-radius: var(--border-radius);
+  }
 
-.br,
-.rounded {
-  border-radius: var(--border-radius);
-}
+  .primary {
+    color: var(--blue-200);
+    background-color: var(--color-primary);
+    border-color: oklch(from var(--color-primary) calc(l - 0.1) c h);
+  }
 
-.primary {
-  color: var(--color-white);
-  background-color: var(--color-blue);
-  border-color: oklch(from var(--color-blue) calc(l + 0.1) c h);
-}
+  .tac {
+    text-align: center;
+  }
 
-.tac {
-  text-align: center;
-}
+  .has-divider::after {
+    content: "";
+    display: block;
+    height: 1px;
+    background-color: var(--color-overlay);
+    margin-block-start: calc(1lh / 2);
+  }
 
-.has-divider::after {
-  content: "";
-  display: block;
-  height: 1px;
-  background-color: var(--color-overlay);
-  margin-block-start: calc(1lh / 2);
-}
+  .count,
+  .format {
+    font-size: 0.8rem;
+    color: oklch(from var(--color-text) l c h / 60%);
+  }
 
-.count,
-.format {
-  font-size: 0.8rem;
-  color: oklch(from var(--color-text) l c h / 60%);
-}
+  .format {
+    --pi: calc(var(--root) / 4);
+    text-transform: uppercase;
+    font-weight: bold;
+    border: 1px solid oklch(from var(--color-text) l c h / 25%);
+  }
 
-.format {
-  --pi: calc(var(--root) / 4);
-  text-transform: uppercase;
-  font-weight: bold;
-  border: 1px solid oklch(from var(--color-text) l c h / 25%);
-}
-
-.boc {
-  border: 1px solid oklch(from var(--color-text) l c h / 10%);
+  .boc {
+    border: 1px solid oklch(from var(--color-text) l c h / 10%);
+  }
 }

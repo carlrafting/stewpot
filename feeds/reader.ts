@@ -80,7 +80,7 @@ ${data.body}
           }
           return new Response(await iconResponse.text(), {
             headers: {
-              "content-type": "image/svg+xml",
+              "content-type": "image/svg+xml; charset=utf-8",
             },
           });
         } catch (error) {

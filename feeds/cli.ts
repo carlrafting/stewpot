@@ -6,6 +6,7 @@ import {
   discoverFeed,
   type FeedData,
   type FeedItem,
+  type FetchedFeed,
   fetchFeedItemsFromURL,
   fetchFeedMetadata,
   type FetchResults,
@@ -360,37 +361,10 @@ const unsubscribe: Command = {
   },
 };
 
-type TryFetchAndParseResults = {
-  metadata: FeedData;
-  parsed: {
-    format: "rss";
-    feed: import("feedsmith/types").DeepPartial<
-      import("feedsmith/types").Rss.Feed<string>
-    >;
-  } | {
-    format: "atom";
-    feed: import("feedsmith/types").DeepPartial<
-      import("feedsmith/types").Atom.Feed<string>
-    >;
-  } | {
-    format: "rdf";
-    feed: import("feedsmith/types").DeepPartial<
-      import("feedsmith/types").Rdf.Feed<string>
-    >;
-  } | {
-    format: "json";
-    feed: import("feedsmith/types").DeepPartial<
-      import("feedsmith/types").Json.Feed<string>
-    >;
-  };
-  body: string;
-  url: URL;
-};
-
 async function tryFetchAndParse(
   feed: FeedData,
 ): Promise<
-  TryFetchAndParseResults | undefined
+  FetchedFeed | undefined
 > {
   try {
     const url = new URL(feed.url);
@@ -435,7 +409,7 @@ async function tryFetchAndParse(
 
 async function processFetchAndParseResult(
   feed: FeedData,
-  results: TryFetchAndParseResults,
+  results: FetchedFeed,
   store: FsStorage | KvStorage,
   feeds: FeedData[],
 ) {
@@ -452,7 +426,7 @@ async function fetchSingleFeed(
   input: string | number,
   feeds: FeedData[],
   store: FsStorage | KvStorage,
-): Promise<TryFetchAndParseResults | undefined> {
+): Promise<FetchedFeed | undefined> {
   if (typeof input !== "string") return;
   const url = parseInputToURL(input);
   if (!url) return;
@@ -541,7 +515,13 @@ async function updateFeedSource(
       `fetching and updating feed source metadata for ${url.hostname}`,
     );
     const metadata = await fetchFeedMetadata(url);
-    updated.push(metadata);
+    updated.push({
+      id: feed.id,
+      url: feed.url,
+      format: metadata.format,
+      fetch_timestamp: metadata.fetch_timestamp,
+      etag: metadata.etag,
+    });
   }
   await store.saveFeeds(updated);
   console.log(colors.green("done"), `saved changes to store`);

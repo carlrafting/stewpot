@@ -44,12 +44,14 @@ export interface FeedData {
   url: string;
   /** feed source format */
   format: FeedFormat;
-  /** feed source title */
+  /** feed source title @deprecated */
   title?: string | null;
   /** reponse header etag (optional) */
   etag?: string | null;
-  /** reponse header last-modified header (optional) */
+  /** reponse header last-modified header (optional) @deprecated */
   lastModified?: string | null;
+  /** timestamp when feed source was last fetched at */
+  fetch_timestamp?: string;
   /** response body */
   body?: string | null;
 }
@@ -80,6 +82,9 @@ export interface FeedItem {
 export interface FetchResults extends FeedData {
   /** if feed source `Response` was modified or not */
   fetch: {
+    ok: boolean;
+    statusText: string;
+    statusCode: number;
     status: "modified" | "not-modified";
     contentType: string | null;
   };
@@ -219,14 +224,15 @@ export async function fetchFeedMetadata(
   url: URL,
 ): Promise<FeedData> {
   const id: FeedID = ulid();
-  const response = await fetch(url);
+  const response: Response = await fetch(url);
+  const timestamp: Temporal.Instant = Temporal.Now.instant();
 
   if (!response.ok) {
     throw new Error(`failed to fetch feed from ${url.href}`);
   }
 
+  const fetch_timestamp: string = timestamp.toString();
   const headers = response.headers;
-  const lastModified = headers.get("last-modified");
   const etag = headers.get("etag");
   const text = await response.text();
   const format: FeedFormat = detectFeedFormat(text);
@@ -234,8 +240,8 @@ export async function fetchFeedMetadata(
   return {
     id,
     url: url.href,
+    fetch_timestamp,
     etag,
-    lastModified,
     format,
   };
 }
@@ -292,6 +298,9 @@ export async function fetchFeedItemsFromURL(
     throw new Error(`failed to fetch feed: ${response.status}`);
   } */
 
+  const ok = response.ok;
+  const statusCode = response.status;
+  const statusText = response.statusText;
   const body = await response.text();
   const contentType = response.headers.get("content-type") ?? "";
   const format: FeedFormat = detectFeedFormat(body);
@@ -306,6 +315,9 @@ export async function fetchFeedItemsFromURL(
     lastModified,
     body,
     fetch: {
+      ok,
+      statusCode,
+      statusText,
       contentType,
       status: "modified",
     },
@@ -328,6 +340,135 @@ export async function* fetchResponseBodyInChunksFromURL(
   }
   for await (const chunk of body) {
     yield decoder.decode(chunk, { stream: true });
+  }
+}
+
+/**
+ * Represents the raw result of successfully fetching and parsing a feed,
+ * prior to mapping into {@linkcode FeedItem} instances.
+ *
+ * Returned by {@linkcode fetchAndParseFeed} and consumed by
+ * {@linkcode processFetchAndParseResult}.
+ *
+ * @see {@linkcode fetchAndParseFeed}
+ */
+export type FetchedFeed = {
+  /** The feed's stored metadata, retrieved prior to fetching. */
+  metadata: FeedData;
+  /** The parsed feed content, discriminated by format. */
+  parsed: {
+    format: "rss";
+    feed: import("feedsmith/types").DeepPartial<
+      import("feedsmith/types").Rss.Feed<string>
+    >;
+  } | {
+    format: "atom";
+    feed: import("feedsmith/types").DeepPartial<
+      import("feedsmith/types").Atom.Feed<string>
+    >;
+  } | {
+    format: "rdf";
+    feed: import("feedsmith/types").DeepPartial<
+      import("feedsmith/types").Rdf.Feed<string>
+    >;
+  } | {
+    format: "json";
+    feed: import("feedsmith/types").DeepPartial<
+      import("feedsmith/types").Json.Feed<string>
+    >;
+  };
+  /** The raw response body string, used during item mapping. */
+  body: string;
+  /** The resolved URL the feed was fetched from. */
+  url: URL;
+};
+
+/**
+ * Fetches and parses a feed from the URL stored in the provided {@linkcode FeedData}.
+ *
+ * Handles all failure points gracefully — invalid URLs, network errors, non-ok
+ * responses, empty bodies, and parse failures are all logged to the console
+ * with a descriptive message. Returns `undefined` in any of these cases.
+ *
+ * @example
+ * ```ts
+ * const result = await fetchAndParseFeed(feed);
+ * if (result) {
+ *   await processFetchAndParseResult(feed, result, store, feeds);
+ * }
+ * ```
+ *
+ * @param feed - The feed to fetch and parse, must contain a valid URL.
+ * @returns A {@linkcode FetchedFeed} if successful, or `undefined` if the feed
+ * could not be fetched or parsed.
+ */
+export async function fetchAndParseFeed(
+  feed: FeedData,
+): Promise<FetchedFeed | undefined> {
+  let url: URL;
+
+  try {
+    url = new URL(feed.url);
+  } catch {
+    console.error(
+      colors.red("error"),
+      `invalid url "${feed.url}" - urls must include a scheme e.g. https://example.com/feed.xml`,
+    );
+    return;
+  }
+
+  let metadata: FeedData;
+  try {
+    metadata = await fetchFeedMetadata(url);
+  } catch (error) {
+    console.error(
+      colors.red("error"),
+      `failed to fetch metadata for ${feed.url}`,
+      error,
+    );
+    return;
+  }
+
+  let results: FetchResults;
+  try {
+    results = await fetchFeedItemsFromURL(url, feed);
+  } catch (error) {
+    console.error(
+      colors.red("error"),
+      `failed to fetch ${feed.url}`,
+      error,
+    );
+    return;
+  }
+
+  if (results.fetch.status === "not-modified") return;
+
+  if (!results.fetch.ok) {
+    console.error(
+      colors.red("error"),
+      `failed to fetch ${feed.url}: ${results.fetch.statusCode} ${results.fetch.statusText}`,
+    );
+    return;
+  }
+
+  if (!results.body) {
+    console.error(
+      colors.red("error"),
+      `empty response body for ${feed.url} - the feed may be broken or temporarily unavailable`,
+    );
+    return;
+  }
+
+  try {
+    const parsed = parseFeed(results.body);
+    return { metadata, parsed, body: results.body, url };
+  } catch (error) {
+    console.error(
+      colors.red("error"),
+      `failed to parse feed ${feed.url} - the feed content may be malformed`,
+      error,
+    );
+    return;
   }
 }
 
