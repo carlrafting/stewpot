@@ -593,11 +593,11 @@ const upgrade: Command = {
     const signal = controller.signal;
     const args = [
       "install",
-      "--reload",
-      "-f",
       "-RWNE",
-      "--allow-run",
       "-g",
+      "-r",
+      "-f",
+      "--allow-run",
       `jsr:${pkg.name}/cli`,
     ];
     const command = new Deno.Command(Deno.execPath(), {

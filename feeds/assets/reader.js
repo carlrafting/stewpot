@@ -89,5 +89,5 @@ class ToggleTheme extends HTMLElement {
   }
 }
 
-customElements.define("toggle-theme", ToggleTheme);
+// customElements.define("toggle-theme", ToggleTheme);
 customElements.define("toggle-details", ToggleDetails);
