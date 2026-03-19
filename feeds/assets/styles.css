@@ -1,4 +1,4 @@
-@layer base, colors, utils, theme-prefs;
+@layer reset, base, colors, utils, theme-prefs;
 
 @layer base {
   :root {
@@ -11,80 +11,30 @@
 
 @layer colors {
   :root {
-    --red-100: oklch(0.93 0.04 25);
-    --red-200: oklch(0.9 0.06 25);
-    --red-300: oklch(0.87 0.08 25);
-    --red-400: oklch(0.8 0.13 25);
-    --red-500: oklch(0.62 0.14 25);
-    --red-600: oklch(0.54 0.13 25);
-    --red-700: oklch(0.44 0.1 25);
-    --red-800: oklch(0.36 0.08 25);
-
-    --yellow-100: oklch(0.93 0.04 90);
-    --yellow-200: oklch(0.9 0.06 90);
-    --yellow-300: oklch(0.86 0.08 90);
-    --yellow-400: oklch(0.78 0.13 90);
-    --yellow-500: oklch(0.61 0.14 90);
-    --yellow-600: oklch(0.53 0.13 90);
-    --yellow-700: oklch(0.43 0.1 90);
-    --yellow-800: oklch(0.35 0.08 90);
-
-    --green-100: oklch(0.92 0.04 150);
-    --green-200: oklch(0.89 0.06 150);
-    --green-300: oklch(0.85 0.08 150);
-    --green-400: oklch(0.77 0.13 150);
-    --green-500: oklch(0.59 0.14 150);
-    --green-600: oklch(0.52 0.13 150);
-    --green-700: oklch(0.42 0.1 150);
-    --green-800: oklch(0.34 0.08 150);
-
-    --blue-100: oklch(0.93 0.04 250);
-    --blue-200: oklch(0.9 0.06 250);
-    --blue-300: oklch(0.86 0.08 250);
-    --blue-400: oklch(0.78 0.13 250);
-    --blue-500: oklch(0.6 0.14 250);
-    --blue-600: oklch(0.53 0.13 250);
-    --blue-700: oklch(0.43 0.1 250);
-    --blue-800: oklch(0.35 0.08 250);
-
-    --purple-100: oklch(0.93 0.04 320);
-    --purple-200: oklch(0.9 0.06 320);
-    --purple-300: oklch(0.87 0.08 320);
-    --purple-400: oklch(0.8 0.13 320);
-    --purple-500: oklch(0.62 0.14 320);
-    --purple-600: oklch(0.54 0.13 320);
-    --purple-700: oklch(0.44 0.1 320);
-    --purple-800: oklch(0.36 0.08 320);
-
-    --neutral-100: oklch(20% 0 0);
-    --neutral-200: oklch(22.5% 0 0);
-    --neutral-300: oklch(25% 0 0);
-    --neutral-400: oklch(28% 0 0);
-    --neutral-500: oklch(32% 0 0);
-    --neutral-600: oklch(38% 0 0);
-    --neutral-700: oklch(44% 0 0);
-    --neutral-800: oklch(48% 0 0);
-
-    --white: oklch(100% 0 0);
-    --offwhite: oklch(90% 0 0);
-    --black: oklch(0 0 0);
-
-    --color-text: var(--offwhite);
-    --color-bg: var(--neutral-200);
-    --color-overlay: var(--neutral-400);
-    --color-primary: var(--blue-600);
-    --color-error: var(--red-400);
+    --color-white: oklch(90% 0 0);
+    --color-gray: oklch(25% 0 0);
+    --color-black: oklch(0 0 0);
+    --color-blue: oklch(from dodgerblue calc(l - 0.2) calc(c + 0.1) h);
+    --color-green: oklch(from limegreen l c h);
+    --color-yellow: oklch(from yellow l c h);
+    --color-orange: oklch(from orange l c h);
+    --color-text: var(--color-white);
+    --color-bg: var(--color-gray);
+    --color-overlay: color-mix(var(--color-bg) 90%, var(--color-text));
+    --color-primary: var(--color-blue);
+    --color-links: oklch(from var(--color-primary) 80% 0.280 h);
 
     @media (prefers-color-scheme: light) {
-      --color-text: var(--neutral-200);
-      --color-bg: var(--offwhite);
-      --color-overlay: oklch(from var(--offwhite) 86% c h);
-      --color-primary: var(--blue-500);
+      --color-bg: var(--color-white);
+      --color-text: var(--color-gray);
+      --color-overlay: color-mix(var(--color-bg) 80%, var(--color-text));
+      --color-links: oklch(from var(--color-primary) 60% 0.280 h);
     }
   }
 }
 
-@layer base {
+@layer reset {
+
   html,
   body,
   fieldset,
@@ -107,17 +57,17 @@
     margin: 0;
     padding: 0;
   }
+}
 
-  html {
-    color-scheme: light dark;
-    font-family:
-      system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
-      Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
-    font-size: calc(var(--root) * 1.125);
-    line-height: var(--line-height);
-    color: var(--color-text);
-    background-color: var(--color-bg);
-  }
+html {
+  color-scheme: light dark;
+  font-family:
+    system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
+    Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+  font-size: calc(var(--root) * 1.125);
+  line-height: var(--line-height);
+  color: var(--color-text);
+  background-color: var(--color-bg);
 }
 
 @layer theme-prefs {
@@ -162,11 +112,9 @@
     }
 
     &:active:not(:disabled) {
-      background-color: color-mix(
-        in oklab,
-        var(--color-overlay),
-        oklch(0 0 0 / 25%) 20%
-      );
+      background-color: color-mix(in oklab,
+          var(--color-overlay),
+          oklch(0 0 0 / 25%) 20%);
     }
   }
 
@@ -180,31 +128,32 @@
   }
 
   details {
+    --box-shadow-alpha: 25%;
+    --box-shadow-color: oklch(from var(--color-black) l c h / var(--box-shadow-alpha));
+
+    box-shadow: 0 2px 4px var(--box-shadow-color);
+
+    @media (prefers-color-scheme: light) {
+      --box-shadow-alpha: 16%;
+    }
+
     &[open] {
-      --color-details: oklch(
-        from
-        light-dark(oklch(100% 0 0), oklch(38% 0 0))
-        l
-        c
-        h
-        /
-        90%
-      );
+      --color-details: oklch(from light-dark(oklch(100% 0 0), oklch(38% 0 0)) l c h / 90%);
       background-color: var(--color-details);
       padding-inline: calc(var(--root) * 1.5);
       padding-block-end: 1lh;
 
-      & > summary {
+      &>summary {
         margin-inline: -1.5rem;
       }
     }
 
-    & > summary {
+    &>summary {
       list-style: none;
       display: flex;
       align-items: baseline;
 
-      & > * {
+      &>* {
         margin-inline-end: var(--root);
       }
 
@@ -213,32 +162,36 @@
       }
     }
 
-    &:not([open]) > summary::after {
+    &:not([open])>summary::after {
       content: "▼";
     }
 
-    &:is([open]) > summary::after {
+    &:is([open])>summary::after {
       content: "▲";
     }
   }
 
   a {
-    color: oklch(from var(--color-primary) 80% calc(0.280) h);
-    text-decoration: none;
-    font-weight: bold;
-    padding-block: calc(1lh / 4);
-    padding-inline: calc(var(--root) / 2);
+    &:where(:link, :visited) {
+      color: var(--color-links);
+      text-decoration-line: none;
+      text-underline-offset: 2px;
+      text-decoration-thickness: 2px;
+      text-decoration-color: color-mix(currentColor, transparent 50%);
+      font-weight: bold;
+      padding-block: calc(1lh / 4);
+      padding-inline: calc(var(--root) / 2);
+    }
 
-    &:hover,
-    &:focus {
+    &:where(:hover, :focus) {
       background-color: oklch(from var(--color-blue) 60% c h / 10%);
-      text-decoration: underline;
+      text-decoration-line: underline;
     }
   }
 }
 
 @layer utils {
-  .flow > * + * {
+  .flow>*+* {
     margin-block-start: var(--flow, 1lh);
   }
 
