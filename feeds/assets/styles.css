@@ -1,4 +1,4 @@
-@layer reset, base, colors, utils, theme-prefs;
+@layer reset, base, colors, theme, utils, scratch;
 
 @layer base {
   :root {
@@ -11,6 +11,7 @@
 
 @layer colors {
   :root {
+    /* color palette */
     --color-white: oklch(90% 0 0);
     --color-gray: oklch(25% 0 0);
     --color-black: oklch(0 0 0);
@@ -18,23 +19,61 @@
     --color-green: oklch(from limegreen l c h);
     --color-yellow: oklch(from yellow l c h);
     --color-orange: oklch(from orange l c h);
-    --color-text: var(--color-white);
-    --color-bg: var(--color-gray);
+    /* semantic colors */
     --color-overlay: color-mix(var(--color-bg) 90%, var(--color-text));
     --color-primary: var(--color-blue);
     --color-links: oklch(from var(--color-primary) 80% 0.280 h);
+    --color-links: oklch(
+      from
+      var(--color-primary)
+      var(--color-links-lightness)
+      0.280
+      h
+    );
+  }
+}
+
+@layer theme {
+  :root {
+    @media (prefers-color-scheme: dark) {
+      color-scheme: dark;
+      --color-text: var(--color-white);
+      --color-bg: var(--color-gray);
+      --color-links-lightness: 80%;
+      --count-color-alpha: 60%;
+    }
 
     @media (prefers-color-scheme: light) {
+      color-scheme: light;
       --color-bg: var(--color-white);
       --color-text: var(--color-gray);
-      --color-overlay: color-mix(var(--color-bg) 80%, var(--color-text));
-      --color-links: oklch(from var(--color-primary) 60% 0.280 h);
+      --color-links-lightness: 50%;
+      --count-color-alpha: 80%;
+    }
+
+    &:where([data-theme="light"]) {
+      color-scheme: light;
+      --color-bg: var(--color-white);
+      --color-text: var(--color-gray);
+      --color-links-lightness: 50%;
+      --count-color-alpha: 80%;
+    }
+
+    &:where([data-theme="dark"]) {
+      color-scheme: dark;
+      --color-text: var(--color-white);
+      --color-bg: var(--color-gray);
+      --color-links-lightness: 80%;
+      --count-color-alpha: 60%;
+    }
+
+    &:where([data-theme="auto"]) {
+      color-scheme: light dark;
     }
   }
 }
 
 @layer reset {
-
   html,
   body,
   fieldset,
@@ -60,7 +99,6 @@
 }
 
 html {
-  color-scheme: light dark;
   font-family:
     system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
     Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
@@ -68,18 +106,6 @@ html {
   line-height: var(--line-height);
   color: var(--color-text);
   background-color: var(--color-bg);
-}
-
-@layer theme-prefs {
-  html {
-    &:is([theme="light"]) {
-      color-scheme: only light;
-    }
-
-    &:is([theme="dark"]) {
-      color-scheme: only dark;
-    }
-  }
 }
 
 @layer base {
@@ -101,20 +127,24 @@ html {
   }
 
   button {
+    --button-shadow: 0 2px 4px oklch(0 0 0 / 10%);
     font-weight: 500;
     padding: var(--button-padding);
     background-color: var(--color-overlay);
     border-radius: var(--border-radius);
     border: 1px solid oklch(from var(--color-text) l c h / 10%);
+    box-shadow: var(--button-shadow);
 
     &:is(:disabled) {
       opacity: 50%;
     }
 
     &:active:not(:disabled) {
-      background-color: color-mix(in oklab,
-          var(--color-overlay),
-          oklch(0 0 0 / 25%) 20%);
+      background-color: color-mix(
+        in oklab,
+        var(--color-overlay),
+        oklch(0 0 0 / 25%) 20%
+      );
     }
   }
 
@@ -129,7 +159,15 @@ html {
 
   details {
     --box-shadow-alpha: 25%;
-    --box-shadow-color: oklch(from var(--color-black) l c h / var(--box-shadow-alpha));
+    --box-shadow-color: oklch(
+      from
+      var(--color-black)
+      l
+      c
+      h
+      /
+      var(--box-shadow-alpha)
+    );
 
     box-shadow: 0 2px 4px var(--box-shadow-color);
 
@@ -138,22 +176,30 @@ html {
     }
 
     &[open] {
-      --color-details: oklch(from light-dark(oklch(100% 0 0), oklch(38% 0 0)) l c h / 90%);
+      --color-details: oklch(
+        from
+        light-dark(oklch(100% 0 0), oklch(38% 0 0))
+        l
+        c
+        h
+        /
+        90%
+      );
       background-color: var(--color-details);
       padding-inline: calc(var(--root) * 1.5);
       padding-block-end: 1lh;
 
-      &>summary {
+      & > summary {
         margin-inline: -1.5rem;
       }
     }
 
-    &>summary {
+    & > summary {
       list-style: none;
       display: flex;
       align-items: baseline;
 
-      &>* {
+      & > * {
         margin-inline-end: var(--root);
       }
 
@@ -162,11 +208,11 @@ html {
       }
     }
 
-    &:not([open])>summary::after {
+    &:not([open]) > summary::after {
       content: "▼";
     }
 
-    &:is([open])>summary::after {
+    &:is([open]) > summary::after {
       content: "▲";
     }
   }
@@ -174,7 +220,7 @@ html {
   a {
     &:where(:link, :visited) {
       color: var(--color-links);
-      text-decoration-line: none;
+      text-decoration-line: underline;
       text-underline-offset: 2px;
       text-decoration-thickness: 2px;
       text-decoration-color: color-mix(currentColor, transparent 50%);
@@ -184,14 +230,16 @@ html {
     }
 
     &:where(:hover, :focus) {
-      background-color: oklch(from var(--color-blue) 60% c h / 10%);
+      background-color: oklch(from var(--color-yellow) 90% 60% h / 20%);
       text-decoration-line: underline;
+      text-decoration-color: currentColor;
+      text-decoration-skip-ink: none;
     }
   }
 }
 
 @layer utils {
-  .flow>*+* {
+  .flow > * + * {
     margin-block-start: var(--flow, 1lh);
   }
 
@@ -229,7 +277,7 @@ html {
   .count,
   .format {
     font-size: 0.8rem;
-    color: oklch(from var(--color-text) l c h / 60%);
+    color: oklch(from var(--color-text) l c h / var(--count-color-alpha, 50%));
   }
 
   .format {
@@ -242,4 +290,29 @@ html {
   .boc {
     border: 1px solid oklch(from var(--color-text) l c h / 10%);
   }
+}
+
+@layer scratch {
+  footer {
+    container-name: small medium large;
+    container-type: inline-size;
+  }
+  legend {
+    text-align: center;
+  }
+  toggle-theme {
+    margin-inline-start: auto;
+  }
+  @container small (inline-size >= 360px) {
+    toggle-theme fieldset {
+      display: flex;
+      gap: 0.5rem;
+    }
+    footer :where(.meta) {
+      display: flex;
+      flex-wrap: nowrap;
+      place-items: center;
+    }
+  }
+  @container medium (inline-size <= 690px) {}
 }

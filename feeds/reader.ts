@@ -44,7 +44,7 @@ export async function app(
     html(data: TemplateData) {
       return `
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="auto">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="icon" href="/rss-icon.svg" type="image/svg+xml">
@@ -130,14 +130,15 @@ ${data.body}
           }`,
         );
         const footer = `<footer>
+          <div class="meta">
           <a href="/">${denoConfig.name}</a>
           <span class="version">v${denoConfig.version}</span>
           <a href="https://jsr.io/${denoConfig.name}">JSR Package</a>
           <a href="https://github.com/carlrafting/stewpot">Github Repository</a>
           <toggle-theme>
             <template>
-              <fieldset class="flow">
-                <legend>Toggle Theme</legend>
+              <fieldset>
+                <legend>Theme</legend>
                 <button type="button" name="toggle-theme" value="auto">
                   Auto
                 </button>
@@ -150,6 +151,7 @@ ${data.body}
               </fieldset>
             </template>
           </toggle-theme>
+          </div>
         </footer>`
           .trim();
         const body = [

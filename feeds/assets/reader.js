@@ -46,11 +46,23 @@ class ToggleTheme extends HTMLElement {
     try {
       const value = localStorage.getItem("theme") ?? null;
       if (!value) return this;
-      root.setAttribute("theme", value ? value : "");
+      root.setAttribute("data-theme", value ? value : "");
+      this.updateButtons(value);
     } catch (error) {
       console.error(error);
     }
     return this;
+  }
+
+  updateButtons(value) {
+    [...this.buttons].map((button) => {
+      console.log(button);
+      if (button?.value === value) {
+        button.hidden = true;
+        return;
+      }
+      button.hidden = false;
+    });
   }
 
   connectedCallback() {
@@ -78,16 +90,15 @@ class ToggleTheme extends HTMLElement {
       theme = "dark";
     }
     if (value === "auto") {
-      localStorage.removeItem("theme");
-      this.root.removeAttribute("theme");
-      return;
+      theme = "auto";
     }
     if (!theme) return;
     if (theme === store) return;
-    this.root.setAttribute("theme", value);
+    this.root.setAttribute("data-theme", value);
     localStorage.setItem("theme", theme);
+    this.updateButtons(value);
   }
 }
 
-// customElements.define("toggle-theme", ToggleTheme);
+customElements.define("toggle-theme", ToggleTheme);
 customElements.define("toggle-details", ToggleDetails);
