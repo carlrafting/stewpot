@@ -40,11 +40,12 @@ class ToggleTheme extends HTMLElement {
   template = this.querySelector("template");
   buttons = this.template?.content?.querySelectorAll("button");
   root = document.documentElement;
+  default = "auto";
 
   init() {
     const root = this.root;
     try {
-      const value = localStorage.getItem("theme") ?? null;
+      const value = localStorage.getItem("theme") ?? this.default;
       if (!value) return this;
       root.setAttribute("data-theme", value ? value : "");
       this.updateButtons(value);

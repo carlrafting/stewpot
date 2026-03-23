@@ -10,6 +10,25 @@ interface TemplateData {
   body: string;
 }
 
+// console.log("reader protocol", new URL(import.meta.url).protocol);
+
+const htmlContentType = {
+  "content-type": "text/html; charset=utf-8",
+};
+const svgContentType = {
+  "content-type": "image/svg+xml; charset=utf-8",
+};
+const fetchFile = async (filePath: string, options?: RequestInit) => {
+  const response = await fetch(
+    new URL(filePath, import.meta.url),
+    {
+      cache: "no-cache",
+      ...options,
+    },
+  );
+  return await response.text();
+};
+
 export async function app(
   _input: Input,
   _options: Options,
@@ -20,20 +39,9 @@ export async function app(
   feeds: FeedData[],
   store: FsStorage | KvStorage,
 ): Promise<Deno.ServeDefaultExport> {
-  const fetchStyles = await fetch(
-    new URL("./assets/styles.css", import.meta.url),
-    {
-      cache: "no-cache",
-    },
-  );
-  const fetchScripts = await fetch(
-    new URL("./assets/reader.js", import.meta.url),
-    {
-      cache: "no-cache",
-    },
-  );
-  const css = await fetchStyles.text();
-  const js = await fetchScripts.text();
+  const css = await fetchFile("./assets/styles.css");
+  const js = await fetchFile("./assets/reader.js");
+  const icon = await fetchFile("./assets/rss-icon.svg");
   const template = {
     header(content: string): string {
       return ["<header>", content, "</header>"].join("\n");
@@ -68,19 +76,14 @@ ${data.body}
   const subscribeButton =
     `<button type="button" name="subscribe" class="primary">Subscribe</button>`;
   return {
-    async fetch(request: Request): Promise<Response> {
+    fetch(request: Request): Response {
       const url = new URL(request.url);
 
       if (url.pathname === "/rss-icon.svg") {
         try {
-          const iconURL = new URL("./assets/rss-icon.svg", import.meta.url);
-          const iconResponse = await fetch(iconURL);
-          if (!iconResponse.ok) {
-            throw new Error(`couldn't fetch icon at ${iconURL}`);
-          }
-          return new Response(await iconResponse.text(), {
+          return new Response(icon, {
             headers: {
-              "content-type": "image/svg+xml; charset=utf-8",
+              ...svgContentType,
             },
           });
         } catch (error) {
@@ -106,8 +109,8 @@ ${data.body}
               const format =
                 `<span class="br pi format">${feed?.format}</span>`;
               const count = `<span class="count">${items.length} items</span>`;
-              const lastModified = feed.lastModified
-                ? `<span>${feed?.lastModified}</span>`
+              const lastModified = feed.fetch_timestamp
+                ? `<span>${feed?.fetch_timestamp}</span>`
                 : "";
               return [
                 '<details class="br flow">',
@@ -138,7 +141,7 @@ ${data.body}
           <toggle-theme>
             <template>
               <fieldset>
-                <legend>Theme</legend>
+                <legend><span>Theme</span></legend>
                 <button type="button" name="toggle-theme" value="auto">
                   Auto
                 </button>
@@ -166,7 +169,7 @@ ${data.body}
           html,
           {
             headers: {
-              "content-type": "text/html; charset=utf-8",
+              ...htmlContentType,
             },
           },
         );

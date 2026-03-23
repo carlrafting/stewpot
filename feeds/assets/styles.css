@@ -19,6 +19,8 @@
     --color-green: oklch(from limegreen l c h);
     --color-yellow: oklch(from yellow l c h);
     --color-orange: oklch(from orange l c h);
+    --color-red: oklch(from red l c h);
+    --color-purple: oklch(from purple l c h);
     /* semantic colors */
     --color-overlay: color-mix(var(--color-bg) 90%, var(--color-text));
     --color-primary: var(--color-blue);
@@ -40,7 +42,7 @@
       --color-text: var(--color-white);
       --color-bg: var(--color-gray);
       --color-links-lightness: 80%;
-      --count-color-alpha: 60%;
+      --color-count-alpha: 60%;
     }
 
     @media (prefers-color-scheme: light) {
@@ -48,7 +50,7 @@
       --color-bg: var(--color-white);
       --color-text: var(--color-gray);
       --color-links-lightness: 50%;
-      --count-color-alpha: 80%;
+      --color-count-alpha: 80%;
     }
 
     &:where([data-theme="light"]) {
@@ -56,7 +58,7 @@
       --color-bg: var(--color-white);
       --color-text: var(--color-gray);
       --color-links-lightness: 50%;
-      --count-color-alpha: 80%;
+      --color-count-alpha: 80%;
     }
 
     &:where([data-theme="dark"]) {
@@ -64,7 +66,7 @@
       --color-text: var(--color-white);
       --color-bg: var(--color-gray);
       --color-links-lightness: 80%;
-      --count-color-alpha: 60%;
+      --color-count-alpha: 60%;
     }
 
     &:where([data-theme="auto"]) {
@@ -277,7 +279,7 @@ html {
   .count,
   .format {
     font-size: 0.8rem;
-    color: oklch(from var(--color-text) l c h / var(--count-color-alpha, 50%));
+    color: oklch(from var(--color-text) l c h / var(--color-count-alpha, 50%));
   }
 
   .format {
@@ -294,25 +296,52 @@ html {
 
 @layer scratch {
   footer {
-    container-name: small medium large;
+    container-name: footer;
     container-type: inline-size;
   }
-  legend {
-    text-align: center;
+  .meta {
+    display: flex;
+    flex-wrap: wrap;
+    place-items: center;
+    justify-content: center;
+    flex-direction: column;
+    column-gap: 0.5rem;
+
+    & > * {
+      flex-shrink: 1;
+    }
+
+    & > *:last-child {
+      margin-inline: auto;
+    }
+
+    @container footer (inline-size >= 800px) {
+      & {
+        flex-direction: row;
+      }
+      & > *:last-child {
+        margin-inline-end: 0;
+      }
+    }
+  }
+  /* !NOTE: make legend behave */
+  legend:has(span) {
+    display: contents;
   }
   toggle-theme {
-    margin-inline-start: auto;
-  }
-  @container small (inline-size >= 360px) {
-    toggle-theme fieldset {
+    & fieldset {
       display: flex;
       gap: 0.5rem;
-    }
-    footer :where(.meta) {
-      display: flex;
-      flex-wrap: nowrap;
-      place-items: center;
+      align-items: center;
+      flex-direction: column;
+      @container footer (inline-size >= 800px) {
+        & {
+          flex-direction: row;
+        }
+      }
     }
   }
-  @container medium (inline-size <= 690px) {}
+  /* @container footer (inline-size >= 480px) {} */
+  /* @container footer (inline-size >= 820px) {} */
+  /* @container footer (inline-size >= 960px) {} */
 }
