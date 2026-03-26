@@ -18,7 +18,7 @@ class ToggleDetails extends HTMLElement {
       if (!value) return;
 
       if (value === "collapse") {
-        [...details].map((el) => {
+        [...details].forEach((el) => {
           if (el.open) {
             el.removeAttribute("open");
           }
@@ -26,7 +26,7 @@ class ToggleDetails extends HTMLElement {
       }
 
       if (value === "expand") {
-        [...details].map((el) => {
+        [...details].forEach((el) => {
           if (!el.open) {
             el.setAttribute("open", "");
           }
@@ -56,7 +56,7 @@ class ToggleTheme extends HTMLElement {
   }
 
   updateButtons(value) {
-    [...this.buttons].map((button) => {
+    [...this.buttons].forEach((button) => {
       console.log(button);
       if (button?.value === value) {
         button.hidden = true;
