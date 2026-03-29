@@ -81,7 +81,7 @@ export interface HtmlAttributes {
 export function html(
   element: string,
   attributes: HtmlAttributes,
-  content: string | null,
+  children?: string[],
   newLine: boolean = true,
   selfClose: boolean = false,
   escape: boolean = false,
@@ -89,14 +89,23 @@ export function html(
   const attrs = Object.entries(attributes).map(([key, value]) =>
     `${key}="${value}"`
   );
-  if (selfClose) {
+  if (selfClose && !children) {
     return [
       `<${element} ${attrs}>`,
     ].join(newLine ? "\n" : "");
   }
-  return [
+  const elementHtmlArray = [
     `<${element} ${attrs}>`,
-    escape && content ? e(content) : content,
+    undefined,
     `</${element}>`,
-  ].join(newLine ? "\n" : "");
+  ];
+  if (children) {
+    const childrenHtmlString: string = children?.join(newLine ? "\n" : "");
+    elementHtmlArray[1] = escape && children
+      ? e(childrenHtmlString)
+      : childrenHtmlString;
+    return elementHtmlArray.join(newLine ? "\n" : "");
+  }
+  elementHtmlArray.splice(1);
+  return elementHtmlArray.join(newLine ? "\n" : "");
 }

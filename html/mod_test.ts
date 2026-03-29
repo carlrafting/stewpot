@@ -6,7 +6,7 @@ Deno.test("html should create header element correctly", (t) => {
   const header = html(
     "header",
     { "class": "foo" },
-    "This is my content",
+    ["This is my content"],
   );
   assertEquals(
     header,
@@ -21,7 +21,7 @@ Deno.test("html should create link element correctly", (t) => {
   const link = html(
     "link",
     { "href": "/foo/bar" },
-    null,
+    undefined,
     true,
     true,
   );
