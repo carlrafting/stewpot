@@ -1,6 +1,7 @@
+import { assertThrows } from "@std/assert";
 import { assertEquals } from "@std/assert/equals";
 import { assertSnapshot } from "@std/testing/snapshot";
-import { html } from "./mod.ts";
+import { html, template } from "./mod.ts";
 
 Deno.test("html should create header element correctly", (t) => {
   const header = html(
@@ -51,3 +52,38 @@ Deno.test("html should create link element correctly", (t) => {
 //   });
 //   assertSnapshot(t, result);
 // });
+
+Deno.test("template should work with template literal strings", () => {
+  const [data, t] = template({ lang: "en" });
+  const result = t`<html lang="${data.lang}">`;
+  assertEquals(result, `<html lang="en">`);
+});
+
+Deno.test("template should map multiple records of data to result string", () => {
+  const [data, t] = template({ lang: "en", charset: "utf-8" });
+  const result =
+    t`<html lang="${data.lang}">\n<meta charset="${data.charset}">`;
+  assertEquals(result, `<html lang="en">\n<meta charset="utf-8">`);
+});
+
+Deno.test("template should return string argument if no data were provided", () => {
+  const [_, t] = template({});
+  const result = t`Just a regular string`;
+  assertEquals(result, "Just a regular string");
+});
+
+Deno.test("empty string value", () => {
+  const [data, t] = template({ alt: "" });
+  const result = t`<img src="/img.jpg" alt="${data.alt}">`;
+  assertEquals(result, `<img src="/img.jpg" alt="">`);
+});
+
+Deno.test("unknown symbol throws", () => {
+  const [_, t] = template({ lang: "en" });
+  const rogue = Symbol("rogue");
+  assertThrows(
+    () => t`<html lang="${rogue}">`,
+    Error,
+    `Unknown symbol at position 0`,
+  );
+});

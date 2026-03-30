@@ -1,64 +1,66 @@
 import { escape as e } from "@std/html";
 
-/*
-
-this might be a very stupid idea...
-
-interface HtmlElement {
-  attributes?: HtmlAttributes;
-  children?: string[];
-}
-
-interface HtmlDocument {
-  doctype: "html";
-  lang?: string;
-  meta: {
-    charset: "utf-8";
-    viewport: "width=device-width, initial-scale=1.0";
-  };
-  title: string;
-  html?: HtmlElement;
-  body?: HtmlElement;
-}
-*/
+type Data = Record<string, unknown>;
+type TaggedTemplateFunction = (
+  html: TemplateStringsArray,
+  ...keys: symbol[]
+) => string;
+type TemplateResult<T extends Data> = [
+  {
+    [K in keyof T]: symbol;
+  },
+  TaggedTemplateFunction,
+];
 
 /**
- * @param document the html document to create
- * @returns array of html strings
+ * Create template strings with provided data
+ *
+ * @param input data to provide to template
+ * @returns data and a tagged template function
+ *
+ * @example
+ *
+ * ```ts
+ *
+ *  const [data, t] = template({ src: "/img.jpg", alt: "alt text for images are important!" });
+ *  const img = t`<img src="${data.src}" alt="${data.alt}">`;
+ *
+ * ```
  */
-// export function buildHtmlDocument(document: HtmlDocument) {
-//   const output = [];
-//   const keys = Object.keys(document);
-//   const values = Object.values(document);
-//   const entries = Object.entries(document);
-//   // console.log({ entries });
-//   for (const [key, value] of entries) {
-//     if (document.doctype === value) {
-//       output.push(`<!${key} ${value}>`);
-//       continue;
-//     }
-//     if (document.meta === value) {
-//       for (const [name, val] of Object.entries(document.meta)) {
-//         output.push(`<${key} ${name}="${val}">`);
-//       }
-//     }
-//     let lang: string | null = null;
-//     if (document.lang === value) {
-//       lang = value;
-//       continue;
-//     }
-//     if (document.html === value) {
-//       output.push(`<${key} ${lang ? `lang=${lang}` : ""}>`);
-//     }
-//     if (document.body?.children && document.body?.children?.length > 0) {
-//       output.push("<body>");
-//       for (const element of document.body.children) {
-//         output.push(element);
-//       }
-//     }
-//   }
-//   return output;
-// }
+export function template<T extends Data>(
+  input: T,
+): TemplateResult<T> {
+  const symbolMap = new Map<symbol, keyof T>();
+
+  const data = Object.fromEntries(
+    Object.keys(input).map((key) => {
+      const sym = Symbol(key);
+      symbolMap.set(sym, key);
+      return [key, sym];
+    }),
+  ) as { [K in keyof T]: symbol };
+
+  const t = (html: TemplateStringsArray, ...keys: symbol[]): string => {
+    return html.reduce((output, part, i): string => {
+      const sym = keys[i - 1];
+      const key = symbolMap.get(sym);
+      if (key === undefined) {
+        throw new Error(`Unknown symbol at position ${i - 1}`);
+      }
+      const value = input[key];
+      if (value === undefined) {
+        throw new Error(
+          `Missing key "${String(key)}" in data. Received keys: [${
+            Object.keys(input).join(", ")
+          }]`,
+        );
+      }
+      return output + value + part;
+    });
+  };
+
+  return [data, t];
+}
 
 /**
  * Interface for HTML Attributes
