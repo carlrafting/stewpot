@@ -1,11 +1,16 @@
 import { escape as e } from "@std/html";
 
-type Data = Record<string, unknown>;
-type TaggedTemplateFunction = (
+/** data to be mapped for template */
+export type Data = Record<string, unknown>;
+
+/** the function type returned by {@linkcode template} */
+export type TaggedTemplateFunction = (
   html: TemplateStringsArray,
   ...keys: symbol[]
 ) => string;
-type TemplateResult<T extends Data> = [
+
+/** result type returned by {@linkcode template} */
+export type TemplateResult<T extends Data> = [
   {
     [K in keyof T]: symbol;
   },
