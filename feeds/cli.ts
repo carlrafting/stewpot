@@ -214,9 +214,9 @@ const list: Command = {
   name: "list",
   description: "list subscribed feed sources",
   async run(
-    input: Input,
+    _input: Input,
     options: Options,
-    deps: Deps,
+    _deps: Deps,
     feeds: FeedData[],
     store: FsStorage | KvStorage,
   ): Promise<number> {
@@ -467,8 +467,8 @@ const fetch: Command = {
   description: "fetch updated feed sources and items",
   async run(
     _input: Input,
-    options: Options,
-    deps: Deps,
+    _options: Options,
+    _deps: Deps,
     feeds: FeedData[],
     store: FsStorage | KvStorage,
   ): Promise<number> {
@@ -531,24 +531,18 @@ const reader: Command = {
   name: "reader",
   description: "start http server for reading feeds",
   async run(
-    input: Input,
+    _input: Input,
     options: Options,
-    deps: Deps,
+    _deps: Deps,
     config: Configuration,
-    paths: Paths,
-    args: ParsedArguments,
+    _paths: Paths,
+    _args: ParsedArguments,
     feeds: FeedData[],
     store: FsStorage | KvStorage,
   ): Promise<void> {
     const controller = new AbortController();
     const signal = controller.signal;
     const handler = await app(
-      input,
-      options,
-      deps,
-      config,
-      paths,
-      args,
       feeds,
       store,
     );

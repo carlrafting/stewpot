@@ -11,8 +11,11 @@
 
 @layer colors {
   :root {
+    /* color config */
+
     /* color palette */
-    --color-white: oklch(90% 0 0);
+    --color-white: oklch(100% 0 0);
+    --color-lightgray: oklch(90% 0 0);
     --color-gray: oklch(25% 0 0);
     --color-black: oklch(0 0 0);
     --color-blue: oklch(from dodgerblue calc(l - 0.2) calc(c + 0.1) h);
@@ -26,11 +29,9 @@
     --color-primary: var(--color-blue);
     --color-links: oklch(from var(--color-primary) 80% 0.280 h);
     --color-links: oklch(
-      from
-      var(--color-primary)
+      from var(--color-primary)
       var(--color-links-lightness)
-      0.280
-      h
+      0.280 h
     );
   }
 }
@@ -39,7 +40,7 @@
   :root {
     @media (prefers-color-scheme: dark) {
       color-scheme: dark;
-      --color-text: var(--color-white);
+      --color-text: var(--color-lightgray);
       --color-bg: var(--color-gray);
       --color-links-lightness: 80%;
       --color-count-alpha: 60%;
@@ -47,7 +48,7 @@
 
     @media (prefers-color-scheme: light) {
       color-scheme: light;
-      --color-bg: var(--color-white);
+      --color-bg: var(--color-lightgray);
       --color-text: var(--color-gray);
       --color-links-lightness: 50%;
       --color-count-alpha: 80%;
@@ -55,7 +56,7 @@
 
     &:where([data-theme="light"]) {
       color-scheme: light;
-      --color-bg: var(--color-white);
+      --color-bg: var(--color-lightgray);
       --color-text: var(--color-gray);
       --color-links-lightness: 50%;
       --color-count-alpha: 80%;
@@ -63,7 +64,7 @@
 
     &:where([data-theme="dark"]) {
       color-scheme: dark;
-      --color-text: var(--color-white);
+      --color-text: var(--color-lightgray);
       --color-bg: var(--color-gray);
       --color-links-lightness: 80%;
       --color-count-alpha: 60%;
@@ -162,13 +163,8 @@ html {
   details {
     --box-shadow-alpha: 25%;
     --box-shadow-color: oklch(
-      from
-      var(--color-black)
-      l
-      c
-      h
-      /
-      var(--box-shadow-alpha)
+      from var(--color-black)
+      l c h / var(--box-shadow-alpha)
     );
 
     box-shadow: 0 2px 4px var(--box-shadow-color);
@@ -179,13 +175,8 @@ html {
 
     &[open] {
       --color-details: oklch(
-        from
-        light-dark(oklch(100% 0 0), oklch(38% 0 0))
-        l
-        c
-        h
-        /
-        90%
+        from light-dark(oklch(100% 0 0), oklch(38% 0 0))
+        l c h / 90%
       );
       background-color: var(--color-details);
       padding-inline: calc(var(--root) * 1.5);

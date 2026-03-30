@@ -1,16 +1,11 @@
-import { html } from "@stewpot/html";
-import type { Deps, Input, Options, ParsedArguments, Paths } from "./cli.ts";
 import type { FeedData, FeedItem } from "./main.ts";
 import type { FsStorage, KvStorage } from "./storage.ts";
 import denoConfig from "./deno.json" with { type: "json" };
-import type { Configuration } from "./config.ts";
 
 interface TemplateData {
   title: string;
   body: string;
 }
-
-// console.log("reader protocol", new URL(import.meta.url).protocol);
 
 const htmlContentType = {
   "content-type": "text/html; charset=utf-8",
@@ -30,12 +25,6 @@ const fetchFile = async (filePath: string, options?: RequestInit) => {
 };
 
 export async function app(
-  _input: Input,
-  _options: Options,
-  _deps: Deps,
-  _config: Configuration,
-  _paths: Paths,
-  args: ParsedArguments,
   feeds: FeedData[],
   store: FsStorage | KvStorage,
 ): Promise<Deno.ServeDefaultExport> {
@@ -76,7 +65,7 @@ ${data.body}
   const subscribeButton =
     `<button type="button" name="subscribe" class="primary">Subscribe</button>`;
   return {
-    fetch(request: Request): Response {
+    async fetch(request: Request): Promise<Response> {
       const url = new URL(request.url);
 
       if (url.pathname === "/rss-icon.svg") {
@@ -94,9 +83,11 @@ ${data.body}
       if (url.pathname === "/") {
         const title = `${denoConfig.name} - v${denoConfig.version}`;
 
+        const header = template.header(
+          `<h1 class="tac has-divider">Feed Sources</h1>\n`,
+        );
         const main = template.main(
-          `<h1 class="tac has-divider">Feed Sources</h1>\n
-          <toggle-details>
+          `<toggle-details>
             <template>
               <button type="button" name="toggle-state" value="expand">Expand All</button>
               <button type="button" name="toggle-state" value="collapse">Collapse All</button>
@@ -158,6 +149,7 @@ ${data.body}
         </footer>`
           .trim();
         const body = [
+          header,
           main,
           footer,
         ].join("\n");
