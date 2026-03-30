@@ -8,7 +8,7 @@
     "./cli": "./cli.ts"
   },
   "imports": {
-    "@stewpot/html": "jsr:@stewpot/html@^0.1.0",
+    "@stewpot/html": "jsr:@stewpot/html@^0.2.0",
     "@std/assert": "jsr:@std/assert@^1.0.19",
     "@std/cli": "jsr:@std/cli@^1.0.28",
     "@std/fmt": "jsr:@std/fmt@^1.0.9",
@@ -16,7 +16,7 @@
     "@std/path": "jsr:@std/path@^1.1.4",
     "@std/testing": "jsr:@std/testing@^1.0.17",
     "@std/ulid": "jsr:@std/ulid@^1.0.0",
-    "feedsmith": "npm:feedsmith@^2.9.0"
+    "feedsmith": "npm:feedsmith@^2.9.1"
   },
   "publish": {
     "exclude": [
