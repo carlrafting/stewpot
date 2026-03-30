@@ -44,7 +44,8 @@
       "env": true,
       "read": true,
       "write": true,
-      "net": true
+      "net": true,
+      "run": true
     }
   }
 }
