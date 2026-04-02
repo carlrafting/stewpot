@@ -87,3 +87,21 @@ Deno.test("unknown symbol throws", () => {
     `Unknown symbol at position 0`,
   );
 });
+
+Deno.test("escape by default", async (c) => {
+  const [d, t] = template({ content: `<nav></nav>` });
+  const result = t`<header>
+    ${d.content}
+  </header>`;
+  assertEquals(result, `<header>\n    &lt;nav&gt;&lt;/nav&gt;\n  </header>`);
+  await assertSnapshot(c, result);
+});
+
+Deno.test("escape disabled", async (c) => {
+  const [d, t] = template({ content: `<nav></nav>` }, { escape: false });
+  const result = t`<header>
+    ${d.content}
+  </header>`;
+  assertEquals(result, `<header>\n    <nav></nav>\n  </header>`);
+  await assertSnapshot(c, result);
+});

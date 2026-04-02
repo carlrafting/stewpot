@@ -17,6 +17,10 @@ export type TemplateResult<T extends Data> = [
   TaggedTemplateFunction,
 ];
 
+interface Options {
+  escape: boolean;
+}
+
 /**
  * Create template strings with provided data
  *
@@ -34,6 +38,7 @@ export type TemplateResult<T extends Data> = [
  */
 export function template<T extends Data>(
   input: T,
+  options: Options = { escape: true },
 ): TemplateResult<T> {
   const symbolMap = new Map<symbol, keyof T>();
 
@@ -60,7 +65,7 @@ export function template<T extends Data>(
           }]`,
         );
       }
-      return output + value + part;
+      return output + (options?.escape ? e(`${value}`) : value) + part;
     });
   };
 

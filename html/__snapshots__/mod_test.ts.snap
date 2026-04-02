@@ -8,11 +8,14 @@ This is my content
 
 snapshot[`html should create link element correctly 1`] = `'<link href="/foo/bar">'`;
 
-snapshot[`buildHtmlDocument should create expected output 1`] = `
-[
-  "<!doctype html>",
-  "<html >",
-  '<meta charset="utf-8">',
-  '<meta viewport="width=device-width, initial-scale=1.0">',
-]
+snapshot[`escape by default 1`] = `
+"<header>
+    &lt;nav&gt;&lt;/nav&gt;
+  </header>"
+`;
+
+snapshot[`escape disabled 1`] = `
+"<header>
+    <nav></nav>
+  </header>"
 `;
