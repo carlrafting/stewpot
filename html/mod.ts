@@ -74,9 +74,13 @@ export interface HtmlAttributes {
   [key: string]: string | boolean;
 }
 
+/** options for {@linkcode html} */
 export interface Options {
+  /** add newlines */
   newLine: boolean;
+  /** self closing element */
   selfClose: boolean;
+  /** escape children */
   escape: boolean;
 }
 
@@ -86,9 +90,18 @@ export interface Options {
  * @param element string value
  * @param attributes object of HtmlAttributes for element
  * @param children for element
- * @param newLine if html string should contain new lines
- * @param selfClose boolean value representing if element should be self-closing
+ * @param options.newLine if html string should contain new lines
+ * @param options.selfClose boolean value representing if element should be self-closing
+ * @param options.escape html escape children
  * @returns string with html contents
+ * 
+ * @example
+ * 
+ * ```
+ *  import { html } from "@stewpot/html";
+ * 
+ *  const header = html("header", { class: "banner" }) // => <header class="banner"></header>
+ * ```
  */
 export function html(
   element: string,
