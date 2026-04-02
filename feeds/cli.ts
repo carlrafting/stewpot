@@ -196,7 +196,7 @@ const init: Command = {
       } catch {
         await writeConfigToPath(paths.config);
         console.log(
-          colors.cyan("info"),
+          colors.green("ok"),
           `wrote config file to ${paths.config}`,
         );
       }
