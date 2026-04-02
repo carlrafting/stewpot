@@ -17,8 +17,8 @@ export type TemplateResult<T extends Data> = [
   TaggedTemplateFunction,
 ];
 
-interface Options {
-  escape: boolean;
+interface TemplateOptions {
+  escape?: boolean;
 }
 
 /**
@@ -38,7 +38,7 @@ interface Options {
  */
 export function template<T extends Data>(
   input: T,
-  options: Options = { escape: true },
+  options: TemplateOptions = { escape: true },
 ): TemplateResult<T> {
   const symbolMap = new Map<symbol, keyof T>();
 
@@ -60,7 +60,8 @@ export function template<T extends Data>(
       const value = input[key];
       if (value === undefined) {
         throw new Error(
-          `Missing key "${String(key)}" in data. Received keys: [${Object.keys(input).join(", ")
+          `Missing key "${String(key)}" in data. Received keys: [${
+            Object.keys(input).join(", ")
           }]`,
         );
       }
@@ -80,7 +81,7 @@ export interface HtmlAttributes {
 }
 
 /** options for {@linkcode html} */
-export interface Options {
+interface HtmlOptions {
   /** add newlines */
   newLine?: boolean;
   /** self closing element */
@@ -99,12 +100,12 @@ export interface Options {
  * @param options.selfClose boolean value representing if element should be self-closing
  * @param options.escape html escape children
  * @returns string with html contents
- * 
+ *
  * @example
- * 
+ *
  * ```
  *  import { html } from "@stewpot/html";
- * 
+ *
  *  const header = html("header", { class: "banner" }) // => <header class="banner"></header>
  * ```
  */
@@ -112,11 +113,11 @@ export function html(
   element: string,
   attributes: HtmlAttributes,
   children?: string[],
-  options: Options = {
+  options: HtmlOptions = {
     newLine: true,
     selfClose: false,
     escape: false,
-  }
+  },
 ): string {
   const attrs = Object.entries(attributes).map(([key, value]) =>
     `${key}="${value}"`
