@@ -32,8 +32,7 @@ Deno.test("should load config file it exists", async (t) => {
     await assertSnapshot(t, results);
   });
   await t.step("notexists", async (t) => {
-    const tempDir = await Deno.makeTempDir();
-    const path = join(tempDir, CONFIG_FILENAME);
+    const path = undefined;
     const results = await loadConfig(path);
     await assertSnapshot(t, results);
   });

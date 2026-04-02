@@ -60,8 +60,7 @@ export function template<T extends Data>(
       const value = input[key];
       if (value === undefined) {
         throw new Error(
-          `Missing key "${String(key)}" in data. Received keys: [${
-            Object.keys(input).join(", ")
+          `Missing key "${String(key)}" in data. Received keys: [${Object.keys(input).join(", ")
           }]`,
         );
       }
@@ -80,31 +79,53 @@ export interface HtmlAttributes {
   [key: string]: string | boolean;
 }
 
+/** options for {@linkcode html} */
+export interface Options {
+  /** add newlines */
+  newLine?: boolean;
+  /** self closing element */
+  selfClose?: boolean;
+  /** escape children */
+  escape?: boolean;
+}
+
 /**
  * function that creates a html string
  *
  * @param element string value
  * @param attributes object of HtmlAttributes for element
- * @param content for element
- * @param newLine if html string should contain new lines
- * @param selfClose boolean value representing if element should be self-closing
+ * @param children for element
+ * @param options.newLine if html string should contain new lines
+ * @param options.selfClose boolean value representing if element should be self-closing
+ * @param options.escape html escape children
  * @returns string with html contents
+ * 
+ * @example
+ * 
+ * ```
+ *  import { html } from "@stewpot/html";
+ * 
+ *  const header = html("header", { class: "banner" }) // => <header class="banner"></header>
+ * ```
  */
 export function html(
   element: string,
   attributes: HtmlAttributes,
   children?: string[],
-  newLine: boolean = true,
-  selfClose: boolean = false,
-  escape: boolean = false,
+  options: Options = {
+    newLine: true,
+    selfClose: false,
+    escape: false,
+  }
 ): string {
   const attrs = Object.entries(attributes).map(([key, value]) =>
     `${key}="${value}"`
   );
-  if (selfClose && !children) {
+  const joinWithNewline = options.newLine ? "\n" : "";
+  if (options.selfClose && !children) {
     return [
       `<${element} ${attrs}>`,
-    ].join(newLine ? "\n" : "");
+    ].join(joinWithNewline);
   }
   const elementHtmlArray = [
     `<${element} ${attrs}>`,
@@ -112,12 +133,12 @@ export function html(
     `</${element}>`,
   ];
   if (children) {
-    const childrenHtmlString: string = children?.join(newLine ? "\n" : "");
-    elementHtmlArray[1] = escape && children
+    const childrenHtmlString: string = children?.join(joinWithNewline);
+    elementHtmlArray[1] = options.escape && children
       ? e(childrenHtmlString)
       : childrenHtmlString;
-    return elementHtmlArray.join(newLine ? "\n" : "");
+    return elementHtmlArray.join(joinWithNewline);
   }
   elementHtmlArray.splice(1);
-  return elementHtmlArray.join(newLine ? "\n" : "");
+  return elementHtmlArray.join(joinWithNewline);
 }

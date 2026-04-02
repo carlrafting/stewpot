@@ -32,12 +32,10 @@ const PARENT_DIRNAME = ".stewpot";
 const ROOT_DIRNAME = "feeds";
 /** where configuration is stored */
 const CONFIG_FILENAME = "config.js";
-/** previous filename for storing sources */
+/** previous filename for storing sources @deprecated */
 const PREV_SOURCES_FILENAME = "feeds.json";
 /** where feed sources metadata are stored */
 const SOURCES_FILENAME = "sources.json";
-/** where feed items are stored @deprecated */
-const ITEMS_FILENAME = "items.json";
 /** where feed items are stored */
 const ITEMS_DIRNAME = "items";
 /** where KV data is stored */
@@ -47,7 +45,6 @@ export {
   CONFIG_FILENAME,
   ENV_CLI_DIR,
   ITEMS_DIRNAME,
-  ITEMS_FILENAME,
   KV_FILENAME,
   PARENT_DIRNAME,
   PREV_SOURCES_FILENAME,
@@ -199,7 +196,7 @@ const init: Command = {
       } catch {
         await writeConfigToPath(paths.config);
         console.log(
-          colors.cyan("info"),
+          colors.green("ok"),
           `wrote config file to ${paths.config}`,
         );
       }
@@ -652,8 +649,6 @@ const handleArgs = (
     options,
   };
 };
-
-function bootstrap() {}
 
 async function main(
   args: string[],

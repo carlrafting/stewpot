@@ -1,3 +1,4 @@
+import { toFileUrl } from "@std/path/to-file-url";
 import type { Paths } from "./cli.ts";
 import * as colors from "@std/fmt/colors";
 
@@ -42,21 +43,18 @@ export const defineConfig = (config: Configuration): Configuration => config;
 export async function loadConfig(
   path: Paths["config"],
 ): Promise<Configuration> {
-  try {
-    const config = path;
-    if (config) {
-      console.log(colors.cyan("info"), `loading config at ${config}`);
-      const configModule = await import(config);
-      return configModule.default;
-    }
-  } catch {
-    // if (error instanceof Deno.errors.NotFound) {}
-    console.error(colors.yellow("warning"), `no config found at ${path}`);
+  const config = path;
+
+  if (!config) {
+    console.log(colors.cyan("info"), "using default configuration");
+    const configUrl = new URL("./assets/config.default.ts", import.meta.url);
+    const defaultConfig = await import(configUrl.href);
+    return defaultConfig.default;
   }
-  console.log(colors.cyan("info"), "using default configuration");
-  const configUrl = new URL("./assets/config.default.ts", import.meta.url);
-  const defaultConfig = await import(configUrl.href);
-  return defaultConfig.default;
+
+  console.log(colors.cyan("info"), `loading config at ${config}`);
+  const configModule = await import(toFileUrl(config).href);
+  return configModule.default;
 }
 
 /**
