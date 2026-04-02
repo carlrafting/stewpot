@@ -32,7 +32,7 @@ const PARENT_DIRNAME = ".stewpot";
 const ROOT_DIRNAME = "feeds";
 /** where configuration is stored */
 const CONFIG_FILENAME = "config.js";
-/** previous filename for storing sources */
+/** previous filename for storing sources @deprecated */
 const PREV_SOURCES_FILENAME = "feeds.json";
 /** where feed sources metadata are stored */
 const SOURCES_FILENAME = "sources.json";
