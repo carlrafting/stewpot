@@ -650,8 +650,6 @@ const handleArgs = (
   };
 };
 
-function bootstrap() {}
-
 async function main(
   args: string[],
   config: Configuration,
