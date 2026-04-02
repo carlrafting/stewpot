@@ -77,11 +77,11 @@ export interface HtmlAttributes {
 /** options for {@linkcode html} */
 export interface Options {
   /** add newlines */
-  newLine: boolean;
+  newLine?: boolean;
   /** self closing element */
-  selfClose: boolean;
+  selfClose?: boolean;
   /** escape children */
-  escape: boolean;
+  escape?: boolean;
 }
 
 /**
