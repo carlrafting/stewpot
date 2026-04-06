@@ -7,7 +7,7 @@ import aiblockMiddleware from "../aiblock.ts";
 const middleware: Middleware[] = [
   logger,
   devReloadMiddleware({ watchPaths: [import.meta.resolve("./public")] }),
-  aiblockMiddleware(),
+  await aiblockMiddleware(),
   serveStatic(),
 ];
 const headers = new Headers({ "content-type": "text/html; charset=utf8" });

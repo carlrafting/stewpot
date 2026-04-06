@@ -4,15 +4,15 @@ import { STATUS_CODE, STATUS_TEXT } from "@std/http/status";
 
 interface Options {}
 
-export function aiblock(options?: Options): Middleware {
-  return async function aiblockMiddleware(
+export async function aiblock(options?: Options): Promise<Middleware> {
+  const fetchBlocklist = await fetch(
+    "https://raw.githubusercontent.com/ai-robots-txt/ai.robots.txt/refs/heads/main/haproxy-block-ai-bots.txt",
+  );
+  const blocklist: string[] = (await fetchBlocklist.text()).split("\n");
+  return function aiblockMiddleware(
     request: Request,
     next: NextHandler,
-  ): Promise<Response> {
-    const fetchBlocklist = await fetch(
-      "https://raw.githubusercontent.com/ai-robots-txt/ai.robots.txt/refs/heads/main/haproxy-block-ai-bots.txt",
-    );
-    const blocklist: string[] = (await fetchBlocklist.text()).split("\n");
+  ): Promise<Response> | Response {
     const headers = new Headers(request.headers);
     const userAgent = new UserAgent(headers.get("user-agent") ?? "");
 
