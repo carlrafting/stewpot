@@ -9,13 +9,13 @@ the `deno serve` CLI.
 - ✅ Type-safe with `Request` and `Response`
 - 🛠️ Compatible with JSR module ecosystem
 
-## 📦 Install
+## Install
 
 ```sh
 deno add jsr:@stewpot/middleware
 ```
 
-## 🚀 Quick Start
+## Quick Start
 
 ```ts
 // main.ts
@@ -44,7 +44,7 @@ export default {
 };
 ```
 
-## 🧱 Middleware Signature
+## Middleware Signature
 
 ```ts
 type NextHandler = () => Promise<Response> | Response;
@@ -62,7 +62,7 @@ Middleware can:
 - Short-circuit the chain (e.g., auth, caching)
 - Defer to the next handler
 
-## 🪄 Compose
+## Compose
 
 ```ts
 function compose(
@@ -73,13 +73,13 @@ function compose(
 
 Combines an array of middleware functions with a final request handler.
 
-## ✅ Type Exports
+## Type Exports
 
 - `Middleware` – Standard middleware function type
 - `NextHandler` – Callback passed to middleware
 - `RequestHandler` – Final request handler (`(req) => Response`)
 
-## 🔗 Related Packages
+## Related Packages
 
 - [`@stewpot/routes`](https://jsr.io/@stewpot/routes): A tiny route matcher
   middleware using `URLPattern`.
