@@ -6,7 +6,8 @@
     ".": "./main.ts",
     "./logger": "./logger.ts",
     "./static": "./static.ts",
-    "./dev": "./dev.ts"
+    "./dev": "./dev.ts",
+    "./aiblock": "./aiblock.ts"
   },
   "publish": {
     "exclude": [
@@ -16,8 +17,8 @@
     ]
   },
   "imports": {
-    "@std/assert": "jsr:@std/assert@^1.0.18",
-    "@std/http": "jsr:@std/http@^1.0.24",
+    "@std/assert": "jsr:@std/assert@^1.0.19",
+    "@std/http": "jsr:@std/http@^1.0.25",
     "@std/path": "jsr:@std/path@^1.1.4"
   }
 }
