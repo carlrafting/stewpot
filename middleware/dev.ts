@@ -2,7 +2,7 @@ import { fromFileUrl, join } from "@std/path";
 import type { Middleware, NextHandler } from "./main.ts";
 
 interface Options {
-  watchPaths: string[]
+  watchPaths: string[];
 }
 
 function injectReloadScript(html: string): string {
@@ -29,27 +29,32 @@ function injectReloadScript(html: string): string {
 const defaultOptions: Options = {
   watchPaths: [
     join(Deno.cwd(), "./templates"),
-    join(Deno.cwd(), "./public")
-  ]
-}
+    join(Deno.cwd(), "./public"),
+  ],
+};
 
 const normalizePaths = (paths: string[]): string[] => {
   const results = [];
   for (const path of paths) {
-    results.push(fromFileUrl(new URL(path, import.meta.dirname)));
+    results.push(fromFileUrl(new URL(path, import.meta.url)));
   }
   return results;
-}
+};
 
-export default function devReload(options: Options = defaultOptions): Middleware {
+export default function devReload(
+  options: Options = defaultOptions,
+): Middleware {
   const connections = new Set<WebSocket>();
 
   (async () => {
     try {
-      const watcher = Deno.watchFs(normalizePaths(options.watchPaths), { recursive: true });
+      const watcher = Deno.watchFs(normalizePaths(options.watchPaths), {
+        recursive: true,
+      });
 
       for await (const event of watcher) {
-        const validEvent = event.kind === "modify" || event.kind === "create" || event.kind === "remove" || event.kind === "rename";
+        const validEvent = event.kind === "modify" || event.kind === "create" ||
+          event.kind === "remove" || event.kind === "rename";
         if (validEvent) {
           for (const socket of connections) {
             socket.send("reload");
@@ -59,12 +64,11 @@ export default function devReload(options: Options = defaultOptions): Middleware
     } catch (error) {
       throw error;
     }
-
   })();
 
   return async function devReloadMiddleware(req: Request, next: NextHandler) {
     const url = new URL(req.url);
-    if (url.pathname === '/reload') {
+    if (url.pathname === "/reload") {
       const { response, socket } = Deno.upgradeWebSocket(req);
       connections.add(socket);
       socket.onclose = () => connections.delete(socket);
@@ -72,7 +76,7 @@ export default function devReload(options: Options = defaultOptions): Middleware
     }
     const response = await next();
     const contentType = response.headers.get("content-type") || "";
-    if (contentType.includes('text/html')) {
+    if (contentType.includes("text/html")) {
       const original = await response.text();
       return new Response(injectReloadScript(original), {
         status: response.status,
