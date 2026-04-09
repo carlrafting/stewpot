@@ -1,15 +1,8 @@
 import { assertEquals, assertGreater } from "@std/assert";
 import { join } from "@std/path/join";
 import { assertSnapshot } from "@std/testing/snapshot";
-import { CONFIG_FILENAME } from "./cli.ts";
+import { CONFIG_FILENAME, run } from "./cli.ts";
 import { loadConfig } from "./config.ts";
-
-function run(args: string[], options: Deno.CommandOptions = {}) {
-  return new Deno.Command(Deno.execPath(), {
-    args: ["run", "-RWNE", "cli.ts", ...args],
-    ...options,
-  });
-}
 
 Deno.test(
   "listCommand should list feed sources if there are more than 0",

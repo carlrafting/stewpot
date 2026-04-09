@@ -66,8 +66,15 @@ export interface Paths {
   kv?: string;
 }
 
-async function resolvePaths(): Promise<Paths | undefined> {
-  const root = resolveRootDirectory();
+export function run(args: string[], options: Deno.CommandOptions = {}) {
+  return new Deno.Command(Deno.execPath(), {
+    args: ["-P", import.meta.filename ?? "cli.ts", ...args],
+    ...options,
+  });
+}
+
+async function resolvePaths(base?: string): Promise<Paths | undefined> {
+  const root = base ?? resolveRootDirectory();
 
   if (!root) return;
 
