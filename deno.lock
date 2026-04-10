@@ -13,6 +13,7 @@
     "jsr:@std/html@^1.0.5": "1.0.5",
     "jsr:@std/http@1": "1.0.25",
     "jsr:@std/http@^1.0.20": "1.0.25",
+    "jsr:@std/http@^1.0.24": "1.0.25",
     "jsr:@std/http@^1.0.25": "1.0.25",
     "jsr:@std/internal@^1.0.12": "1.0.12",
     "jsr:@std/media-types@^1.1.0": "1.1.0",
@@ -23,7 +24,8 @@
     "jsr:@std/testing@^1.0.16": "1.0.17",
     "jsr:@std/testing@^1.0.17": "1.0.17",
     "jsr:@std/ulid@1": "1.0.0",
-    "jsr:@stewpot/html@~0.2.1": "0.2.1",
+    "jsr:@stewpot/html@~0.3.1": "0.3.1",
+    "jsr:@stewpot/middleware@0.3": "0.3.1",
     "npm:feedsmith@^2.9.1": "2.9.1",
     "npm:marked@^17.0.1": "17.0.5"
   },
@@ -105,10 +107,17 @@
     "@std/ulid@1.0.0": {
       "integrity": "d41c3d27a907714413649fee864b7cde8d42ee68437d22b79d5de4f81d808780"
     },
-    "@stewpot/html@0.2.1": {
-      "integrity": "3b749ec459c50afa49f6dffa0fe597536309a686635cc43d9c7cb082e089c670",
+    "@stewpot/html@0.3.1": {
+      "integrity": "40bffb467efb3bda6e369bc7f621be646c324ed75f5cd8318bc6148613578119",
       "dependencies": [
         "jsr:@std/html"
+      ]
+    },
+    "@stewpot/middleware@0.3.1": {
+      "integrity": "c13d8346a1efa8e6f7283331bf72218e752472a537182e7cfa54a70deb865791",
+      "dependencies": [
+        "jsr:@std/http@^1.0.24",
+        "jsr:@std/path"
       ]
     }
   },
@@ -184,7 +193,7 @@
           "jsr:@std/path@^1.1.4",
           "jsr:@std/testing@^1.0.17",
           "jsr:@std/ulid@1",
-          "jsr:@stewpot/html@~0.2.1",
+          "jsr:@stewpot/html@~0.3.1",
           "npm:feedsmith@^2.9.1"
         ]
       },
