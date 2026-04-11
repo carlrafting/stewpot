@@ -45,16 +45,21 @@ export async function loadConfig(
 ): Promise<Configuration> {
   const config = path;
 
-  if (!config) {
+  try {
+    if (!config) throw "no config path provided";
+    console.log(colors.cyan("info"), `loading config at ${config}`);
+    const configModule = await import(toFileUrl(config).href);
+    return configModule.default;
+  } catch (error) {
+    console.error(
+      colors.red("error"),
+      "error occured while fetching config file, fallback to default",
+    );
     console.log(colors.cyan("info"), "using default configuration");
     const configUrl = new URL("./assets/config.default.ts", import.meta.url);
     const defaultConfig = await import(configUrl.href);
     return defaultConfig.default;
   }
-
-  console.log(colors.cyan("info"), `loading config at ${config}`);
-  const configModule = await import(toFileUrl(config).href);
-  return configModule.default;
 }
 
 /**

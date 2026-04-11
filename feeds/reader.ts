@@ -2,9 +2,31 @@ import type { FeedData, FeedItem } from "./main.ts";
 import type { FsStorage, KvStorage } from "./storage.ts";
 import denoConfig from "./deno.json" with { type: "json" };
 
+type mapTemplateOutputFn =
+  & ((value: TemplateStyles, index: number, array: TemplateStyles[]) => unknown)
+  & ((
+    value: TemplateScripts,
+    index: number,
+    array: TemplateScripts[],
+  ) => unknown);
+
+interface TemplateStyles {
+  inline?: string;
+  media?: "screen" | "print" | "all" | string;
+  href?: string | URL;
+}
+
+interface TemplateScripts {
+  src: string | URL;
+  inline?: string;
+  type?: "module";
+}
+
 interface TemplateData {
   title: string;
   body: string;
+  styles?: TemplateStyles[];
+  scripts?: TemplateScripts[];
 }
 
 const htmlContentType = {
@@ -24,6 +46,23 @@ const fetchFile = async (filePath: string, options?: RequestInit) => {
   return await response.text();
 };
 
+const mapStylesFn = (style: TemplateStyles) => {
+  if (!style) return "";
+  if (style?.inline) return `<style>${style.inline}</style>`;
+  return `<link rel="stylesheet" href="${style.href}" media="${style.media}">`;
+};
+const mapScriptsFn = (script: TemplateScripts) => {
+  if (!script) return "";
+  if (script?.inline) return `<script>${script.inline}</script>`;
+  return `<script type="${script.type}" src="${script.src}"></script>`;
+};
+const newLine = "\n";
+
+const outputTemplateAssetsHTML = (
+  input: TemplateScripts[] | TemplateStyles[] = [],
+  fn: mapTemplateOutputFn,
+): string => input?.map(fn)?.join(newLine) ?? "";
+
 export async function app(
   feeds: FeedData[],
   store: FsStorage | KvStorage,
@@ -33,10 +72,10 @@ export async function app(
   const icon = await fetchFile("./assets/rss-icon.svg");
   const template = {
     header(content: string): string {
-      return ["<header>", content, "</header>"].join("\n");
+      return ["<header>", content, "</header>"].join(newLine);
     },
     main(content: string): string {
-      return ["<main class=flow>", content, "</main>"].join("\n");
+      return ["<main class=flow>", content, "</main>"].join(newLine);
     },
     html(data: TemplateData) {
       return `
@@ -45,6 +84,7 @@ export async function app(
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="icon" href="/rss-icon.svg" type="image/svg+xml">
+${outputTemplateAssetsHTML(data?.styles, mapStylesFn)}
 <style>
 ${css.trim()}
 </style>
@@ -116,11 +156,11 @@ ${data.body}
                   `<li><a href="${item.url}">${item.title}</a> <time>${
                     item.published ?? item.updated
                   }</time></li>`
-                ).join("\n"),
+                ).join(newLine),
                 "</ul>",
                 "</details>",
-              ].join("\n");
-            }).join("\n")
+              ].join(newLine);
+            }).join(newLine)
           }`,
         );
         const footer = `<footer>
@@ -152,7 +192,7 @@ ${data.body}
           header,
           main,
           footer,
-        ].join("\n");
+        ].join(newLine);
         const html = template.html({
           title,
           body,
