@@ -190,10 +190,14 @@ const init: Command = {
   name: "init",
   description: "init cli config",
   async run(
-    _input: Input,
-    _options: Options,
+    input: Input,
+    options: Options,
     deps: Deps,
   ): Promise<number> {
+    if (options.help) {
+      console.log("this is the help for this command");
+      return 0;
+    }
     const { paths } = deps;
     if (paths.config) {
       try {
@@ -224,6 +228,11 @@ const list: Command = {
     feeds: FeedData[],
     store: FsStorage | KvStorage,
   ): Promise<number> {
+    if (options.help) {
+      console.log("this is help for list command");
+      return 0;
+    }
+
     if (feeds.length === 0) {
       console.error(colors.red("error"), "there are no feeds");
       return 1;
@@ -247,12 +256,17 @@ const subscribe: Command = {
   description: "subscribe to new feed source",
   async run(
     _input: Input,
-    _options: Options,
+    options: Options,
     _deps: Deps,
     args: ParsedArguments,
     feeds: FeedData[],
     store: Storage,
   ) {
+    if (options.help) {
+      console.log("this is help for subscribe command");
+      return 0;
+    }
+
     const [command, input] = args._;
 
     if (typeof input !== "string") {
@@ -330,12 +344,16 @@ const unsubscribe: Command = {
   description: "unsubscribe to feed source",
   async run(
     _input: Input,
-    _options: Options,
+    options: Options,
     _deps: Deps,
     args: ParsedArguments,
     feeds: FeedData[],
     store: Storage,
   ): Promise<number | void> {
+    if (options.help) {
+      console.log("this is help for unsubscribe command");
+      return 0;
+    }
     const [command, input] = args._;
     if (typeof input !== "string") {
       console.error(colors.red("error"), "invalid input format!");
@@ -471,11 +489,16 @@ const fetch: Command = {
   description: "fetch updated feed sources and items",
   async run(
     _input: Input,
-    _options: Options,
+    options: Options,
     _deps: Deps,
     feeds: FeedData[],
     store: FsStorage | KvStorage,
   ): Promise<number> {
+    if (options.help) {
+      console.log("this is help for fetch command");
+      return 0;
+    }
+
     const [command, input] = _input;
 
     if (feeds.length === 0) {
@@ -543,7 +566,11 @@ const reader: Command = {
     _args: ParsedArguments,
     feeds: FeedData[],
     store: FsStorage | KvStorage,
-  ): Promise<void> {
+  ): Promise<void | number> {
+    if (options.help) {
+      console.log("this is help for list command");
+      return 0;
+    }
     const controller = new AbortController();
     const signal = controller.signal;
     const handler = await app(
@@ -597,9 +624,21 @@ const upgrade: Command = {
   description: "upgrade cli to latest version",
   async run(
     _input: Input,
-    _options: Options,
+    options: Options,
     ..._rest: unknown[]
   ): Promise<number> {
+    if (options.help) {
+      console.log(`
+${printHeader()}
+
+${colors.green("Description")}:
+  ${upgrade.description}
+
+${colors.green("Usage")}:
+  how do you use this thing?
+      `);
+      return 0;
+    }
     const controller = new AbortController();
     const signal = controller.signal;
     const args = [
@@ -612,7 +651,7 @@ const upgrade: Command = {
       `jsr:${pkg.name}/cli`,
     ];
     if (!await uninstall()) {
-      console.error(colors.cyan("info"), "nothing to cleanup");
+      console.info(colors.cyan("info"), "nothing to cleanup");
     }
     const command = new Deno.Command(Deno.execPath(), {
       args,
@@ -723,9 +762,11 @@ async function main(
   }
 }
 
+const printHeader = () => `${colors.cyan(pkg.name)} - v${pkg.version}`;
+
 function printHelp() {
   console.log(`
-${colors.cyan(pkg.name)} - v${pkg.version}
+${printHeader()}
 
 ${colors.green("Description")}:
   Small CLI program for managing & consuming feeds of different kinds (RSS/Atom/JSON).
