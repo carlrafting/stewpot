@@ -153,9 +153,10 @@ ${data.body}
                 "</summary>",
                 "<ul>",
                 items.map((item) =>
-                  `<li><a href="${item.url}">${item.title}</a> <time>${
-                    item.published ?? item.updated
-                  }</time></li>`
+                  ` <li>
+    <a href="${item.url}">${item.title}</a>
+    <time>${item.published ?? item.updated}</time>
+</li>`
                 ).join(newLine),
                 "</ul>",
                 "</details>",
@@ -169,22 +170,17 @@ ${data.body}
           <span class="version">v${denoConfig.version}</span>
           <a href="https://jsr.io/${denoConfig.name}">JSR Package</a>
           <a href="https://github.com/carlrafting/stewpot">Github Repository</a>
-          <toggle-theme>
-            <template>
+          <template id="toggle-theme-template">
+            <form>
               <fieldset>
-                <legend><span>Theme</span></legend>
-                <button type="button" name="toggle-theme" value="auto">
+                <label for="toggle-theme">Theme</label>
+                <button id="toggle-theme" type="submit" name="toggle-theme" value="auto">
                   Auto
                 </button>
-                <button type="button" name="toggle-theme" value="light">
-                  Light
-                </button>
-                <button type="button" name="toggle-theme" value="dark">
-                  Dark
-                </button>
               </fieldset>
-            </template>
-          </toggle-theme>
+            </form>
+          </template>
+          <toggle-theme></toggle-theme>
           </div>
         </footer>`
           .trim();

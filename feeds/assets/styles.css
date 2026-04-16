@@ -216,14 +216,11 @@ html {
       text-decoration-line: underline;
       text-underline-offset: 2px;
       text-decoration-thickness: 2px;
-      text-decoration-color: color-mix(currentColor, transparent 50%);
+      text-decoration-color: color-mix(in oklch, currentColor, transparent);
       font-weight: bold;
-      padding-block: calc(1lh / 4);
-      padding-inline: calc(var(--root) / 2);
     }
 
     &:where(:hover, :focus) {
-      background-color: oklch(from var(--color-yellow) 90% 60% h / 20%);
       text-decoration-line: underline;
       text-decoration-color: currentColor;
       text-decoration-skip-ink: none;
