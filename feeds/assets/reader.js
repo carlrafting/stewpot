@@ -99,5 +99,21 @@ class ToggleTheme extends HTMLElement {
   }
 }
 
+class FetchItems extends HTMLElement {
+  templateElement = document.querySelector("#fetch-items-template");
+  connectedCallback() {
+    this.append(document.importNode(this.templateElement.content, true));
+    this.addEventListener("click", this.clickHandler);
+    console.log("fetch-items connected!");
+  }
+  clickHandler() {
+    console.log("doing click stuff...");
+  }
+}
+
 customElements.define("toggle-theme", ToggleTheme);
-customElements.define("toggle-details", ToggleDetails);
+customElements.define(
+  "toggle-details",
+  ToggleDetails,
+);
+customElements.define("fetch-items", FetchItems);

@@ -138,6 +138,11 @@ html {
     border: 1px solid oklch(from var(--color-text) l c h / 10%);
     box-shadow: var(--button-shadow);
 
+    details & {
+      background-color: var(--color-bg);
+      border-color: oklch(from var(--color-gray) 60% c h);
+    }
+
     &:is(:disabled) {
       opacity: 50%;
     }
