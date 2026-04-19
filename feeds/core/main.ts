@@ -11,7 +11,7 @@ import {
 } from "feedsmith";
 import type { Atom, DeepPartial, Json, Rdf, Rss } from "feedsmith/types";
 
-export { defineConfig } from "./config.ts";
+export { defineConfig } from "../cli/config.ts";
 
 /**
  * This is the main module. It handles everything related to feeds.

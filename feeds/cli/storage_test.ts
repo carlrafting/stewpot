@@ -3,7 +3,7 @@ import { ulid } from "@std/ulid/ulid";
 import { join } from "@std/path/join";
 import type { FeedData, FeedFormat } from "@stewpot/feeds";
 import { FsStorage, KvStorage } from "./storage.ts";
-import { type Paths, SOURCES_FILENAME } from "./cli.ts";
+import { type Paths, SOURCES_FILENAME } from "./main.ts";
 
 Deno.test("FsStorage should load and save feeds correctly", async () => {
   const root = await Deno.makeTempDir();

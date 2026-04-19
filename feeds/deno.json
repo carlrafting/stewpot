@@ -4,8 +4,8 @@
   "version": "0.14.0",
   "license": "MIT",
   "exports": {
-    ".": "./main.ts",
-    "./cli": "./cli.ts"
+    ".": "./core/main.ts",
+    "./cli": "./cli/main.ts"
   },
   "imports": {
     "@stewpot/html": "jsr:@stewpot/html@^0.3.1",
@@ -19,20 +19,16 @@
     "feedsmith": "npm:feedsmith@^2.9.1"
   },
   "publish": {
-    "exclude": [
-      "*_test.ts",
-      "fixtures",
-      "__snapshots__"
-    ]
+    "exclude": ["*_test.ts", "fixtures", "__snapshots__", "cli/dev.ts"]
   },
   "tasks": {
     "dev:reader": {
       "description": "Run CLI reader application for development",
-      "command": "deno -P --watch=assets cli.ts reader"
+      "command": "deno -P --watch=assets cli/main.ts reader"
     },
     "doc:lint": {
       "description": "Lint package export modules",
-      "command": "deno doc --lint main.ts cli.ts"
+      "command": "deno doc --lint core/main.ts cli/main.ts"
     },
     "tests": {
       "description": "Run lints & tests",

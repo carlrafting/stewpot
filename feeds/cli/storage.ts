@@ -2,10 +2,10 @@ import { dirname } from "@std/path/dirname";
 import { join } from "@std/path/join";
 import { ensureFile } from "@std/fs/ensure-file";
 import * as colors from "@std/fmt/colors";
-import { ITEMS_DIRNAME } from "./cli.ts";
-import type { Paths } from "./cli.ts";
+import { ITEMS_DIRNAME } from "../cli/main.ts";
+import type { Paths } from "../cli/main.ts";
 import type { Configuration } from "./config.ts";
-import type { FeedData, FeedID, FeedItem } from "./main.ts";
+import type { FeedData, FeedID, FeedItem } from "../core/main.ts";
 
 export interface Storage {
   loadFeeds(): Promise<FeedData[]>;

@@ -1,7 +1,13 @@
 import { parseArgs, type ParseOptions } from "@std/cli";
+import * as colors from "@std/fmt/colors";
 import { ensureDir } from "@std/fs";
 import { join as joinPath } from "@std/path/join";
-import * as colors from "@std/fmt/colors";
+import { parseFeed } from "feedsmith";
+import {
+  type Configuration,
+  loadConfig,
+  writeConfigToPath,
+} from "../cli/config.ts";
 import {
   discoverFeed,
   type FeedData,
@@ -12,12 +18,14 @@ import {
   type FetchResults,
   mapToFeedItems,
   parseInputToURL,
-} from "./main.ts";
-import pkg from "./deno.json" with { type: "json" };
-import app from "./reader.ts";
-import { type Configuration, loadConfig, writeConfigToPath } from "./config.ts";
-import { createStorage, type FsStorage, type KvStorage } from "./storage.ts";
-import { parseFeed } from "feedsmith";
+} from "../core/main.ts";
+import app from "../core/reader.ts";
+import {
+  createStorage,
+  type FsStorage,
+  type KvStorage,
+} from "../cli/storage.ts";
+import pkg from "../deno.json" with { type: "json" };
 
 /**
  * This module contains code related to CLI
@@ -66,7 +74,10 @@ export interface Paths {
   kv?: string;
 }
 
-export function run(args: string[], options: Deno.CommandOptions = {}) {
+export function run(
+  args: string[],
+  options: Deno.CommandOptions = {},
+): Deno.Command {
   return new Deno.Command(Deno.execPath(), {
     args: ["-P", import.meta.filename ?? "cli.ts", ...args],
     ...options,
@@ -696,7 +707,7 @@ const handleArgs = (
   };
 };
 
-async function main(
+export default async function main(
   args: string[],
   config: Configuration,
   store: FsStorage | KvStorage,

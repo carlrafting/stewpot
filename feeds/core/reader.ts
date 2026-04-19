@@ -1,6 +1,6 @@
 import type { FeedData, FeedItem } from "./main.ts";
-import type { FsStorage, KvStorage } from "./storage.ts";
-import denoConfig from "./deno.json" with { type: "json" };
+import type { FsStorage, KvStorage } from "../cli/storage.ts";
+import denoConfig from "../deno.json" with { type: "json" };
 
 type mapTemplateOutputFn =
   & ((value: TemplateStyles, index: number, array: TemplateStyles[]) => unknown)
@@ -67,9 +67,9 @@ export async function app(
   feeds: FeedData[],
   store: FsStorage | KvStorage,
 ): Promise<Deno.ServeDefaultExport> {
-  const css = await fetchFile("./assets/styles.css");
-  const js = await fetchFile("./assets/reader.js");
-  const icon = await fetchFile("./assets/rss-icon.svg");
+  const css = await fetchFile("../assets/styles.css");
+  const js = await fetchFile("../assets/reader.js");
+  const icon = await fetchFile("../assets/rss-icon.svg");
   const template = {
     header(content: string): string {
       return ["<header>", content, "</header>"].join(newLine);
@@ -128,11 +128,13 @@ ${data.body}
         );
         const main = template.main(
           `<toggle-details>
-            <template>
-              <button type="button" name="toggle-state" value="expand">Expand All</button>
-              <button type="button" name="toggle-state" value="collapse">Collapse All</button>
-            </template>
-          </toggle-details>
+             <template id="toggle-details-template">
+                <button type="button" name="toggle-state" value="expand"><slot name="expand">Expand Slot</slot></button>
+                <button type="button" name="toggle-state" value="collapse"><slot name="collapse">Collapse Slot</slot></button>
+              </template>
+              <span slot="expand">Expand All</span>
+              <span slot="collapse">Collapse All</span>
+            </toggle-details>
           ${
             feeds.map((feed) => {
               const hostname = `<h3>${new URL(feed.url).hostname}</h3>`;

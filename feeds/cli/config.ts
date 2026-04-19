@@ -1,5 +1,5 @@
 import { toFileUrl } from "@std/path/to-file-url";
-import type { Paths } from "./cli.ts";
+import type { Paths } from "./main.ts";
 import * as colors from "@std/fmt/colors";
 
 /** config type for filesystem (fs) storage */
@@ -56,7 +56,7 @@ export async function loadConfig(
       "error occured while fetching config file, fallback to default",
     );
     console.log(colors.cyan("info"), "using default configuration");
-    const configUrl = new URL("./assets/config.default.ts", import.meta.url);
+    const configUrl = new URL("../assets/config.default.ts", import.meta.url);
     const defaultConfig = await import(configUrl.href);
     return defaultConfig.default;
   }

@@ -1,7 +1,7 @@
 import { assertEquals, assertGreater } from "@std/assert";
 import { join } from "@std/path/join";
 import { assertSnapshot } from "@std/testing/snapshot";
-import { CONFIG_FILENAME, run } from "./cli.ts";
+import { CONFIG_FILENAME, run } from "./main.ts";
 import { loadConfig } from "./config.ts";
 
 Deno.test(
