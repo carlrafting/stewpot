@@ -1,11 +1,7 @@
 class ToggleDetails extends HTMLElement {
-	template = this.querySelector("template");
-
 	connectedCallback() {
-		if (!this.template) return;
-
-		this.append(this?.template.content);
-
+		const template = document.querySelector("#toggle-details-template");
+		this.append(document.importNode(template?.content, true));
 		this.addEventListener("click", this.clickHandler);
 	}
 	clickHandler(event) {
@@ -69,7 +65,6 @@ class ToggleTheme extends HTMLElement {
 				this.value = "dark";
 				return;
 			case "dark":
-			default:
 				this.value = "auto";
 				return;
 		}

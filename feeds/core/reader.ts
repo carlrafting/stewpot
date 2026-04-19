@@ -127,14 +127,7 @@ ${data.body}
           `<h1 class="tac has-divider">Feed Sources</h1>\n`,
         );
         const main = template.main(
-          `<toggle-details>
-             <template id="toggle-details-template">
-                <button type="button" name="toggle-state" value="expand"><slot name="expand">Expand Slot</slot></button>
-                <button type="button" name="toggle-state" value="collapse"><slot name="collapse">Collapse Slot</slot></button>
-              </template>
-              <span slot="expand">Expand All</span>
-              <span slot="collapse">Collapse All</span>
-            </toggle-details>
+          `<toggle-details></toggle-details>
           ${
             feeds.map((feed) => {
               const hostname = `<h3>${new URL(feed.url).hostname}</h3>`;
@@ -178,6 +171,10 @@ ${data.body}
         </footer>`
           .trim();
         const templates = [
+          `<template id="toggle-details-template">
+            <button type="button" name="toggle-state" value="expand">Expand All</button>
+            <button type="button" name="toggle-state" value="collapse">Collapse All</button>
+           </template>`,
           `<template id="toggle-theme-template">
             <form>
               <fieldset>
