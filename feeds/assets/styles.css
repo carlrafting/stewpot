@@ -145,6 +145,11 @@ html {
     border: 1px solid oklch(from var(--color-text) l c h / 10%);
     box-shadow: var(--button-shadow);
 
+    details & {
+      background-color: var(--color-bg);
+      border-color: oklch(from var(--color-gray) 60% c h);
+    }
+
     &:is(:disabled) {
       opacity: 50%;
     }
@@ -221,10 +226,8 @@ html {
       text-decoration-line: underline;
       text-underline-offset: 2px;
       text-decoration-thickness: 2px;
-      text-decoration-color: color-mix(currentColor, transparent 50%);
+      text-decoration-color: color-mix(in oklch, currentColor, transparent);
       font-weight: bold;
-      padding-block: calc(1lh / 4);
-      padding-inline: calc(var(--root) / 2);
     }
 
     &:where(:hover, :focus) {

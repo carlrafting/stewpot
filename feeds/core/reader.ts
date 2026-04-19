@@ -152,12 +152,14 @@ ${data.body}
                 format,
                 count,
                 lastModified,
+                `<fetch-items></fetch-items>`,
                 "</summary>",
                 "<ul>",
                 items.map((item) =>
-                  `<li><a href="${item.url}">${item.title}</a> <time>${
-                    item.published ?? item.updated
-                  }</time></li>`
+                  `  <li>
+    <a href="${item.url}">${item.title}</a>
+    <time>${item.published ?? item.updated}</time>
+  </li>`
                 ).join(newLine),
                 "</ul>",
                 "</details>",
@@ -171,29 +173,30 @@ ${data.body}
           <span class="version">v${denoConfig.version}</span>
           <a href="https://jsr.io/${denoConfig.name}">JSR Package</a>
           <a href="https://github.com/carlrafting/stewpot">Github Repository</a>
-          <toggle-theme>
-            <template>
-              <fieldset>
-                <legend><span>Theme</span></legend>
-                <button type="button" name="toggle-theme" value="auto">
-                  Auto
-                </button>
-                <button type="button" name="toggle-theme" value="light">
-                  Light
-                </button>
-                <button type="button" name="toggle-theme" value="dark">
-                  Dark
-                </button>
-              </fieldset>
-            </template>
-          </toggle-theme>
+          <toggle-theme></toggle-theme>
           </div>
         </footer>`
           .trim();
+        const templates = [
+          `<template id="toggle-theme-template">
+            <form>
+              <fieldset>
+                <label for="toggle-theme">Theme</label>
+                <button id="toggle-theme" type="submit" name="toggle-theme" value="auto">
+                  Auto
+                </button>
+              </fieldset>
+            </form>
+          </template>`,
+          `<template id="fetch-items-template">
+            <button type="button" name="feed-item-action" value="fetch">Fetch</button>
+          </template>`,
+        ].join(newLine);
         const body = [
           header,
           main,
           footer,
+          templates,
         ].join(newLine);
         const html = template.html({
           title,
