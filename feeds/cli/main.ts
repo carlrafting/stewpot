@@ -588,9 +588,11 @@ const reader: Command = {
       feeds,
       store,
     );
-    const hostname = (options.hostname || config?.reader?.hostname) ??
+    const hostname = (Deno.env.get("HOSTNAME") || options.hostname ||
+      config?.reader?.hostname) ??
       "localhost";
-    const port = (options.port || config?.reader?.port) ?? 8000;
+    const port =
+      (Deno.env.get("PORT") || options.port || config?.reader?.port) ?? 8000;
     const serveOptions: Deno.ServeTcpOptions = {
       hostname,
       port,
@@ -605,7 +607,6 @@ const reader: Command = {
     } as Deno.ServeTcpOptions;
     const server = Deno.serve(serveOptions, handler.fetch);
     Deno.addSignalListener("SIGINT", async () => {
-      console.log("\n");
       console.log(colors.cyan("info"), "shutting down reader...");
       await server.shutdown();
     });

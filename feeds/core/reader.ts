@@ -43,6 +43,9 @@ const fetchFile = async (filePath: string, options?: RequestInit) => {
       ...options,
     },
   );
+  if (!response.ok) {
+    throw "response did not return a 200 OK status";
+  }
   return await response.text();
 };
 
@@ -63,6 +66,22 @@ const outputTemplateAssetsHTML = (
   fn: mapTemplateOutputFn,
 ): string => input?.map(fn)?.join(newLine) ?? "";
 
+const replace = (
+  data: { [s: string]: unknown } | ArrayLike<unknown>,
+  src: string,
+) => {
+  const entries = Object.entries(data);
+  let result = src;
+  for (const [key, value] of entries) {
+    if (typeof value === "function") {
+      result = value();
+      continue;
+    }
+    result = result.replaceAll(key, value as string);
+  }
+  return result;
+};
+
 export async function app(
   feeds: FeedData[],
   store: FsStorage | KvStorage,
@@ -71,6 +90,8 @@ export async function app(
   const js = await fetchFile("../assets/reader.js");
   const icon = await fetchFile("../assets/rss-icon.svg");
   const template = {
+    document: await fetchFile("../templates/document.html"),
+    footer: await fetchFile("../templates/partials/footer.html"),
     header(content: string): string {
       return ["<header>", content, "</header>"].join(newLine);
     },
@@ -79,22 +100,22 @@ export async function app(
     },
     html(data: TemplateData) {
       return `
-<!doctype html>
-<html lang="en" data-theme="auto">
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="icon" href="/rss-icon.svg" type="image/svg+xml">
-${outputTemplateAssetsHTML(data?.styles, mapStylesFn)}
-<style>
-${css.trim()}
-</style>
-<script type="module">
-${js.trim()}
-</script>
-<title>${data.title}</title>
-<body class="flow">
-${data.body}
-  `.trim();
+  <!doctype html>
+  <html lang="en" data-theme="auto">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" href="/rss-icon.svg" type="image/svg+xml">
+  ${outputTemplateAssetsHTML(data?.styles, mapStylesFn)}
+  <style>
+  ${css.trim()}
+  </style>
+  <script type="module">
+  ${js.trim()}
+  </script>
+  <title>${data.title}</title>
+  <body class="flow">
+  ${data.body}
+    `.trim();
     },
   };
   const data = new Map();
@@ -104,9 +125,28 @@ ${data.body}
   }
   const subscribeButton =
     `<button type="button" name="subscribe" class="primary">Subscribe</button>`;
+  const fetchAllButton =
+    `<button type="button" name="fetch-all" class="primary">Fetch All</button>`;
   return {
     async fetch(request: Request): Promise<Response> {
       const url = new URL(request.url);
+
+      if (request.headers.get("upgrade") === "websocket") {
+        const ws = Deno.upgradeWebSocket(request);
+        if (ws.response && ws.socket) {
+          console.info("upgraded to websockets connection!");
+          ws.socket.addEventListener(
+            "open",
+            () => console.log("client connected!"),
+          );
+          ws.socket.addEventListener("message", (event) => {
+            if (event.data === "ping") {
+              ws.socket.send("pong");
+            }
+          });
+          return ws.response;
+        }
+      }
 
       if (url.pathname === "/rss-icon.svg") {
         try {
@@ -128,6 +168,8 @@ ${data.body}
         );
         const main = template.main(
           `<toggle-details></toggle-details>
+          ${fetchAllButton}
+
           ${
             feeds.map((feed) => {
               const hostname = `<h3>${new URL(feed.url).hostname}</h3>`;
@@ -160,16 +202,20 @@ ${data.body}
             }).join(newLine)
           }`,
         );
-        const footer = `<footer>
-          <div class="meta">
-          <a href="/">${denoConfig.name}</a>
-          <span class="version">v${denoConfig.version}</span>
-          <a href="https://jsr.io/${denoConfig.name}">JSR Package</a>
-          <a href="https://github.com/carlrafting/stewpot">Github Repository</a>
-          <toggle-theme></toggle-theme>
-          </div>
-        </footer>`
-          .trim();
+        // const footer = `<footer>
+        //   <div class="meta">
+        //   <a href="/">${denoConfig.name}</a>
+        //   <span class="version">v${denoConfig.version}</span>
+        //   <a href="https://jsr.io/${denoConfig.name}">JSR Package</a>
+        //   <a href="https://github.com/carlrafting/stewpot">Github Repository</a>
+        //   <toggle-theme></toggle-theme>
+        //   </div>
+        // </footer>`
+        //   .trim();
+        const footer = replace({
+          "$NAME": denoConfig.name,
+          "$VERSION": denoConfig.version,
+        }, template.footer);
         const templates = [
           `<template id="toggle-details-template">
             <button type="button" name="toggle-state" value="expand">Expand All</button>
