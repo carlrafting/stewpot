@@ -90,8 +90,18 @@ export async function app(
   const js = await fetchFile("../assets/reader.js");
   const icon = await fetchFile("../assets/rss-icon.svg");
   const template = {
-    document: await fetchFile("../templates/document.html"),
-    footer: await fetchFile("../templates/partials/footer.html"),
+    Document: await fetchFile("../templates/document.html"),
+    Header: await fetchFile("../templates/partials/header.html"),
+    Footer: await fetchFile("../templates/partials/footer.html"),
+    ToggleDetails: await fetchFile(
+      "../templates/partials/toggle-details-template.html",
+    ),
+    ToggleTheme: await fetchFile(
+      "../templates/partials/toggle-theme-template.html",
+    ),
+    FetchItems: await fetchFile(
+      "../templates/partials/fetch-items-template.html",
+    ),
     header(content: string): string {
       return ["<header>", content, "</header>"].join(newLine);
     },
@@ -163,14 +173,16 @@ export async function app(
       if (url.pathname === "/") {
         const title = `${denoConfig.name} - v${denoConfig.version}`;
 
-        const header = template.header(
-          `<h1 class="tac has-divider">Feed Sources</h1>\n`,
-        );
-        const main = template.main(
-          `<toggle-details></toggle-details>
-          ${fetchAllButton}
+        const header = replace({
+          "<!--$HEADER-->": `<h1 class="tac">Feed Sources</h1>
+             <header-toolbar>
+               <toggle-details></toggle-details>
+               ${fetchAllButton}
+             </header-toolbar>`,
+        }, template.Header);
 
-          ${
+        const main = template.main(
+          `${
             feeds.map((feed) => {
               const hostname = `<h3>${new URL(feed.url).hostname}</h3>`;
               const items: FeedItem[] = data.get(feed.id);
@@ -187,14 +199,13 @@ export async function app(
                 format,
                 count,
                 lastModified,
-                `<fetch-items></fetch-items>`,
+                `<fetch-items for="${feed.id}"></fetch-items>`,
                 "</summary>",
                 "<ul>",
                 items.map((item) =>
-                  `  <li>
-    <a href="${item.url}">${item.title}</a>
-    <time>${item.published ?? item.updated}</time>
-  </li>`
+                  `<li><a href="${item.url}">${item.title}</a><time>${
+                    item.published ?? item.updated
+                  }</time></li>`
                 ).join(newLine),
                 "</ul>",
                 "</details>",
@@ -202,38 +213,14 @@ export async function app(
             }).join(newLine)
           }`,
         );
-        // const footer = `<footer>
-        //   <div class="meta">
-        //   <a href="/">${denoConfig.name}</a>
-        //   <span class="version">v${denoConfig.version}</span>
-        //   <a href="https://jsr.io/${denoConfig.name}">JSR Package</a>
-        //   <a href="https://github.com/carlrafting/stewpot">Github Repository</a>
-        //   <toggle-theme></toggle-theme>
-        //   </div>
-        // </footer>`
-        //   .trim();
         const footer = replace({
           "$NAME": denoConfig.name,
           "$VERSION": denoConfig.version,
-        }, template.footer);
+        }, template.Footer);
         const templates = [
-          `<template id="toggle-details-template">
-            <button type="button" name="toggle-state" value="expand">Expand All</button>
-            <button type="button" name="toggle-state" value="collapse">Collapse All</button>
-           </template>`,
-          `<template id="toggle-theme-template">
-            <form>
-              <fieldset>
-                <label for="toggle-theme">Theme</label>
-                <button id="toggle-theme" type="submit" name="toggle-theme" value="auto">
-                  Auto
-                </button>
-              </fieldset>
-            </form>
-          </template>`,
-          `<template id="fetch-items-template">
-            <button type="button" name="feed-item-action" value="fetch">Fetch</button>
-          </template>`,
+          template.ToggleTheme,
+          template.ToggleDetails,
+          template.FetchItems,
         ].join(newLine);
         const body = [
           header,

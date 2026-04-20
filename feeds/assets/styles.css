@@ -6,6 +6,7 @@
     --line-height: 1.5;
     --border-radius: calc(var(--root) / 4);
     --button-padding: 0.5lh 0.75rem;
+    --gap-half: calc(var(--root) / 2);
   }
 }
 
@@ -27,7 +28,7 @@
     /* semantic colors */
     --color-overlay: color-mix(var(--color-bg) 90%, var(--color-text));
     --color-primary: var(--color-blue);
-    --color-links: oklch(from var(--color-primary) 80% 0.28 h);
+    /*--color-links: oklch(from var(--color-primary) 80% 0.28 h);*/
     --color-links: oklch(
       from var(--color-primary) var(--color-links-lightness) 0.28 h
     );
@@ -142,7 +143,7 @@ html {
     padding: var(--button-padding);
     background-color: var(--color-overlay);
     border-radius: var(--border-radius);
-    border: 1px solid oklch(from var(--color-text) l c h / 10%);
+    border: 1px solid oklch(from var(--color-text) l c h / 20%);
     box-shadow: var(--button-shadow);
 
     details & {
@@ -169,7 +170,7 @@ html {
 
   toggle-details {
     display: flex;
-    gap: calc(var(--root) / 2);
+    gap: var(--gap-half);
   }
 
   details {
@@ -257,7 +258,7 @@ html {
   }
 
   .primary {
-    color: var(--blue-200);
+    color: color-mix(in oklch longer hue, var(--color-primary), white 90%);
     background-color: var(--color-primary);
     border-color: oklch(from var(--color-primary) calc(l - 0.1) c h);
   }
@@ -288,11 +289,19 @@ html {
   }
 
   .boc {
-    border: 1px solid oklch(from var(--color-text) l c h / 10%);
+    border: 1px solid oklch(from var(--color-text) l c h / 20%);
   }
 }
 
 @layer scratch {
+  header {
+    container-name: header;
+    container-type: inline-size;
+  }
+  header-toolbar {
+    display: flex;
+    gap: var(--gap-half);
+  }
   footer {
     container-name: footer;
     container-type: inline-size;
