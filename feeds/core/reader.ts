@@ -133,10 +133,16 @@ export async function app(
     const items: FeedItem[] = await store.loadItems(feed.id);
     data.set(feed.id, items);
   }
-  const subscribeButton =
-    `<button type="button" name="subscribe" class="primary">Subscribe</button>`;
-  const fetchAllButton =
-    `<button type="button" name="fetch-all" class="primary">Fetch All</button>`;
+  // const subscribeButton =
+  //   `<button type="button" name="subscribe" class="primary">Subscribe</button>`;
+  const subscribeButton = await fetchFile(
+    "../templates/partials/subscribeButton.html",
+  );
+  // const fetchAllButton =
+  //   `<button type="button" name="fetch-all" class="primary">Fetch All</button>`;
+  const fetchAllButton = await fetchFile(
+    "../templates/partials/fetchAllButton.html",
+  );
   return {
     async fetch(request: Request): Promise<Response> {
       const url = new URL(request.url);
