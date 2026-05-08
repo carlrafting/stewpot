@@ -1,0 +1,11 @@
+{
+  "tasks": {
+    "dev": "deno serve -RW --watch=templates/,static/ serve.ts"
+  },
+  "imports": {
+    "@std/ulid": "jsr:@std/ulid@^1.0.0",
+    "@ventojs/vento": "https://cdn.jsdelivr.net/gh/ventojs/vento@2.3.1/mod.ts",
+    "@std/assert": "jsr:@std/assert@1",
+    "@std/http": "jsr:@std/http@1"
+  }
+}
