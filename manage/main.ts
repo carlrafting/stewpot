@@ -5,6 +5,7 @@ import { createSessionCookie } from "./session/cookie.ts";
 import { html } from "./http/response.ts";
 import { createServer } from "./http/server.ts";
 import { createConnections } from "./kv/connections.ts";
+import { KvRepository } from "./kv/repository.ts";
 
 export interface Options {
   vento: VentoOptions;
@@ -35,6 +36,7 @@ export async function app(_options?: Options) {
   };
   const connections = await createConnections(options);
   console.log(connections);
+  KvRepository.connections = connections;
   const templates = vento(options.vento);
   const render = async (file: string) => {
     const template = await templates.load(file);
@@ -74,19 +76,12 @@ export async function app(_options?: Options) {
 
       if (url.pathname === "/sessions/") {
         const title = "Sessions";
+        const key = "sessions";
+        const repository = new KvRepository(key);
         const page = await render(
           "dev/index.vto",
         );
-        const sessionsConnection = connections.get("sessions");
-        const results = sessionsConnection?.list({
-          prefix: ["sessions"],
-        });
-        const data = [];
-        if (results) {
-          for await (const { key, value, versionstamp } of results) {
-            data.push({ key, value, versionstamp });
-          }
-        }
+        const data = repository.getAllByKey(key);
         return html(await page({ title, url, data }), headers);
       }
 
