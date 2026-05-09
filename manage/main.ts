@@ -1,8 +1,12 @@
-import { Cookie, getCookies, serveDir, setCookie, UserAgent } from "@std/http";
+import { getCookies, serveDir } from "@std/http";
 import type { Options as VentoOptions } from "@ventojs/vento";
 import vento from "@ventojs/vento";
+import { createSessionCookie } from "./session/cookie.ts";
+import { html } from "./http/response.ts";
+import { createServer } from "./http/server.ts";
+import { createConnections } from "./kv/connections.ts";
 
-interface Options {
+export interface Options {
   vento: VentoOptions;
   sessions: {
     path?: string;
@@ -12,7 +16,7 @@ interface Options {
   };
 }
 
-const defaultOptions: Options = {
+export const defaultOptions: Options = {
   vento: {
     includes: "templates",
   },
@@ -23,84 +27,6 @@ const defaultOptions: Options = {
     path: "database/kv.db",
   },
 };
-
-interface Session {
-  createdAt: bigint;
-  lastAccessedAt: bigint;
-  userAgent?: string;
-  forwardedIP?: string;
-  flash?: Record<string, string>;
-  csrf?: string;
-}
-
-interface SessionData extends Session {}
-
-const SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
-
-async function createSession(
-  request: Request,
-  store: Deno.Kv,
-): Promise<string>;
-async function createSession(
-  request: Request,
-  store: Deno.Kv,
-  data?: SessionData,
-): Promise<string> {
-  const id = crypto.randomUUID();
-  const now = Temporal.Instant.fromEpochMilliseconds(Date.now());
-  const headers = request.headers;
-  const userAgent = new UserAgent(headers.get("user-agent")).ua;
-  const forwardedIP = headers.get("x-forwarded-for")?.toString();
-  const session: Session = {
-    createdAt: now.epochNanoseconds,
-    lastAccessedAt: now.epochNanoseconds,
-    userAgent,
-    forwardedIP,
-    ...data,
-  };
-  console.log(id, now);
-  await store.set(["sessions", id], session, { expireIn: SESSION_TTL_MS });
-  return id;
-}
-
-async function createSessionCookie(
-  connections: { get: (arg: string) => Deno.Kv },
-  request: Request,
-  headers: Headers,
-) {
-  const id = await createSession(
-    request,
-    connections.get("sessions"),
-  );
-  const cookie: Cookie = {
-    name: "session",
-    value: id,
-  };
-  setCookie(headers, cookie);
-  return new Response(null, {
-    headers,
-  });
-}
-
-async function createConnections(options: Options) {
-  const connections = new Map();
-  {
-    const sessions = await Deno.openKv(options?.sessions?.path);
-    const kv = await Deno.openKv(options?.kv?.path);
-    connections.set("sessions", sessions);
-    connections.set("kv", kv);
-  }
-  return connections;
-}
-
-function html(body: BodyInit, headers: HeadersInit = []) {
-  return new Response(body, {
-    headers: {
-      "content-type": "text/html; charset=utf-8",
-      ...headers,
-    },
-  });
-}
 
 export async function app(_options?: Options) {
   const options = {
@@ -113,7 +39,13 @@ export async function app(_options?: Options) {
   const userPagePattern = new URLPattern({ pathname: "/users/:id" });
   const staticPathPattern = new URLPattern({ pathname: "/assets/*" });
   return {
-    async fetch(request: Request) {
+    async fetch(request: Request, info?: Deno.ServeHandlerInfo) {
+      if (info) {
+        const remoteAddr = info.remoteAddr;
+        console.log({
+          remoteAddr,
+        });
+      }
       const cookies = getCookies(request.headers);
       console.log(cookies);
       const headers = new Headers();
@@ -149,3 +81,10 @@ export async function app(_options?: Options) {
 }
 
 export default app;
+
+if (import.meta.main) {
+  {
+    const handler = await app();
+    await createServer(handler);
+  }
+}
