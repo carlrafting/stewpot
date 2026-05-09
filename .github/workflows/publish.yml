@@ -20,7 +20,6 @@ jobs:
         uses: denoland/setup-deno@v2
         with:
           cache: true
-      - run: echo "Deno version is " deno -v
       - name: Publish to JSR
         uses: actions/checkout@v6
       - run: deno publish
