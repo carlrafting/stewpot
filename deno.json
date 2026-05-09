@@ -7,6 +7,7 @@
     "../vanillapod/assets"
   ],
   "workspace": [
+    "./cli",
     "./feeds",
     "./manage",
     "./ui",
