@@ -1,7 +1,7 @@
 import { Options } from "../main.ts";
 
 export async function createConnections(options: Options) {
-  const connections = new Map();
+  const connections = new Map<string, Deno.Kv>();
   {
     const sessions = await Deno.openKv(options?.sessions?.path);
     const kv = await Deno.openKv(options?.kv?.path);
@@ -10,3 +10,6 @@ export async function createConnections(options: Options) {
   }
   return connections;
 }
+
+export const getConnection = (connections: Map<string, Deno.Kv>, key: string) =>
+  connections.has(key) ? connections.get(key) : null;

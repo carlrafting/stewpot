@@ -1,12 +1,13 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" {{ if url }}data-page-url="{{ url }}"{{ /if }}>
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{{ title }}</title>
 </head>
 <body>
-  <h1>Home Page!</h1>
-  <p>With <code>@stewpot/manage</code> you can manage anything!</p>
+
+{{ content}}
+
 </body>
 </html>

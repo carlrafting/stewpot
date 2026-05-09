@@ -36,6 +36,11 @@ export async function app(_options?: Options) {
   const connections = await createConnections(options);
   console.log(connections);
   const templates = vento(options.vento);
+  const render = async (file: string) => {
+    const template = await templates.load(file);
+    return async (data: Record<string, unknown> | undefined) =>
+      (await template(data)).content;
+  };
   const userPagePattern = new URLPattern({ pathname: "/users/:id" });
   const staticPathPattern = new URLPattern({ pathname: "/assets/*" });
   return {
@@ -58,10 +63,31 @@ export async function app(_options?: Options) {
       }
 
       if (url.pathname === "/") {
-        const page = await templates.run("index.vto", {
-          title: "Manage anything!",
+        const title = "Manage anything!";
+        const page = await render("dev/index.vto");
+        // const page = await templates.run("dev/index.vto", {
+        //   url,
+        //   title: "Manage anything!",
+        // });
+        return html(await page({ title, url }), headers);
+      }
+
+      if (url.pathname === "/sessions/") {
+        const title = "Sessions";
+        const page = await render(
+          "dev/index.vto",
+        );
+        const sessionsConnection = connections.get("sessions");
+        const results = sessionsConnection?.list({
+          prefix: ["sessions"],
         });
-        return html(page.content, headers);
+        const data = [];
+        if (results) {
+          for await (const { key, value, versionstamp } of results) {
+            data.push({ key, value, versionstamp });
+          }
+        }
+        return html(await page({ title, url, data }), headers);
       }
 
       const userPageMatch = userPagePattern.exec(url);

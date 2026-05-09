@@ -1,0 +1,19 @@
+{{ layout "layouts/document.vto" }}
+  <h1>Home Page!</h1>
+  <p>With <code>@stewpot/manage</code> you can manage anything!</p>
+  <ul>
+    <li><a href="/sessions/">Sessions</a></li>
+  </ul>
+  {{ if data }}
+  <h2>Data</h2>
+  <ul>
+  {{ for { key, value, versionstamp } of data }}
+    <li>
+    {{ key }}
+    {{ value }}
+    {{ versionstamp }}
+    </li>
+  {{ /for }}
+  </ul>
+  {{ /if }}
+{{ /layout }}
