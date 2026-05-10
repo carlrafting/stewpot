@@ -2,7 +2,7 @@ import { Cookie, setCookie } from "@std/http/cookie";
 import { createSession } from "./kv.ts";
 import { getConnection } from "../kv/connections.ts";
 
-const COOKIE_NAME = "session";
+export const COOKIE_NAME = "session";
 
 export async function createSessionCookie(
   connections: Map<string, Deno.Kv>,

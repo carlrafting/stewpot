@@ -1,6 +1,6 @@
 import { UserAgent } from "@std/http/user-agent";
 
-interface Session {
+export interface Session {
   createdAt: bigint;
   lastAccessedAt: bigint;
   userAgent?: string;
@@ -11,7 +11,11 @@ interface Session {
 
 interface SessionData extends Session {}
 
-const SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
+const sessionTTL = (duration: Temporal.Duration) => {
+  return duration.total({ unit: "milliseconds" });
+};
+
+export const SESSION_TTL_MS = sessionTTL(Temporal.Duration.from({ hours: 1 }));
 
 export async function createSession(
   request: Request,
