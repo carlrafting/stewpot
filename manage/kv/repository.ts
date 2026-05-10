@@ -1,15 +1,15 @@
 export class KvRepository {
   public connection: Deno.Kv | null = null;
 
-  private connections: Map<string, Deno.Kv> = new Map();
+  static #connections: Map<string, Deno.Kv> = new Map();
 
   static set connections(connections: Map<string, Deno.Kv>) {
-    this.connections = connections;
+    this.#connections = connections;
   }
 
   constructor(key: string) {
-    const connection = this.connections.has(key)
-      ? this.connections.get(key)
+    const connection = KvRepository.#connections.has(key)
+      ? KvRepository.#connections.get(key)
       : null;
     if (!connection) throw `no connection with key: "${key}" exists!`;
     this.connection = connection;
