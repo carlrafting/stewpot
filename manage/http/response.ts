@@ -1,14 +1,9 @@
 export function html(body: BodyInit, options?: ResponseInit): Response {
   const headers = new Headers();
   headers.set("content-type", "text/html; charset=utf-8");
-  if (options !== undefined) {
-    return new Response(body, {
-      headers,
-      ...options,
-    });
-  }
   return new Response(body, {
     headers,
+    ...options,
   });
 }
 
