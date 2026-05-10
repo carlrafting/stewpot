@@ -6,6 +6,14 @@ import { html, notFound } from "./http/response.ts";
 import { createServer } from "./http/server.ts";
 import { createConnections } from "./kv/connections.ts";
 import { KvRepository } from "./kv/repository.ts";
+import {
+  Extract,
+  extractJson,
+  extractToml,
+  extractYaml,
+  Format as FrontMatterFormat,
+  test as testFM,
+} from "@std/front-matter";
 
 export interface Options {
   vento: VentoOptions;
@@ -40,8 +48,23 @@ export async function app(_options?: Options) {
   const templates = vento(options.vento);
   const render = async (file: string) => {
     const template = await templates.load(file);
-    return async (data: Record<string, unknown> | undefined) =>
-      (await template(data)).content;
+    const source = template.source;
+    const frontmatterFormat = "yaml";
+    const hasFrontmatter = testFM(source, [frontmatterFormat]);
+    console.log({ source, frontmatter: hasFrontmatter });
+    return async (data: Record<string, unknown> | undefined) => {
+      if (!hasFrontmatter) {
+        const view = await template(data);
+        return view.content;
+      }
+      const frontmatterData: Extract<FrontMatterFormat> = extractYaml(source);
+      const attrs = frontmatterData;
+      const view = await templates.runString(frontmatterData.body, {
+        ...attrs,
+        ...data,
+      });
+      return view.content;
+    };
   };
   const userPagePattern = new URLPattern({ pathname: "/users/:id" });
   const staticPathPattern = new URLPattern({ pathname: "/assets/*" });
