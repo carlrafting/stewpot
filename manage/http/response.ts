@@ -1,16 +1,19 @@
-export function html(body: BodyInit): Response;
 export function html(body: BodyInit, options?: ResponseInit): Response {
   const headers = new Headers();
   headers.set("content-type", "text/html; charset=utf-8");
+  if (options !== undefined) {
+    return new Response(body, {
+      headers,
+      ...options,
+    });
+  }
   return new Response(body, {
     headers,
-    ...options,
   });
 }
 
 type Data = Record<string, unknown> | string[] | number[];
 
-export function json(data: Data): Response;
 export function json(data: Data, options?: ResponseInit): Response {
   const headers = new Headers();
   headers.set("content-type", "application/json");
@@ -21,7 +24,6 @@ export function json(data: Data, options?: ResponseInit): Response {
   });
 }
 
-export function text(body: string): Response;
 export function text(body: string, options?: ResponseInit): Response {
   const headers = new Headers();
   headers.set("content-type", "text/plain");
