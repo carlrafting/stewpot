@@ -1,6 +1,7 @@
-import { Cookie, setCookie } from "@std/http/cookie";
+import { type Cookie, setCookie } from "@std/http/cookie";
 import { createSession } from "./kv.ts";
 import { getConnection } from "../kv/connections.ts";
+import { duration } from "../utils.ts";
 
 export const COOKIE_NAME = "session";
 
@@ -9,6 +10,8 @@ export async function createSessionCookie(
   request: Request,
   headers: Headers,
 ) {
+  const url = new URL(request.url);
+  const https = url.protocol === "https:";
   const kv = getConnection(connections, "sessions");
   if (!kv) throw "could not get session kv data store!";
   const id = await createSession(
@@ -18,9 +21,11 @@ export async function createSessionCookie(
   const cookie: Cookie = {
     name: COOKIE_NAME,
     value: id,
+    domain: url.host,
+    expires: duration({ hours: 1 }),
+    httpOnly: true,
+    sameSite: "Strict",
+    secure: https,
   };
   setCookie(headers, cookie);
-  return new Response(null, {
-    headers,
-  });
 }

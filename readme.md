@@ -10,8 +10,14 @@ more is coming as it usually goes.
 
 # Packages
 
+- [@stewpot/cli](/cli/)
+  [![JSR](https://jsr.io/badges/@stewpot/cli)](https://jsr.io/@stewpot/cli)
 - [@stewpot/feeds](/feeds/)
   [![JSR](https://jsr.io/badges/@stewpot/feeds)](https://jsr.io/@stewpot/feeds)
+- [@stewpot/html](/html/)
+  [![JSR](https://jsr.io/badges/@stewpot/html)](https://jsr.io/@stewpot/html)
+- [@stewpot/manage](/manage/)
+  [![JSR](https://jsr.io/badges/@stewpot/manage)](https://jsr.io/@stewpot/manage)
 - [@stewpot/ui](/ui/)
   [![JSR](https://jsr.io/badges/@stewpot/ui)](https://jsr.io/@stewpot/ui)
 - [@stewpot/middleware](/middleware/)

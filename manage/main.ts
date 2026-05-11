@@ -7,24 +7,33 @@ import { createServer } from "./http/server.ts";
 import { createConnections } from "./kv/connections.ts";
 import { KvRepository } from "./kv/repository.ts";
 import {
-  Extract,
-  extractJson,
-  extractToml,
+  type Extract,
+  // extractJson,
+  // extractToml,
   extractYaml,
-  Format as FrontMatterFormat,
+  type Format as FrontMatterFormat,
   test as testFM,
 } from "@std/front-matter";
 
+export type { VentoOptions };
+
+/** app options interface */
 export interface Options {
+  /** vento options from vento package */
   vento: VentoOptions;
+  /** session config options */
   sessions: {
+    /** path to session kv db */
     path?: string;
   };
+  /** main kv db config options */
   kv: {
+    /** path to main kv db */
     path?: string;
   };
 }
 
+/** default app config options */
 export const defaultOptions: Options = {
   vento: {
     includes: "templates",
@@ -37,7 +46,10 @@ export const defaultOptions: Options = {
   },
 };
 
-export async function app(_options?: Options) {
+/** create app instance */
+export async function app(
+  _options?: Options,
+): Promise<Deno.ServeDefaultExport> {
   const options = {
     ...defaultOptions,
     ..._options,
@@ -69,7 +81,10 @@ export async function app(_options?: Options) {
   const userPagePattern = new URLPattern({ pathname: "/users/:id" });
   const staticPathPattern = new URLPattern({ pathname: "/assets/*" });
   return {
-    async fetch(request: Request, info?: Deno.ServeHandlerInfo) {
+    async fetch(
+      request: Request,
+      info?: Deno.ServeHandlerInfo,
+    ) {
       if (info) {
         const remoteAddr = info.remoteAddr;
         console.log({

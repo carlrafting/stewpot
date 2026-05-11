@@ -1,0 +1,13 @@
+{{ layout "./document.vto" }}
+
+<header>
+  {{ if title }}
+  <h1>{{ title }}</h1>
+  {{ /if }}
+</header>
+
+<main>
+{{ content }}
+</main>
+
+{{ /layout}}
