@@ -21,7 +21,7 @@ export async function createSessionCookie(
   const cookie: Cookie = {
     name: COOKIE_NAME,
     value: id,
-    domain: url.host,
+    path: "/",
     expires: duration({ hours: 1 }),
     httpOnly: true,
     sameSite: "Strict",
