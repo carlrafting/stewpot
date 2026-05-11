@@ -2,10 +2,6 @@
   "compilerOptions": {
     "strict": true
   },
-  "tasks": {},
-  "links": [
-    "../vanillapod/assets"
-  ],
   "workspace": [
     "./cli",
     "./feeds",
