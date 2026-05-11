@@ -13,6 +13,8 @@
   ],
   "unstable": [
     "raw-imports",
-    "kv"
-  ]
+    "kv",
+    "bundle"
+  ],
+  "vendor": true
 }

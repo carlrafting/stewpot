@@ -8,7 +8,8 @@
   },
   "tasks": {
     "dev": "deno -RWN --watch=templates/,static/ main.ts",
-    "serve": "deno serve -RW serve.ts"
+    "serve": "deno serve -RW serve.ts",
+    "bundle": "deno -RW bundle.ts"
   },
   "imports": {
     "@std/front-matter": "jsr:@std/front-matter@^1.0.9",

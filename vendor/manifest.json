@@ -1,0 +1,13 @@
+{
+  "modules": {
+    "https://jsr.io/@std/cli/1.0.29/unstable_progress_bar_stream.ts": {},
+    "https://jsr.io/@std/cli/1.0.29/unstable_prompt_multiple_select.ts": {},
+    "https://jsr.io/@std/data-structures/1.0.11/_binary_search_tree_internals.ts": {},
+    "https://jsr.io/@std/html/1.0.6/unstable_is_valid_custom_element_name.ts": {},
+    "https://jsr.io/@std/http/1.1.0/server_sent_event_parse_stream.ts": {},
+    "https://jsr.io/@std/http/1.1.0/unstable_formdata_decoder_stream.ts": {},
+    "https://jsr.io/@std/http/1.1.0/unstable_formdata_encoder_stream.ts": {},
+    "https://jsr.io/@std/net/1.0.6/unstable_get_network_address.ts": {},
+    "https://jsr.io/@std/streams/1.1.0/unstable_capped_delimiter_stream.ts": {}
+  }
+}

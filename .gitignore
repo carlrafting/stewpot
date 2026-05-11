@@ -4,5 +4,6 @@ sandbox/*
 coverage
 *.lcov
 dist
-!sandbox/next
 .obsidian
+!vendor/cdn.jsdelivr.net/gh/ventojs/vento@2.3.1
+vendor/jsr.io
