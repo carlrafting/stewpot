@@ -1,11 +1,11 @@
 {
-  "name": "cli",
-  "version": "0.1.0",
+  "name": "@stewpot/cli",
+  "version": "0.0.0",
   "exports": "./mod.ts",
+  "license": "MIT",
   "tasks": {
     "dev": "deno test --watch"
   },
-  "license": "MIT",
   "imports": {
     "@std/assert": "jsr:@std/assert@1"
   }
