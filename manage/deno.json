@@ -1,4 +1,11 @@
 {
+  "name": "@stewpot/manage",
+  "version": "0.1.0",
+  "license": "MIT",
+  "exports": "./main.ts",
+  "publish": {
+    "exclude": ["*_test.ts"]
+  },
   "tasks": {
     "dev": "deno -RWN --watch=templates/,static/ main.ts",
     "serve": "deno serve -RW serve.ts"
