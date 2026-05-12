@@ -1,5 +1,6 @@
 {
   "modules": {
+    "https://cdn.jsdelivr.net/gh/ventojs/vento@2.3.1/": {},
     "https://jsr.io/@std/cli/1.0.29/unstable_progress_bar_stream.ts": {},
     "https://jsr.io/@std/cli/1.0.29/unstable_prompt_multiple_select.ts": {},
     "https://jsr.io/@std/data-structures/1.0.11/_binary_search_tree_internals.ts": {},

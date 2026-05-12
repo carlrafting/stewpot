@@ -35,7 +35,7 @@ export async function createSession(
     forwardedIP,
     ...data,
   };
-  console.log(id, now);
+  // console.log(id, now);
   await store.set(["sessions", id], session, { expireIn: SESSION_TTL_MS });
   return id;
 }

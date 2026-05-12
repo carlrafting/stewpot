@@ -1,6 +1,13 @@
 {{ layout "./document.vto" }}
 
 <header>
+  {{ if nav }}
+  <nav>
+    {{ for link of nav }}
+    <a href="{{ link.href }}">{{ link.text }}</a>
+    {{ /for }}
+  </nav>
+  {{ /if }}
   {{ if title }}
   <h1>{{ title }}</h1>
   {{ /if }}

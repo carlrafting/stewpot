@@ -19,7 +19,6 @@ Now you can run the app with `deno serve main.ts`.
 
 ```bash
 deno serve -RW main.ts
-Map(2) { "sessions" => Kv {}, "kv" => Kv {} }
 deno serve: Listening on http://0.0.0.0:8000/
 ```
 

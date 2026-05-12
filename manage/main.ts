@@ -1,6 +1,6 @@
 import { getCookies, serveDir } from "@std/http";
-import type { Options as VentoOptions } from "@ventojs/vento";
-import vento from "@ventojs/vento";
+import type { Options as VentoOptions } from "@ventojs/vento/mod.ts";
+import vento from "@ventojs/vento/mod.ts";
 import { createSessionCookie } from "./session/cookie.ts";
 import { html, notFound } from "./http/response.ts";
 import { createServer } from "./http/server.ts";
@@ -47,24 +47,21 @@ export const defaultOptions: Options = {
   },
 };
 
-/** create app instance */
-export async function app(
-  _options?: Options,
-): Promise<Deno.ServeDefaultExport> {
-  const options = {
-    ...defaultOptions,
-    ..._options,
-  };
-  const connections = await createConnections(options);
-  console.log(connections);
-  KvRepository.connections = connections;
-  const templates = vento(options.vento);
-  const render = async (file: string) => {
+export type TemplateRenderFunction = (
+  data: Record<string, unknown> | undefined,
+) => Promise<string>;
+
+function createRender(options: VentoOptions) {
+  return (async (
+    file: string,
+  ): Promise<TemplateRenderFunction> => {
+    const templates = vento(options);
     const template = await templates.load(file);
+    // console.log({ template });
     const source = template.source;
-    const frontmatterFormat = "yaml";
-    const hasFrontmatter = testFM(source, [frontmatterFormat]);
-    console.log({ source, frontmatter: hasFrontmatter });
+    // const frontmatterFormat = "yaml";
+    // const hasFrontmatter = testFM(source, [frontmatterFormat]);
+    const hasFrontmatter = false;
     return async (data: Record<string, unknown> | undefined) => {
       if (!hasFrontmatter) {
         const view = await template(data);
@@ -78,7 +75,27 @@ export async function app(
       });
       return view.content;
     };
+  });
+}
+
+export const nav = [
+  { text: "Home", href: "/" },
+  { text: "Library", href: "/library/" },
+  { text: "Sessions", href: "/sessions/" },
+];
+
+/** create app instance */
+export async function app(
+  _options?: Options,
+): Promise<Deno.ServeDefaultExport> {
+  const options = {
+    ...defaultOptions,
+    ..._options,
   };
+  const connections = await createConnections(options);
+  // console.log(connections);
+  KvRepository.connections = connections;
+  const render = createRender(options.vento);
   const userPagePattern = new URLPattern({ pathname: "/users/:id" });
   const staticPathPattern = new URLPattern({ pathname: "/assets/*" });
   return {
@@ -93,10 +110,10 @@ export async function app(
         });
       }
       const cookies = getCookies(request.headers);
-      console.log(cookies);
+      // console.log(cookies);
       const headers = new Headers();
       const sessionID = cookies["session"];
-      console.log(sessionID);
+      // console.log(sessionID);
       const url = new URL(request.url);
 
       if (!sessionID) {
@@ -105,7 +122,7 @@ export async function app(
 
       if (url.pathname === "/") {
         const title = "Manage anything!";
-        const page = await render("dev/index.vto");
+        const page = await render("welcome/index.vto");
         // const page = await templates.run("dev/index.vto", {
         //   url,
         //   title: "Manage anything!",
@@ -119,7 +136,7 @@ export async function app(
         const key = "sessions";
         const repository = new KvRepository(key);
         const page = await render("dev/index.vto");
-        const data = repository.getAllByKey(key);
+        const data = await repository.getAllByKey(key);
         const body = await page({ title, url, data });
         return html(body, { headers });
       }
@@ -135,7 +152,10 @@ export async function app(
         return serveDir(request);
       }
 
-      return notFound();
+      const title = "Page was not found!";
+      const template = await render("errors/not_found.vto");
+      const page = await template({ title, url });
+      return notFound(page);
     },
   } satisfies Deno.ServeDefaultExport;
 }

@@ -1,20 +1,20 @@
----
-title: Development Area
----
-
 {{ layout "layouts/page.vto" }}
-  <p>With <code>@stewpot/manage</code> you can manage anything!</p>
-  <ul>
-    <li><a href="/sessions/">Sessions</a></li>
-  </ul>
   {{ if data }}
   <h2>Data</h2>
   <ul>
-  {{ for { key, value, versionstamp } of data }}
+  {{ for entry of data }}
     <li>
-    {{ key }}
-    {{ value }}
-    {{ versionstamp }}
+      <details>
+        <summary>{{ JSON.stringify(entry.key) }}</summary>
+        <ul>
+          {{ console.log(entry) }}
+          {{ for value of entry.value }}
+            {{ if value }}
+            <li>{{ value }}</li>
+            {{ /if }}
+          {{ /for }}
+        </ul>
+        </details>
     </li>
   {{ /for }}
   </ul>

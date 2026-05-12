@@ -36,12 +36,11 @@ export function text(body: string, options?: ResponseInit): Response {
   });
 }
 
-export function notFound() {
+export function notFound(body: string) {
   const status = STATUS_CODE.NotFound;
   const statusText = STATUS_TEXT[status];
   const headers = new Headers();
   headers.set("content-type", "text/html; charset=utf-8");
-  const body = `<h1>${statusText}</h1>`;
   return new Response(body, {
     headers,
     status,
