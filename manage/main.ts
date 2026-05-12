@@ -79,7 +79,7 @@ function createTemplateRender(options: VentoOptions) {
   });
 }
 
-export const nav = [
+const nav = [
   { text: "Home", href: "/" },
   { text: "Library", href: "/library/" },
   { text: "Sessions", href: "/sessions/" },
