@@ -34,7 +34,8 @@
     "jsr:@std/yaml@^1.0.5": "1.1.0",
     "jsr:@stewpot/middleware@0.3": "0.3.1",
     "npm:feedsmith@^2.9.1": "2.9.1",
-    "npm:marked@^17.0.1": "17.0.5"
+    "npm:marked@^17.0.1": "17.0.5",
+    "npm:ventojs@^2.3.1": "2.3.1"
   },
   "jsr": {
     "@std/assert@1.0.19": {
@@ -188,6 +189,9 @@
     },
     "strnum@2.2.2": {
       "integrity": "sha512-DnR90I+jtXNSTXWdwrEy9FakW7UX+qUZg28gj5fk2vxxl7uS/3bpI4fjFYVmdK9etptYBPNkpahuQnEwhwECqA=="
+    },
+    "ventojs@2.3.1": {
+      "integrity": "sha512-saGBMwQF+TZZJLTixSzwbZl+O5cNdBhMXNYAwegQ+/EsXSllSzrzgrZN7MU07ZOea3M+I/xBTwEFVb0HU6moUw=="
     }
   },
   "remote": {
@@ -271,7 +275,8 @@
           "jsr:@std/front-matter@^1.0.9",
           "jsr:@std/http@1",
           "jsr:@std/path@^1.1.4",
-          "jsr:@std/ulid@1"
+          "jsr:@std/ulid@1",
+          "npm:ventojs@^2.3.1"
         ]
       },
       "middleware": {

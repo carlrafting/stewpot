@@ -1,7 +1,7 @@
 import { getCookies, serveDir } from "@std/http";
-import type { Options as VentoOptions } from "@ventojs/vento/mod.ts";
-import vento from "@ventojs/vento/mod.ts";
-import { createSessionCookie } from "./session/cookie.ts";
+import type { Options as VentoOptions } from "ventojs/mod.js";
+import vento from "ventojs/mod.js";
+import { COOKIE_NAME, createSessionCookie } from "./session/cookie.ts";
 import { html, notFound } from "./http/response.ts";
 import { createServer } from "./http/server.ts";
 import { createConnections } from "./kv/connections.ts";
@@ -14,6 +14,7 @@ import {
   type Format as FrontMatterFormat,
   test as testFM,
 } from "@std/front-matter";
+import { createFlash } from "./flash/message.ts";
 
 export type { VentoOptions };
 export { createServer };
@@ -51,7 +52,7 @@ export type TemplateRenderFunction = (
   data: Record<string, unknown> | undefined,
 ) => Promise<string>;
 
-function createRender(options: VentoOptions) {
+function createTemplateRender(options: VentoOptions) {
   return (async (
     file: string,
   ): Promise<TemplateRenderFunction> => {
@@ -82,6 +83,7 @@ export const nav = [
   { text: "Home", href: "/" },
   { text: "Library", href: "/library/" },
   { text: "Sessions", href: "/sessions/" },
+  { text: "Settings", href: "/settings/" },
 ];
 
 /** create app instance */
@@ -95,7 +97,7 @@ export async function app(
   const connections = await createConnections(options);
   // console.log(connections);
   KvRepository.connections = connections;
-  const render = createRender(options.vento);
+  const render = createTemplateRender(options.vento);
   const userPagePattern = new URLPattern({ pathname: "/users/:id" });
   const staticPathPattern = new URLPattern({ pathname: "/assets/*" });
   return {
@@ -112,7 +114,7 @@ export async function app(
       const cookies = getCookies(request.headers);
       // console.log(cookies);
       const headers = new Headers();
-      const sessionID = cookies["session"];
+      const sessionID = cookies[COOKIE_NAME];
       // console.log(sessionID);
       const url = new URL(request.url);
 
@@ -120,10 +122,26 @@ export async function app(
         await createSessionCookie(connections, request, headers);
       }
 
+      if (staticPathPattern.test(url)) {
+        return serveDir(request);
+      }
+
+      // if (!url.pathname.endsWith("/")) {
+      //   return Response.redirect(url.href.concat("/"));
+      // }
+
       if (url.pathname === "/") {
         const title = "Manage anything!";
         const page = await render("welcome/index.vto");
         const body = await page({ title, url, nav });
+        return html(body, { headers });
+      }
+
+      if (url.pathname === "/library/") {
+        const title = "Library";
+        const description = "This is the library...";
+        const page = await render("library/index.vto");
+        const body = await page({ title, description, url, nav });
         return html(body, { headers });
       }
 
@@ -142,10 +160,6 @@ export async function app(
         return new Response(userPageMatch.pathname.groups.id, {
           headers,
         });
-      }
-
-      if (staticPathPattern.test(url)) {
-        return serveDir(request);
       }
 
       const title = "Page was not found!";

@@ -2,8 +2,8 @@ import { UserAgent } from "@std/http/user-agent";
 import { duration } from "../utils.ts";
 
 export interface Session {
-  createdAt: bigint;
-  lastAccessedAt: bigint;
+  createdAt: number;
+  lastAccessedAt: number;
   userAgent?: string;
   forwardedIP?: string;
   flash?: Record<string, string>;
@@ -29,8 +29,8 @@ export async function createSession(
   const userAgent = new UserAgent(headers.get("user-agent")).ua;
   const forwardedIP = headers.get("x-forwarded-for")?.toString();
   const session: Session = {
-    createdAt: now.epochNanoseconds,
-    lastAccessedAt: now.epochNanoseconds,
+    createdAt: now.epochMilliseconds,
+    lastAccessedAt: now.epochMilliseconds,
     userAgent,
     forwardedIP,
     ...data,

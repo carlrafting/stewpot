@@ -1,6 +1,6 @@
 {
   "name": "@stewpot/manage",
-  "version": "0.1.0",
+  "version": "0.0.0",
   "license": "MIT",
   "exports": "./main.ts",
   "publish": {
@@ -15,8 +15,8 @@
     "@std/front-matter": "jsr:@std/front-matter@^1.0.9",
     "@std/path": "jsr:@std/path@^1.1.4",
     "@std/ulid": "jsr:@std/ulid@^1.0.0",
-    "@ventojs/vento/": "https://cdn.jsdelivr.net/gh/ventojs/vento@2.3.1/",
     "@std/assert": "jsr:@std/assert@1",
-    "@std/http": "jsr:@std/http@1"
+    "@std/http": "jsr:@std/http@1",
+    "ventojs": "npm:ventojs@^2.3.1"
   }
 }

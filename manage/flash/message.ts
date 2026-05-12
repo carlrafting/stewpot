@@ -1,6 +1,6 @@
 import { getCookies } from "@std/http/cookie";
 import { COOKIE_NAME } from "../session/cookie.ts";
-import { Session, SESSION_TTL_MS } from "../session/kv.ts";
+import { type Session, SESSION_TTL_MS } from "../session/kv.ts";
 
 export type FlashType = "error" | "success" | "info";
 
