@@ -22,3 +22,14 @@ deno serve -RW main.ts
 Map(2) { "sessions" => Kv {}, "kv" => Kv {} }
 deno serve: Listening on http://0.0.0.0:8000/
 ```
+
+It's also possible to use `createServer()` API for running the manage app.
+
+```ts
+import { createServer } from "@stewpot/manage";
+const handler = await app();
+const options: Deno.ServeTcpOptions = {
+  port: 3000,
+};
+await createServer(handler, options);
+```

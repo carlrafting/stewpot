@@ -16,6 +16,7 @@ import {
 } from "@std/front-matter";
 
 export type { VentoOptions };
+export { createServer };
 
 /** app options interface */
 export interface Options {
