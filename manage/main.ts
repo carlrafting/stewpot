@@ -59,9 +59,9 @@ function createRender(options: VentoOptions) {
     const template = await templates.load(file);
     // console.log({ template });
     const source = template.source;
-    // const frontmatterFormat = "yaml";
-    // const hasFrontmatter = testFM(source, [frontmatterFormat]);
-    const hasFrontmatter = false;
+    const frontmatterFormat = "yaml";
+    const hasFrontmatter = testFM(source, [frontmatterFormat]);
+    // const hasFrontmatter = false;
     return async (data: Record<string, unknown> | undefined) => {
       if (!hasFrontmatter) {
         const view = await template(data);
@@ -123,10 +123,6 @@ export async function app(
       if (url.pathname === "/") {
         const title = "Manage anything!";
         const page = await render("welcome/index.vto");
-        // const page = await templates.run("dev/index.vto", {
-        //   url,
-        //   title: "Manage anything!",
-        // });
         const body = await page({ title, url, nav });
         return html(body, { headers });
       }
