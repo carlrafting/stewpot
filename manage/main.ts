@@ -127,7 +127,7 @@ export async function app(
         //   url,
         //   title: "Manage anything!",
         // });
-        const body = await page({ title, url });
+        const body = await page({ title, url, nav });
         return html(body, { headers });
       }
 
@@ -137,7 +137,7 @@ export async function app(
         const repository = new KvRepository(key);
         const page = await render("dev/index.vto");
         const data = await repository.getAllByKey(key);
-        const body = await page({ title, url, data });
+        const body = await page({ title, url, nav, data });
         return html(body, { headers });
       }
 
@@ -154,7 +154,7 @@ export async function app(
 
       const title = "Page was not found!";
       const template = await render("errors/not_found.vto");
-      const page = await template({ title, url });
+      const page = await template({ title, url, nav });
       return notFound(page);
     },
   } satisfies Deno.ServeDefaultExport;
