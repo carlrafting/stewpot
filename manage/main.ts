@@ -1,5 +1,6 @@
 import { getCookies, serveDir } from "@std/http";
 import type { Options as VentoOptions } from "ventojs/mod.js";
+import { FileLoader } from "ventojs/loaders/file.js";
 import vento from "ventojs/mod.js";
 import { COOKIE_NAME, createSessionCookie } from "./session/cookie.ts";
 import { html } from "./http/response.ts";
@@ -39,7 +40,9 @@ export interface Options {
 /** default app config options */
 export const defaultOptions: Options = {
   vento: {
-    includes: "templates",
+    includes: new FileLoader(
+      new URL("templates", import.meta.url).pathname,
+    ),
   },
   sessions: {
     path: "database/sessions.db",
