@@ -15,6 +15,5 @@
     "raw-imports",
     "kv",
     "bundle"
-  ],
-  "vendor": true
+  ]
 }
