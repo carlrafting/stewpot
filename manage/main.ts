@@ -1,4 +1,4 @@
-import { getCookies, serveDir } from "@std/http";
+import { getCookies, serveDir, serveFile } from "@std/http";
 import type { Options as VentoOptions } from "ventojs/mod.js";
 import { FileLoader } from "ventojs/loaders/file.js";
 import vento from "ventojs/mod.js";
@@ -17,6 +17,8 @@ import {
 } from "@std/front-matter";
 import { createFlash } from "./flash/message.ts";
 import { matchRoutes, type Route, type RouteContext } from "./http/routes.ts";
+import { fileURLToPath } from "node:url";
+import { dirname } from "@std/path/dirname";
 
 export type { VentoOptions };
 export { createServer };
@@ -231,7 +233,11 @@ export async function app(
       }
 
       if (staticPathPattern.test(url)) {
-        return serveDir(request);
+        const fsRoot: string = dirname(fileURLToPath(new URL(import.meta.url)));
+        return await serveDir(
+          request,
+          { fsRoot },
+        );
       }
 
       return await matchRoutes(routes, context) as Response;
