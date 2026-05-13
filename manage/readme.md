@@ -11,7 +11,7 @@ of that instance.
 ```ts
 // main.ts
 import createApp from "@stewpot/manage";
-const app = createApp();
+const app = await createApp();
 export default app;
 ```
 
