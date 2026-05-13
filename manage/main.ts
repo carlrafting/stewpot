@@ -17,6 +17,7 @@ import {
 } from "@std/front-matter";
 import { createFlash } from "./flash/message.ts";
 import { matchRoutes, type Route, type RouteContext } from "./http/routes.ts";
+import { dirname, fromFileUrl } from "@std/path";
 
 export type { VentoOptions };
 export { createServer };
@@ -231,7 +232,11 @@ export async function app(
       }
 
       if (staticPathPattern.test(url)) {
-        return serveDir(request);
+        const fsRoot: string = dirname(fromFileUrl(new URL(import.meta.url)));
+        return await serveDir(
+          request,
+          { fsRoot },
+        );
       }
 
       return await matchRoutes(routes, context) as Response;
