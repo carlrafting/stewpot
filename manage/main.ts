@@ -235,22 +235,7 @@ export async function app(
         return serveDir(request);
       }
 
-      const response = await matchRoutes(routes, context) as Response;
-      if (response) {
-        return response;
-      }
-
-      const userPageMatch = userPagePattern.exec(url);
-      if (userPageMatch) {
-        return new Response(userPageMatch.pathname.groups.id, {
-          headers,
-        });
-      }
-
-      const title = "Page was not found!";
-      const template = await render("errors/not_found.vto");
-      const page = await template({ title, url, nav });
-      return notFound(page);
+      return await matchRoutes(routes, context) as Response;
     },
   } satisfies Deno.ServeDefaultExport;
 }

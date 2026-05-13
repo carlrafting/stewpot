@@ -1,4 +1,5 @@
 import type { TemplateRenderFunction } from "@stewpot/manage";
+import { notFound } from "./response.ts";
 
 export type RouteMethod = "GET" | "POST";
 
@@ -19,7 +20,19 @@ export interface Route {
   pattern?: URLPattern;
 }
 
-export async function matchRoutes(routes: Route[], context: RouteContext) {
+async function notFoundHandler(
+  { render, url }: RouteContext,
+): Promise<Response> {
+  const title = "Page was not found!";
+  const template = await render("errors/not_found.vto");
+  const page = await template({ title, url });
+  return notFound(page);
+}
+
+export async function matchRoutes(
+  routes: Route[],
+  context: RouteContext,
+): Promise<Response> {
   const request = context.request;
   const url = new URL(request.url);
   const method: string = request.method as RouteMethod;
@@ -40,4 +53,6 @@ export async function matchRoutes(routes: Route[], context: RouteContext) {
       }
     }
   }
+
+  return await notFoundHandler(context);
 }
