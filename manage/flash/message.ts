@@ -21,7 +21,7 @@ export async function createFlash(
 ): Promise<FlashMethods> {
   const cookies = getCookies(request.headers);
   const sessionID = cookies[COOKIE_NAME];
-  if (sessionID) throw errors.session;
+  if (!sessionID) throw errors.session;
   const key = ["sessions", sessionID];
   const entry = await store.get<Session>(key);
   if (!entry.value) throw errors.entry;

@@ -15,6 +15,9 @@ import {
   test as testFM,
 } from "@std/front-matter";
 import { createFlash } from "./flash/message.ts";
+import { join } from "@std/path/join";
+import { METHOD } from "@std/http/unstable-method";
+import { matchRoutes, Route, RouteContext } from "./http/routes.ts";
 
 export type { VentoOptions };
 export { createServer };
@@ -81,9 +84,141 @@ function createTemplateRender(options: VentoOptions) {
 
 const nav = [
   { text: "Home", href: "/" },
+  { text: "Routes", href: "/routes/" },
   { text: "Library", href: "/library/" },
   { text: "Sessions", href: "/sessions/" },
   { text: "Settings", href: "/settings/" },
+];
+
+// if (url.pathname === "/") {
+//   if (method === "GET") {
+//     const title = "Manage anything!";
+//     const page = await render("welcome/index.vto");
+//     const body = await page({ title, url, nav });
+//     return html(body, { headers });
+//   }
+// }
+
+// if (url.pathname === "/routes/") {
+//   if (method === "GET") {
+//     const title = "Routes";
+//     const routes = [
+//       {
+//         name: "Black",
+//         path: "/black/",
+//         type: "static",
+//         ref: "files/black.png",
+//       },
+//     ];
+//     const page = await render("routes/index.vto");
+//     const body = await page({ title, url, nav, routes });
+//     return html(body, { headers });
+//   }
+// }
+
+const routes: Route[] = [
+  {
+    name: "home",
+    pathname: "/",
+    method: "GET",
+    async handler({
+      render,
+      url,
+      headers,
+    }): Promise<Response> {
+      const title = "Manage anything!";
+      const page = await render("welcome/index.vto");
+      const body = await page({ title, url, nav });
+      return html(body, { headers });
+    },
+  },
+  {
+    name: "routes",
+    method: "GET",
+    pathname: "/routes/",
+    async handler({ render, url, headers }) {
+      const title = "Routes";
+      const routes = [
+        {
+          name: "Black",
+          path: "/black/",
+          type: "static",
+          ref: "files/black.png",
+        },
+      ];
+      const page = await render("routes/index.vto");
+      const body = await page({ title, url, nav, routes });
+      return html(body, { headers });
+    },
+  },
+  // if (url.pathname === "/library/") {
+  //   if (method === "GET") {
+  //     const title = "Library";
+  //     const description = "This is the library...";
+  //     const page = await render("library/index.vto");
+  //     const body = await page({ title, description, url, nav });
+  //     return html(body, { headers });
+  //   }
+  // }
+  {
+    name: "library",
+    method: "GET",
+    pathname: "/library/",
+    async handler({ render, url, headers }) {
+      const title = "Library";
+      const description = "This is the library...";
+      const page = await render("library/index.vto");
+      const body = await page({ title, description, url, nav });
+      return html(body, { headers });
+    },
+  },
+  {
+    name: "library_upload",
+    method: "GET",
+    pathname: "/library/upload/",
+    async handler({ connections, request }) {
+      const connection = connections.get("sessions");
+      if (!connection) throw "no session connection available!";
+      const flash = await createFlash(request, connection);
+      flash.set("success", "file uploaded successfully!");
+      return Response.redirect(new URL("/library/", import.meta.url));
+    },
+  },
+  {
+    name: "library_upload",
+    method: "POST",
+    pathname: "/library/upload/",
+    async handler({ request }) {
+      const formData = await request.formData();
+      const file: File | null = formData?.get("file") as File;
+      if (!file) {
+        return new Response("File required but not provided.", {
+          status: 400,
+        });
+      }
+      const tmp = await Deno.makeTempFile({
+        dir: "./tmp",
+      });
+      await Deno.writeFile(tmp, await file.bytes());
+      const fileURL = new URL(`files/${file.name}`, import.meta.url);
+      await Deno.rename(tmp, fileURL);
+      return Response.redirect(new URL("/library/", request.url));
+    },
+  },
+  {
+    name: "sessions",
+    method: "GET",
+    pathname: "/sessions/",
+    async handler({ render, headers, url }) {
+      const title = "Sessions";
+      const key = "sessions";
+      const repository = new KvRepository(key);
+      const page = await render("dev/index.vto");
+      const data = await repository.getAllByKey(key);
+      const body = await page({ title, url, nav, data });
+      return html(body, { headers });
+    },
+  },
 ];
 
 /** create app instance */
@@ -117,6 +252,17 @@ export async function app(
       const sessionID = cookies[COOKIE_NAME];
       // console.log(sessionID);
       const url = new URL(request.url);
+      const method: string = request.method;
+      const isGET = method === "GET";
+      const isPOST = method === "POST";
+
+      const context: RouteContext = {
+        request,
+        headers,
+        url,
+        render,
+        connections,
+      };
 
       if (!sessionID) {
         await createSessionCookie(connections, request, headers);
@@ -126,33 +272,85 @@ export async function app(
         return serveDir(request);
       }
 
-      // if (!url.pathname.endsWith("/")) {
+      // const lastIndex = -1;
+      // const lastSegment = url.pathname.split("/").at(lastIndex);
+      // if (!lastSegment?.includes(".") && !url.pathname.endsWith("/")) {
       //   return Response.redirect(url.href.concat("/"));
       // }
 
-      if (url.pathname === "/") {
-        const title = "Manage anything!";
-        const page = await render("welcome/index.vto");
-        const body = await page({ title, url, nav });
-        return html(body, { headers });
-      }
+      // if (url.pathname === "/") {
+      //   if (method === "GET") {
+      //     const title = "Manage anything!";
+      //     const page = await render("welcome/index.vto");
+      //     const body = await page({ title, url, nav });
+      //     return html(body, { headers });
+      //   }
+      // }
 
-      if (url.pathname === "/library/") {
-        const title = "Library";
-        const description = "This is the library...";
-        const page = await render("library/index.vto");
-        const body = await page({ title, description, url, nav });
-        return html(body, { headers });
-      }
+      // if (url.pathname === "/routes/") {
+      //   if (method === "GET") {
+      //     const title = "Routes";
+      //     const routes = [
+      //       {
+      //         name: "Black",
+      //         path: "/black/",
+      //         type: "static",
+      //         ref: "files/black.png",
+      //       },
+      //     ];
+      //     const page = await render("routes/index.vto");
+      //     const body = await page({ title, url, nav, routes });
+      //     return html(body, { headers });
+      //   }
+      // }
 
-      if (url.pathname === "/sessions/") {
-        const title = "Sessions";
-        const key = "sessions";
-        const repository = new KvRepository(key);
-        const page = await render("dev/index.vto");
-        const data = await repository.getAllByKey(key);
-        const body = await page({ title, url, nav, data });
-        return html(body, { headers });
+      // if (url.pathname === "/library/") {
+      //   if (method === "GET") {
+      //     const title = "Library";
+      //     const description = "This is the library...";
+      //     const page = await render("library/index.vto");
+      //     const body = await page({ title, description, url, nav });
+      //     return html(body, { headers });
+      //   }
+      // }
+
+      // if (url.pathname === "/library/upload/") {
+      //   if (method === "POST") {
+      //     const formData = await request.formData();
+      //     const file: File | null = formData?.get("file") as File;
+      //     if (!file) {
+      //       return new Response("File required but not provided.", {
+      //         status: 400,
+      //       });
+      //     }
+      //     const tmp = await Deno.makeTempFile({
+      //       dir: "./tmp",
+      //     });
+      //     await Deno.writeFile(tmp, await file.bytes());
+      //     const fileURL = new URL(`files/${file.name}`, import.meta.url);
+      //     await Deno.rename(tmp, fileURL);
+      //     return Response.redirect(new URL("/library/", request.url));
+      //   }
+      //   const connection = connections.get("sessions");
+      //   if (!connection) throw "no session connection available!";
+      //   const flash = await createFlash(request, connection);
+      //   flash.set("success", "file uploaded successfully!");
+      //   return Response.redirect(new URL("/library/", import.meta.url));
+      // }
+
+      // if (isGET && url.pathname === "/sessions/") {
+      //   const title = "Sessions";
+      //   const key = "sessions";
+      //   const repository = new KvRepository(key);
+      //   const page = await render("dev/index.vto");
+      //   const data = await repository.getAllByKey(key);
+      //   const body = await page({ title, url, nav, data });
+      //   return html(body, { headers });
+      // }
+
+      const response = await matchRoutes(routes, context);
+      if (response) {
+        return response;
       }
 
       const userPageMatch = userPagePattern.exec(url);

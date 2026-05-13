@@ -1,0 +1,18 @@
+{{ layout "layouts/page.vto" }}
+
+<a href="./create/">New Route</a> <span>Create new route</span>
+
+{{ if routes }}
+<ul>
+{{ for route of routes }}
+  <li>
+    name: {{ route.name }}<br>
+    path: {{ route.path }}<br>
+    type: {{ route.type }}<br>
+    ref: {{ route.ref }}<br>
+  </li>
+{{ /for }}
+</ul>
+{{ /if }}
+
+{{ /layout }}
