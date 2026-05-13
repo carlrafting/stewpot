@@ -196,7 +196,6 @@ export async function app(
   // console.log(connections);
   KvRepository.connections = connections;
   const render = createTemplateRender(options.vento);
-  const userPagePattern = new URLPattern({ pathname: "/users/:id" });
   const staticPathPattern = new URLPattern({ pathname: "/assets/*" });
   return {
     async fetch(
@@ -215,9 +214,6 @@ export async function app(
       const sessionID = cookies[COOKIE_NAME];
       // console.log(sessionID);
       const url = new URL(request.url);
-      const method: string = request.method;
-      const isGET = method === "GET";
-      const isPOST = method === "POST";
 
       const context: RouteContext = {
         request,
