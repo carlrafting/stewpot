@@ -1,0 +1,10 @@
+{{ layout "layouts/page.vto" }}
+<a href="./new/">Create New Document</a>
+{{ if data?.documents }}
+<ul>
+{{ for document of data.documents }}
+  <li>{{ document.title }}</li>
+{{ /for }}
+</ul>
+{{ /if }}
+{{ /layout }}

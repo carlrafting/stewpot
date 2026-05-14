@@ -1,0 +1,15 @@
+{{ layout "layouts/page.vto" }}
+
+<form action="/documents/create/" method="post">
+  <div class="field">
+    <label for="title">Title</label><br>
+    <input id="title" type="text" name="title">
+  </div>
+  <div class="field">
+    <label for="content">Content</label><br>
+    <textarea name="content" id="content" cols="80" rows="25"></textarea>
+  </div>
+  <button>Create Document</button>
+</form>
+
+{{ /layout }}

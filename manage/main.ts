@@ -86,11 +86,20 @@ function createTemplateRender(options: VentoOptions) {
 
 const nav = [
   { text: "Home", href: "/" },
+  { text: "Documents", href: "/documents/" },
   { text: "Routes", href: "/routes/" },
   { text: "Library", href: "/library/" },
   { text: "Sessions", href: "/sessions/" },
   { text: "Settings", href: "/settings/" },
 ];
+
+interface Document {
+  title: string;
+  content: string;
+  created: string;
+}
+
+interface PageContext {}
 
 const routes: Route[] = [
   {
@@ -125,6 +134,73 @@ const routes: Route[] = [
       const page = await render("routes/index.vto");
       const body = await page({ title, url, nav, routes });
       return html(body, { headers });
+    },
+  },
+  {
+    name: "documents_index",
+    pathname: "/documents/",
+    method: "GET",
+    async handler(
+      { render, url, connections, headers }: RouteContext,
+    ): Promise<Response> {
+      const title = "Documents";
+      const description = "Edit &amp; create new documents";
+      const kv = connections.get("kv");
+      const data: { documents: Document[] } = { documents: [] };
+      if (kv) {
+        const prefix = ["documents"];
+        const documents = kv.list<Document>({ prefix });
+        for await (const document of documents) {
+          data.documents.push(document.value);
+        }
+      }
+      const page = await render("documents/index.vto");
+      const body = await page({ title, description, url, nav, routes, data });
+      return html(body, { headers });
+    },
+  },
+  {
+    name: "new_document",
+    pathname: "/documents/new/",
+    method: "GET",
+    async handler({ render, url, headers }: RouteContext): Promise<Response> {
+      const title = "New Document";
+      const description = "Create new document";
+      const page = await render("documents/new.vto");
+      const body = await page({ title, description, url, nav, routes });
+      return html(body, { headers });
+    },
+  },
+  {
+    name: "create_document",
+    pathname: "/documents/create/",
+    method: "POST",
+    async handler(
+      { render, request, url, connections }: RouteContext,
+    ): Promise<Response> {
+      const id = crypto.randomUUID();
+      const key = ["documents", id];
+      const formData = request.formData();
+      const title = (await formData).get("title");
+      const content = (await formData).get("content");
+      const created = Temporal.Now.plainDateTimeISO().toLocaleString();
+      const data = {
+        title,
+        content,
+        created,
+      };
+      const kv = connections.get("kv");
+      if (kv) {
+        const atomic = kv.atomic();
+        const commit = await atomic.check({ key, versionstamp: null }).set(
+          key,
+          data,
+        ).commit();
+        if (!commit.ok) {
+          throw "there was an error creating document";
+        }
+      }
+      return Response.redirect(new URL("/documents/", url));
     },
   },
   {
@@ -208,9 +284,9 @@ export async function app(
     ) {
       if (info) {
         const remoteAddr = info.remoteAddr;
-        console.log({
-          remoteAddr,
-        });
+        // console.log({
+        //   remoteAddr,
+        // });
       }
       const cookies = getCookies(request.headers);
       // console.log(cookies);
