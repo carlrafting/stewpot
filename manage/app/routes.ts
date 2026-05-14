@@ -4,6 +4,7 @@ import type { Route, RouteContext } from "../http/routes.ts";
 import { html } from "../http/response.ts";
 import { KvRepository } from "../kv/repository.ts";
 import type { DocumentData, RouteData } from "./data.ts";
+import type { Session } from "../session/kv.ts";
 
 export const routes: Route[] = [
   {
@@ -46,18 +47,15 @@ export const routes: Route[] = [
     pathname: "/documents/",
     method: "GET",
     async handler(
-      { render, url, connections, headers }: RouteContext,
+      { render, url, headers }: RouteContext,
     ): Promise<Response> {
       const title = "Documents";
       const description = "Edit &amp; create new documents";
-      const kv = connections.get("kv");
+      const kv = new KvRepository("kv");
       const data: { documents: DocumentData[] } = { documents: [] };
-      if (kv) {
-        const prefix = ["documents"];
-        const documents = kv.list<DocumentData>({ prefix });
-        for await (const document of documents) {
-          data.documents.push(document.value);
-        }
+      const documents = await kv.getAllByKey<DocumentData>("documents");
+      for (const document of documents) {
+        data.documents.push(document?.value);
       }
       const page = await render("documents/index.vto");
       const body = await page({ title, description, url, nav, routes, data });
@@ -95,15 +93,13 @@ export const routes: Route[] = [
         created,
       };
       const kv = connections.get("kv");
-      if (kv) {
-        const atomic = kv.atomic();
-        const commit = await atomic.check({ key, versionstamp: null }).set(
-          key,
-          data,
-        ).commit();
-        if (!commit.ok) {
-          throw "there was an error creating document";
-        }
+      const atomic = kv?.atomic();
+      const commit = await atomic?.check({ key, versionstamp: null }).set(
+        key,
+        data,
+      ).commit();
+      if (!commit?.ok) {
+        throw "there was an error while creating the document!";
       }
       return Response.redirect(new URL("/documents/", url));
     },
@@ -162,7 +158,7 @@ export const routes: Route[] = [
       const key = "sessions";
       const repository = new KvRepository(key);
       const page = await render("dev/index.vto");
-      const data = await repository.getAllByKey(key);
+      const data = await repository.getAllByKey<Session>(key);
       const body = await page({ title, url, nav, data });
       return html(body, { headers });
     },

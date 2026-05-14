@@ -1,5 +1,5 @@
 export class KvRepository {
-  public connection: Deno.Kv | null = null;
+  #connection: Deno.Kv | null = null;
 
   static #connections: Map<string, Deno.Kv> = new Map();
 
@@ -12,12 +12,14 @@ export class KvRepository {
       ? KvRepository.#connections.get(key)
       : null;
     if (!connection) throw `no connection with key: "${key}" exists!`;
-    this.connection = connection;
+    this.#connection = connection;
   }
 
-  async getAllByKey(key: string) {
+  async getAllByKey<T>(
+    key: string,
+  ): Promise<Deno.KvEntry<T>[]> {
     const prefix = [key];
-    const results = this.connection?.list({
+    const results = this.#connection?.list<T>({
       prefix,
     });
     const data = [];

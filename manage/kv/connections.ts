@@ -1,7 +1,9 @@
-import { Options } from "../main.ts";
+import type { Options } from "../main.ts";
+
+export type ConnectionKey = "sessions" | "kv";
 
 export async function createConnections(options: Options) {
-  const connections = new Map<string, Deno.Kv>();
+  const connections = new Map<ConnectionKey, Deno.Kv>();
   {
     const sessions = await Deno.openKv(options?.sessions?.path);
     const kv = await Deno.openKv(options?.kv?.path);
