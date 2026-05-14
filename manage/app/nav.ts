@@ -1,3 +1,5 @@
+import type { NavData } from "./data.ts";
+
 export default [
   { text: "Home", href: "/" },
   { text: "Documents", href: "/documents/" },
@@ -5,4 +7,4 @@ export default [
   { text: "Library", href: "/library/" },
   { text: "Sessions", href: "/sessions/" },
   { text: "Settings", href: "/settings/" },
-];
+] as NavData[];

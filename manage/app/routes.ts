@@ -3,14 +3,7 @@ import { createFlash } from "../flash/message.ts";
 import type { Route, RouteContext } from "../http/routes.ts";
 import { html } from "../http/response.ts";
 import { KvRepository } from "../kv/repository.ts";
-
-export interface Document {
-  title: string;
-  content: string;
-  created: string;
-}
-
-interface PageContext {}
+import type { DocumentData, RouteData } from "./data.ts";
 
 export const routes: Route[] = [
   {
@@ -34,7 +27,7 @@ export const routes: Route[] = [
     pathname: "/routes/",
     async handler({ render, url, headers }) {
       const title = "Routes";
-      const routes = [
+      const routes: RouteData[] = [
         {
           name: "Black",
           path: "/black/",
@@ -42,8 +35,9 @@ export const routes: Route[] = [
           ref: "files/black.png",
         },
       ];
+      const data: { routes: RouteData[] } = { routes };
       const page = await render("routes/index.vto");
-      const body = await page({ title, url, nav, routes });
+      const body = await page({ title, url, nav, data });
       return html(body, { headers });
     },
   },
@@ -57,10 +51,10 @@ export const routes: Route[] = [
       const title = "Documents";
       const description = "Edit &amp; create new documents";
       const kv = connections.get("kv");
-      const data: { documents: Document[] } = { documents: [] };
+      const data: { documents: DocumentData[] } = { documents: [] };
       if (kv) {
         const prefix = ["documents"];
-        const documents = kv.list<Document>({ prefix });
+        const documents = kv.list<DocumentData>({ prefix });
         for await (const document of documents) {
           data.documents.push(document.value);
         }
@@ -87,7 +81,7 @@ export const routes: Route[] = [
     pathname: "/documents/create/",
     method: "POST",
     async handler(
-      { render, request, url, connections }: RouteContext,
+      { request, url, connections }: RouteContext,
     ): Promise<Response> {
       const id = crypto.randomUUID();
       const key = ["documents", id];
