@@ -1,6 +1,13 @@
 {{ layout "./document.vto" }}
 
 <header>
+  <nav class="skiplinks">
+    <a href="#main" class="skiplink">Skip to main content</a>
+  </nav>
+  <div class="meta">
+    <a href="/">@stewpot/manage</a>
+    <span class="version">{{ version }}</span>
+  </div>
   {{ if nav }}
   <nav>
     {{ for link of nav }}
@@ -16,7 +23,7 @@
   {{ /if }}
 </header>
 
-<main>
+<main id="main">
 {{ content }}
 </main>
 

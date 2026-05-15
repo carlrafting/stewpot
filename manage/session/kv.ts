@@ -8,6 +8,7 @@ export interface Session {
   forwardedIP?: string;
   flash?: Record<string, string>;
   csrf?: string;
+  [key: string]: unknown;
 }
 
 interface SessionData extends Session {}

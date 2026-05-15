@@ -1,10 +1,11 @@
-import { getCookies, serveDir } from "@std/http";
+import { getCookies, serveDir, setCookie } from "@std/http";
 import type { Options as VentoOptions } from "ventojs/mod.js";
 import { FileLoader } from "ventojs/loaders/file.js";
 import vento from "ventojs/mod.js";
+import { createSession } from "./session/kv.ts";
 import { COOKIE_NAME, createSessionCookie } from "./session/cookie.ts";
 import { createServer } from "./http/server.ts";
-import { createConnections } from "./kv/connections.ts";
+import { createConnections, getConnection } from "./kv/connections.ts";
 import { KvRepository } from "./kv/repository.ts";
 import {
   type Extract,
@@ -17,6 +18,10 @@ import {
 import { matchRoutes, type RouteContext } from "./http/routes.ts";
 import { dirname, fromFileUrl } from "@std/path";
 import { routes } from "./app/routes.ts";
+import denoConfig from "./deno.json" with { type: "json" };
+import { createSessionManager } from "./session/manager.ts";
+import { createFlash } from "./flash/message.ts";
+import { I18n } from "./i18n/locale.ts";
 
 export type { VentoOptions };
 export { createServer };
@@ -60,6 +65,7 @@ function createTemplateRender(options: VentoOptions) {
   return (async (
     file: string,
   ): Promise<TemplateRenderFunction> => {
+    const version = denoConfig.version;
     const templates = vento(options);
     const template = await templates.load(file);
     // console.log({ template });
@@ -69,12 +75,13 @@ function createTemplateRender(options: VentoOptions) {
     // const hasFrontmatter = false;
     return async (data: Record<string, unknown> | undefined) => {
       if (!hasFrontmatter) {
-        const view = await template(data);
+        const view = await template({ version, ...data });
         return view.content;
       }
       const frontmatterData: Extract<FrontMatterFormat> = extractYaml(source);
       const attrs = frontmatterData;
       const view = await templates.runString(frontmatterData.body, {
+        version,
         ...attrs,
         ...data,
       });
@@ -107,12 +114,24 @@ export async function app(
         //   remoteAddr,
         // });
       }
-      const cookies = getCookies(request.headers);
-      // console.log(cookies);
-      const headers = new Headers();
-      const sessionID = cookies[COOKIE_NAME];
-      // console.log(sessionID);
       const url = new URL(request.url);
+      const headers = new Headers();
+      const sessionKv = getConnection(connections, "sessions");
+      const cookies = getCookies(request.headers);
+      const sessionId = cookies[COOKIE_NAME];
+      if (!sessionKv) {
+        throw "session kv store was undefined!";
+      }
+      if (!sessionId) {
+        const id = await createSession(request, sessionKv);
+        const sessionCookie = createSessionCookie(connections, request, id);
+        setCookie(headers, sessionCookie);
+        headers.set("location", request.url);
+        return new Response(null, { status: 302, headers });
+      }
+      const sessionManager = await createSessionManager(request, connections);
+      const i18n = new I18n(request, sessionManager);
+      const flash = await createFlash(sessionManager);
 
       const context: RouteContext = {
         request,
@@ -120,11 +139,10 @@ export async function app(
         url,
         render,
         connections,
+        sessionManager,
+        i18n,
+        flash,
       };
-
-      if (!sessionID) {
-        await createSessionCookie(connections, request, headers);
-      }
 
       if (staticPathPattern.test(url)) {
         const fsRoot: string = dirname(fromFileUrl(new URL(import.meta.url)));

@@ -1,16 +1,16 @@
+import { type ConnectionKey, getConnection } from "./connections.ts";
+
 export class KvRepository {
   #connection: Deno.Kv | null = null;
 
-  static #connections: Map<string, Deno.Kv> = new Map();
+  static #connections: Map<ConnectionKey, Deno.Kv> = new Map();
 
-  static set connections(connections: Map<string, Deno.Kv>) {
+  static set connections(connections: Map<ConnectionKey, Deno.Kv>) {
     this.#connections = connections;
   }
 
-  constructor(key: string) {
-    const connection = KvRepository.#connections.has(key)
-      ? KvRepository.#connections.get(key)
-      : null;
+  constructor(key: ConnectionKey) {
+    const connection = getConnection(KvRepository.#connections, key);
     if (!connection) throw `no connection with key: "${key}" exists!`;
     this.#connection = connection;
   }

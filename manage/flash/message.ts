@@ -1,53 +1,23 @@
-import { getCookies } from "@std/http/cookie";
-import { COOKIE_NAME } from "../session/cookie.ts";
-import { type Session, SESSION_TTL_MS } from "../session/kv.ts";
+import type { SessionManager } from "../session/manager.ts";
 
 export type FlashType = "error" | "success" | "info";
 
-export type FlashMethods = {
+export interface FlashMethods {
   set(key: FlashType, value: string): Promise<void>;
   get(key: FlashType): Promise<string | undefined>;
-};
-
-const errors = {
-  session: "could not determine session ID!",
-  entry: "entry does not contain any value!",
-  empty: "no flashes found in session entry!",
-};
+  // getAll(key?: FlashType): Record<string, string>;
+}
 
 export async function createFlash(
-  request: Request,
-  store: Deno.Kv,
+  session: SessionManager,
 ): Promise<FlashMethods> {
-  const cookies = getCookies(request.headers);
-  const sessionID = cookies[COOKIE_NAME];
-  if (!sessionID) throw errors.session;
-  const key = ["sessions", sessionID];
-  const entry = await store.get<Session>(key);
-  if (!entry.value) throw errors.entry;
   return {
-    async set(key: FlashType, value: string): Promise<void> {
-      const data: Session = {
-        ...entry.value,
-        flash: {
-          ...entry.value.flash,
-          [key]: value,
-        },
-      };
-      await store.set(["sessions", sessionID], data, {
-        expireIn: SESSION_TTL_MS,
-      });
+    async set(key: FlashType, value: string) {
+      await session.set(`flash:${key}`, value);
     },
     async get(key: FlashType) {
-      const value = entry.value.flash?.[key];
-      if (!value) return;
-      const flash = entry?.value?.flash ?? {};
-      if (!flash) throw errors.empty;
-      const { [key]: _, ...remainingFlashes } = flash;
-      const updated = { ...entry.value, flash: remainingFlashes };
-      await store.set(["sessions", sessionID], updated, {
-        expireIn: SESSION_TTL_MS,
-      });
+      const value = session.get<string>(`flash:${key}`);
+      await session.delete(`flash:${key}`);
       return value;
     },
   };

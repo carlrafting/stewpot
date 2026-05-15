@@ -1,5 +1,8 @@
-import type { TemplateRenderFunction } from "@stewpot/manage";
+import type { TemplateRenderFunction } from "../main.ts";
 import { html, notFound } from "./response.ts";
+import type { SessionManager } from "../session/manager.ts";
+import type { I18n } from "../i18n/locale.ts";
+import type { FlashMethods } from "../flash/message.ts";
 
 export type RouteMethod = "GET" | "POST";
 
@@ -9,6 +12,9 @@ export interface RouteContext {
   headers: Headers;
   render: (file: string) => Promise<TemplateRenderFunction>;
   connections: Map<string, Deno.Kv>;
+  sessionManager: SessionManager;
+  i18n: I18n;
+  flash: FlashMethods;
 }
 
 export interface Route {

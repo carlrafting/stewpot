@@ -1,5 +1,4 @@
 import nav from "./nav.ts";
-import { createFlash } from "../flash/message.ts";
 import type { Route, RouteContext } from "../http/routes.ts";
 import { html } from "../http/response.ts";
 import { KvRepository } from "../kv/repository.ts";
@@ -108,31 +107,20 @@ export const routes: Route[] = [
     name: "library",
     method: "GET",
     pathname: "/library/",
-    async handler({ render, url, headers }) {
+    async handler({ render, url, headers, flash }) {
       const title = "Library";
       const description = "This is the library...";
+      const success = await flash.get("success");
       const page = await render("library/index.vto");
-      const body = await page({ title, description, url, nav });
+      const body = await page({ title, description, url, nav, success });
       return html(body, { headers });
-    },
-  },
-  {
-    name: "library_upload",
-    method: "GET",
-    pathname: "/library/upload/",
-    async handler({ connections, request }) {
-      const connection = connections.get("sessions");
-      if (!connection) throw "no session connection available!";
-      const flash = await createFlash(request, connection);
-      flash.set("success", "file uploaded successfully!");
-      return Response.redirect(new URL("/library/", import.meta.url));
     },
   },
   {
     name: "library_upload",
     method: "POST",
     pathname: "/library/upload/",
-    async handler({ request }) {
+    async handler({ request, flash }) {
       const formData = await request.formData();
       const file: File | null = formData?.get("file") as File;
       if (!file) {
@@ -144,22 +132,44 @@ export const routes: Route[] = [
         dir: "./tmp",
       });
       await Deno.writeFile(tmp, await file.bytes());
-      const fileURL = new URL(`files/${file.name}`, import.meta.url);
+      const fileURL = new URL(`../library/${file.name}`, import.meta.url);
       await Deno.rename(tmp, fileURL);
+      flash.set("success", "file uploaded successfully!");
       return Response.redirect(new URL("/library/", request.url));
     },
   },
   {
-    name: "sessions",
+    name: "sessions_index",
     method: "GET",
     pathname: "/sessions/",
     async handler({ render, headers, url }) {
       const title = "Sessions";
+      const description = "All current sessions that hasn't expired yet.";
       const key = "sessions";
       const repository = new KvRepository(key);
-      const page = await render("dev/index.vto");
+      const page = await render("sessions/index.vto");
+      const sessions = await repository.getAllByKey<Session>(key);
+      const data: { sessions: Session[] } = { sessions: [] };
+      for (const { key, value, versionstamp } of sessions) {
+        data.sessions.push(value);
+      }
+      const body = await page({ title, description, url, nav, data });
+      return html(body, { headers });
+    },
+  },
+  {
+    name: "settings_index",
+    method: "GET",
+    pathname: "/settings/",
+    async handler({ render, headers, url }) {
+      const title = "Settings";
+      const description = "Settings for manage application";
+      const text = "Here be some settings...";
+      const key = "sessions";
+      const repository = new KvRepository(key);
+      const page = await render("settings/index.vto");
       const data = await repository.getAllByKey<Session>(key);
-      const body = await page({ title, url, nav, data });
+      const body = await page({ title, description, url, nav, text, data });
       return html(body, { headers });
     },
   },
