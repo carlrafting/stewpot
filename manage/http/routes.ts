@@ -1,4 +1,4 @@
-import type { TemplateRenderFunction } from "../main.ts";
+import type { TemplateRenderFunction } from "../vento/templates.ts";
 import { html, notFound } from "./response.ts";
 import type { SessionManager } from "../session/manager.ts";
 import type { I18n } from "../i18n/locale.ts";
