@@ -87,7 +87,7 @@ export async function app(
       }
       const sessionManager = await createSessionManager(request, connections);
       const i18n = new I18n(request, sessionManager);
-      const flash = await createFlash(sessionManager);
+      const flash = createFlash(sessionManager);
 
       const context: RouteContext = {
         request,

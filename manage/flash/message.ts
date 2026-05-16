@@ -5,12 +5,12 @@ export type FlashType = "error" | "success" | "info";
 export interface FlashMethods {
   set(key: FlashType, value: string): Promise<void>;
   get(key: FlashType): Promise<string | undefined>;
-  // getAll(key?: FlashType): Record<string, string>;
+  getAll(): Record<string, string> | undefined;
 }
 
-export async function createFlash(
+export function createFlash(
   session: SessionManager,
-): Promise<FlashMethods> {
+): FlashMethods {
   return {
     async set(key: FlashType, value: string) {
       await session.set(`flash:${key}`, value);
@@ -19,6 +19,10 @@ export async function createFlash(
       const value = session.get<string>(`flash:${key}`);
       await session.delete(`flash:${key}`);
       return value;
+    },
+    getAll() {
+      const data = session.getAll<Record<string, string>>();
+      return data;
     },
   };
 }

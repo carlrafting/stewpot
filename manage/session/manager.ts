@@ -7,6 +7,7 @@ export type SessionManager = {
   get id(): string;
   touch(): Promise<void>;
   get<T>(key: string): T | undefined;
+  getAll<T>(): T | undefined;
   set(key: string, value: unknown): Promise<void>;
   delete(key: string): Promise<void>;
   destroy(): Promise<void>;
@@ -48,6 +49,10 @@ export async function createSessionManager(
     get<T>(key: string): T | undefined {
       const data: Session = entry.value;
       return data[key] as T | undefined;
+    },
+    getAll<T>(): T | undefined {
+      const data: Session = entry.value;
+      return data as T | undefined;
     },
     async delete(key: string) {
       const { [key]: _, ...data }: Session = entry.value;
