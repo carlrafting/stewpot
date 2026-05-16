@@ -17,7 +17,7 @@ export function createSessionCookie(
     name: COOKIE_NAME,
     value: id,
     path: "/",
-    maxAge: duration({ hours: 1 }),
+    maxAge: Temporal.Duration.from({ hours: 1 }).total({ unit: "seconds" }),
     httpOnly: true,
     sameSite: "Strict",
     secure: https,
