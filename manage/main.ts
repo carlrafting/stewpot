@@ -1,29 +1,18 @@
 import { getCookies, serveDir, setCookie } from "@std/http";
-import type { Options as VentoOptions } from "ventojs/mod.js";
 import { FileLoader } from "ventojs/loaders/file.js";
-import vento from "ventojs/mod.js";
 import { createSession } from "./session/kv.ts";
 import { COOKIE_NAME, createSessionCookie } from "./session/cookie.ts";
 import { createServer } from "./http/server.ts";
 import { createConnections, getConnection } from "./kv/connections.ts";
 import { KvRepository } from "./kv/repository.ts";
-import {
-  type Extract,
-  // extractJson,
-  // extractToml,
-  extractYaml,
-  type Format as FrontMatterFormat,
-  test as testFM,
-} from "@std/front-matter";
 import { matchRoutes, type RouteContext } from "./http/routes.ts";
 import { dirname, fromFileUrl } from "@std/path";
 import { routes } from "./app/routes.ts";
-import denoConfig from "./deno.json" with { type: "json" };
 import { createSessionManager } from "./session/manager.ts";
 import { createFlash } from "./flash/message.ts";
 import { I18n } from "./i18n/locale.ts";
+import { createTemplateRender, type VentoOptions } from "./vento/templates.ts";
 
-export type { VentoOptions };
 export { createServer };
 
 /** app options interface */
@@ -56,39 +45,6 @@ export const defaultOptions: Options = {
     path: "database/kv.db",
   },
 };
-
-export type TemplateRenderFunction = (
-  data: Record<string, unknown> | undefined,
-) => Promise<string>;
-
-function createTemplateRender(options: VentoOptions) {
-  return (async (
-    file: string,
-  ): Promise<TemplateRenderFunction> => {
-    const version = denoConfig.version;
-    const templates = vento(options);
-    const template = await templates.load(file);
-    // console.log({ template });
-    const source = template.source;
-    const frontmatterFormat = "yaml";
-    const hasFrontmatter = testFM(source, [frontmatterFormat]);
-    // const hasFrontmatter = false;
-    return async (data: Record<string, unknown> | undefined) => {
-      if (!hasFrontmatter) {
-        const view = await template({ version, ...data });
-        return view.content;
-      }
-      const frontmatterData: Extract<FrontMatterFormat> = extractYaml(source);
-      const attrs = frontmatterData;
-      const view = await templates.runString(frontmatterData.body, {
-        version,
-        ...attrs,
-        ...data,
-      });
-      return view.content;
-    };
-  });
-}
 
 /** create app instance */
 export async function app(
