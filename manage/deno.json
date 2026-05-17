@@ -4,7 +4,7 @@
   "license": "MIT",
   "exports": "./main.ts",
   "publish": {
-    "exclude": ["*_test.ts"]
+    "exclude": ["*_test.ts", "*.test.ts"]
   },
   "tasks": {
     "dev": "deno -RWN --watch=templates/,static/ main.ts",
