@@ -83,5 +83,6 @@ export interface LibrarySource {
 
 export interface LibraryImport {
   url: URL;
+  type: "local" | "remote";
   targetSource: string;
 }

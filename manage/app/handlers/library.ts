@@ -35,6 +35,7 @@ export default [
     pathname: "/library/upload/",
     async handler({ request, flash }) {
       throw "upload feature is under development!";
+      /*
       const formData = await request.formData();
       const file: File | null = formData?.get("file") as File;
       if (!file) {
@@ -50,6 +51,7 @@ export default [
       await Deno.rename(tmp, fileURL);
       flash.set("success", "file uploaded successfully!");
       return Response.redirect(new URL("/library/", request.url));
+      */
     },
   },
 ] as Route[];
