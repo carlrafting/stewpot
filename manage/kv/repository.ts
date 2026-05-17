@@ -30,4 +30,21 @@ export class KvRepository {
     }
     return data;
   }
+
+  async getAllByPrefix<T>(prefix: Deno.KvKey): Promise<Deno.KvEntry<T>[]> {
+    const entries: Deno.KvEntry<T>[] = [];
+    const iter = this.#connection?.list<T>({ prefix });
+    if (iter) {
+      for await (const entry of iter) {
+        entries.push(entry);
+      }
+    }
+    return entries;
+  }
+
+  async getByKey<T>(key: Deno.KvKey): Promise<Deno.KvEntry<T> | null> {
+    const entry = await this.#connection?.get<T>(key);
+    if (!entry?.value) return null;
+    return entry as Deno.KvEntry<T>;
+  }
 }

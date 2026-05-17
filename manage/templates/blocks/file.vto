@@ -1,0 +1,15 @@
+<form method="POST" action="/block/{{ block.id }}/edit/">
+  <input type="hidden" name="type" value="file">
+  <fieldset>
+    <legend>{{ block.type }}</legend>
+    <div class="field">
+      <label for="url-{{ block.id }}">URL</label><br>
+      <input type="url" name="url" id="url-{{ block.id }}" value="{{ block.url }}">
+    </div>
+    <div class="field">
+      <label for="filename-{{ block.id }}">Filename</label><br>
+      <input type="text" name="filename-{{ block.id }}" id="filename-{{ block.id }}">
+    </div>
+    <button>Save block</button>
+  </fieldset>
+</form>

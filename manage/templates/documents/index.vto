@@ -3,7 +3,13 @@
 {{ if data?.documents }}
 <ul>
 {{ for document of data.documents }}
-  <li>{{ document.title }}</li>
+  <li>
+    {{ if !document.id }}
+    {{ document.title }}
+    {{ else }}
+    <a href="/document/{{ document.id }}/edit/">{{ document.title }}</a>
+    {{ /if }}
+  </li>
 {{ /for }}
 </ul>
 {{ /if }}

@@ -17,6 +17,7 @@ export { createServer };
 
 /** app options interface */
 export interface Options {
+  meta: ImportMeta;
   /** vento options from vento package */
   vento: VentoOptions;
   /** session config options */
@@ -33,6 +34,7 @@ export interface Options {
 
 /** default app config options */
 export const defaultOptions: Options = {
+  meta: import.meta,
   vento: {
     includes: new FileLoader(
       new URL("templates", import.meta.url).pathname,
@@ -88,6 +90,7 @@ export async function app(
       const sessionManager = await createSessionManager(request, connections);
       const i18n = new I18n(request, sessionManager);
       const flash = createFlash(sessionManager);
+      const params = {};
 
       const context: RouteContext = {
         request,
@@ -98,6 +101,7 @@ export async function app(
         sessionManager,
         i18n,
         flash,
+        params,
       };
 
       if (staticPathPattern.test(url)) {

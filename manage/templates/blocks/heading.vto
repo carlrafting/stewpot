@@ -1,0 +1,15 @@
+<form method="POST" action="/block/{{ block.id }}/edit/">
+  <fieldset>
+    <legend>{{ block.type }}</legend>
+    <input type="hidden" name="type" value="heading">
+    <label for="level-{{ block.id }}">Level</label>
+    <select id="level-{{ block.id }}" name="level">
+      {{ for level of [1, 2, 3, 4, 5, 6] }}
+        <option value="{{ level }}" {{ if block.content.level === level }}selected{{ /if }}>H{{ level }}</option>
+      {{ /for }}
+    </select>
+    <label for="text-{{ block.id }}">Text</label>
+    <input id="text-{{ block.id }}" type="text" name="text" value="{{ block.content.text }}" />
+    <button>Save block</button>
+  </fieldset>
+</form>

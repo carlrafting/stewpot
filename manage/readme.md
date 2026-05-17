@@ -11,7 +11,7 @@ of that instance.
 ```ts
 // main.ts
 import createApp from "@stewpot/manage";
-const app = await createApp();
+const app = await createApp({ meta: import.meta });
 export default app;
 ```
 
@@ -26,7 +26,7 @@ It's also possible to use `createServer()` API for running the manage app.
 
 ```ts
 import { createServer } from "@stewpot/manage";
-const handler = await app();
+const handler = await app({ meta: import.meta });
 const options: Deno.ServeTcpOptions = {
   port: 3000,
 };

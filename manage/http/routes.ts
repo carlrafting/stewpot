@@ -6,6 +6,8 @@ import type { FlashMethods } from "../flash/message.ts";
 
 export type RouteMethod = "GET" | "POST";
 
+export type RouteParams = Record<string, string | undefined>;
+
 export interface RouteContext {
   request: Request;
   url: URL;
@@ -15,6 +17,7 @@ export interface RouteContext {
   sessionManager: SessionManager;
   i18n: I18n;
   flash: FlashMethods;
+  params: RouteParams;
 }
 
 export interface Route {
@@ -58,12 +61,20 @@ export async function matchRoutes(
   for (const route of routes) {
     const routeURL = route.url ?? route.pathname;
     const matchMethod = method === route.method;
+
+    if (!matchMethod) continue;
+
+    const matchPattern = route.pattern?.exec(url) ?? null;
     const matchPathname = routeURL
       ? url.pathname === routeURL
-      : route.pattern?.exec(url) ?? false;
-    if (matchMethod && matchPathname) {
+      : matchPattern !== null;
+    if (matchPathname) {
       try {
-        return await route.handler(context);
+        const params = matchPattern?.pathname.groups ?? {};
+        return await route.handler({
+          ...context,
+          params,
+        });
       } catch (error) {
         console.error(
           "error",

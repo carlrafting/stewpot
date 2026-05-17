@@ -1,0 +1,39 @@
+{{ layout "layouts/page.vto" }}
+
+{{ if document }}
+<form action="/document/{{ document.id }}/blocks/new/" method="post">
+  <fieldset>
+    <legend>Add block</legend>
+    <label for="type">Type</label>
+    <select name="type" id="type">
+      {{ for type of blockTypes }}
+        <option value="{{ type }}">{{ type }}</option>
+      {{ /for }}
+    </select>
+    <button>Add block</button>
+  </fieldset>
+</form>
+<form action="/document/{{ document.id }}/update/" method="post">
+  <div class="field">
+    <label for="title">Title</label><br>
+    <input id="title" type="text" name="title" size="40" value="{{ document.title }}">
+    <input id="draft" type="checkbox" name="draft" {{ if document.draft }}checked{{ /if }}>
+    <label for="draft">Draft</label>
+  </div>
+  <div class="field">
+    <button>Save Document</button>
+  </div>
+</form>
+{{ if blocks }}
+  {{ for block of blocks }}
+    <div class="field">
+      {{ include `blocks/${block.type}.vto` { block } }}
+    </div>
+  {{ /for }}
+{{ /if }}
+
+{{ else }}
+<p>There's no document associated with this id.</p>
+{{ /if }}
+
+{{ /layout }}

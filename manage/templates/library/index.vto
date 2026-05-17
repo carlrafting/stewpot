@@ -4,12 +4,12 @@
 <div class="success">{{ success }}</div>
 {{ /if }}
 
-<p>What should you be able to do in the library?</p>
+<a href="./new/">Create new library source</a>
 
 <form action="/library/upload/" method="post" enctype="multipart/form-data">
   <label for="file">Select File</label>
   <input type="file" name="file" id="file">
-  <button>Upload File</button>
+  <button>Import file</button>
 </form>
 
 {{ /layout }}

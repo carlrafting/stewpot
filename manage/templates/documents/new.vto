@@ -3,13 +3,13 @@
 <form action="/documents/create/" method="post">
   <div class="field">
     <label for="title">Title</label><br>
-    <input id="title" type="text" name="title">
+    <input id="title" type="text" name="title" size="40" placeholder="New Document Title...">
+    <input id="draft" type="checkbox" name="draft">
+    <label for="draft">Draft</label>
   </div>
   <div class="field">
-    <label for="content">Content</label><br>
-    <textarea name="content" id="content" cols="80" rows="25"></textarea>
+    <button>Create Document</button>
   </div>
-  <button>Create Document</button>
 </form>
 
 {{ /layout }}
