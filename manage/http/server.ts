@@ -1,3 +1,20 @@
+/**
+ * `createServer` creates an http server with `Deno.serve()` API
+ *
+ * @example
+ *
+ * import { createServer } from "@stewpot/manage";
+ * const options: Deno.ServeTcpOptions = {
+ *   port: 3000,
+ * };
+ * await createServer(
+ *   (req: Request) => new Response("Hello World!"),
+ *   options
+ * );
+ *
+ * @param instance app instance to create server for
+ * @param options options for http server
+ */
 export async function createServer(
   instance: Deno.ServeDefaultExport,
   options: Deno.ServeTcpOptions = {},

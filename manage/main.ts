@@ -11,15 +11,12 @@ import { routes } from "./app/routes.ts";
 import { createSessionManager } from "./session/manager.ts";
 import { createFlash } from "./flash/message.ts";
 import { I18n } from "./i18n/locale.ts";
-import { createTemplateRender, type VentoOptions } from "./vento/templates.ts";
-
-export { createServer };
+import { createTemplateRender } from "./vento/templates.ts";
 
 /** app options interface */
 export interface Options {
+  /** Import meta from the entrypoint, used to resolve paths */
   meta: ImportMeta;
-  /** vento options from vento package */
-  vento: VentoOptions;
   /** session config options */
   sessions: {
     /** path to session kv db */
@@ -33,13 +30,8 @@ export interface Options {
 }
 
 /** default app config options */
-export const defaultOptions: Options = {
+const defaultOptions: Options = {
   meta: import.meta,
-  vento: {
-    includes: new FileLoader(
-      new URL("templates", import.meta.url).pathname,
-    ),
-  },
   sessions: {
     path: "database/sessions.db",
   },
@@ -59,7 +51,11 @@ export async function app(
   const connections = await createConnections(options);
   // console.log(connections);
   KvRepository.connections = connections;
-  const render = createTemplateRender(options.vento);
+  const render = createTemplateRender({
+    includes: new FileLoader(
+      new URL("templates", import.meta.url).pathname,
+    ),
+  });
   const staticPathPattern = new URLPattern({ pathname: "/assets/*" });
   return {
     async fetch(
@@ -81,11 +77,13 @@ export async function app(
         throw "session kv store was undefined!";
       }
       if (!sessionId) {
-        const id = await createSession(request, sessionKv);
-        const sessionCookie = createSessionCookie(connections, request, id);
-        setCookie(headers, sessionCookie);
-        headers.set("location", request.url);
-        return new Response(null, { status: 302, headers });
+        {
+          const id = await createSession(request, sessionKv);
+          const sessionCookie = createSessionCookie(connections, request, id);
+          setCookie(headers, sessionCookie);
+          headers.set("location", request.url);
+          return new Response(null, { status: 302, headers });
+        }
       }
       const sessionManager = await createSessionManager(request, connections);
       const i18n = new I18n(request, sessionManager);
@@ -117,11 +115,12 @@ export async function app(
   } satisfies Deno.ServeDefaultExport;
 }
 
-export default app;
-
 if (import.meta.main) {
   {
     const handler = await app();
     await createServer(handler);
   }
 }
+
+export default app;
+export { createServer };

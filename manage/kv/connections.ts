@@ -14,8 +14,8 @@ export async function createConnections(options: Options) {
     await createDirectory(options.meta);
     const sessions = await Deno.openKv(options?.sessions?.path);
     const kv = await Deno.openKv(options?.kv?.path);
-    connections.set("sessions", sessions);
-    connections.set("kv", kv);
+    connections.set("sessions" as ConnectionKey, sessions);
+    connections.set("kv" as ConnectionKey, kv);
   }
   return connections;
 }

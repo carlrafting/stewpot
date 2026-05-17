@@ -9,7 +9,8 @@
   "tasks": {
     "dev": "deno -RWN --watch=templates/,static/ main.ts",
     "serve": "deno serve -RW serve.ts",
-    "bundle": "deno -RW bundle.ts"
+    "bundle": "deno -RW bundle.ts",
+    "doc:lint": "deno doc --lint main.ts && deno check --doc main.ts"
   },
   "imports": {
     "@std/front-matter": "jsr:@std/front-matter@^1.0.9",
