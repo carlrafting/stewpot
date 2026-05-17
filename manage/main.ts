@@ -79,7 +79,7 @@ export async function app(
       if (!sessionId) {
         {
           const id = await createSession(request, sessionKv);
-          const sessionCookie = createSessionCookie(connections, request, id);
+          const sessionCookie = createSessionCookie(request, id);
           setCookie(headers, sessionCookie);
           headers.set("location", request.url);
           return new Response(null, { status: 302, headers });
