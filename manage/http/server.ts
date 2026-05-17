@@ -40,10 +40,6 @@ export async function createServer(
     console.log("[SIGNINT] server shut down...");
     abortController.abort();
   });
-  Deno.addSignalListener("SIGABRT", () => {
-    console.log("[SIGABRT] got abort signal, shut down...");
-    abortController.abort();
-  });
   await server.finished;
   server.shutdown();
   console.log("server shutdown finished!");
