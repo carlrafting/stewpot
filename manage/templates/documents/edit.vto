@@ -2,6 +2,9 @@
 
 {{ if document }}
 <form action="/document/{{ document.id }}/blocks/new/" method="post">
+{{ if blockAdded }}
+<div class="info">{{ blockAdded }}</div>
+{{ /if }}
   <fieldset>
     <legend>Add block</legend>
     <label for="type">Type</label>

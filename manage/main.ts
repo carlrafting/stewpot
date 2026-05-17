@@ -68,6 +68,7 @@ export async function app(
         //   remoteAddr,
         // });
       }
+      const start = performance.now();
       const url = new URL(request.url);
       const headers = new Headers();
       const sessionKv = getConnection(connections, "sessions");
@@ -110,7 +111,13 @@ export async function app(
         );
       }
 
-      return await matchRoutes(routes, context) as Response;
+      const response = await matchRoutes(routes, context) as Response;
+      const duration = (performance.now() - start).toFixed(2);
+      console.log(
+        `${request.method} ${url.pathname} ${response.status} ${duration}ms`,
+      );
+
+      return response;
     },
   } satisfies Deno.ServeDefaultExport;
 }

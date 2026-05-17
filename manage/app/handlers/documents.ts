@@ -79,7 +79,7 @@ export default [
     name: "edit_document",
     method: "GET",
     pattern: new URLPattern({ pathname: "/document/:id/edit/" }),
-    async handler({ render, url, headers, connections, params }) {
+    async handler({ render, url, headers, connections, params, flash }) {
       const title = "Edit Document";
       const description = "Add and edit content blocks for document";
       const connection = getConnection(connections, "kv");
@@ -94,20 +94,13 @@ export default [
         "text",
         "code",
       ];
-      // const blocks: Data.Block[] | unknown[] = await kv.getAllByPrefix<
-      //   Data.Block
-      // >([
-      //   "documents",
-      //   id,
-      //   "blocks",
-      // ]);
-      const blocks =
-        (await kv.getAllByPrefix<Data.Block>(["documents", id, "blocks"]))
-          .map((entry) => entry.value);
+      const blocks = (await kv.getAllByPrefix<Data.Block>(["blocks", id]))
+        .map((entry) => entry.value);
       const entry = await connection?.get<Data.Document>(["documents", id]);
       const document: Data.Document | undefined = {
         ...entry?.value,
       } as Data.Document;
+      const blockAdded = await flash.get("success");
       const page = await render("documents/edit.vto");
       const body = await page({
         title,
@@ -115,6 +108,7 @@ export default [
         url,
         nav,
         document,
+        blockAdded,
         blockTypes,
         blocks,
       });
@@ -125,7 +119,7 @@ export default [
     name: "new_block",
     method: "POST",
     pattern: new URLPattern({ pathname: "/document/:id/blocks/new/" }),
-    async handler({ params, url, connections, request }) {
+    async handler({ params, url, connections, request, flash }) {
       const id = params.id;
       if (!id) throw "no document id found in params";
       const kv = getConnection(connections, "kv");
@@ -140,7 +134,8 @@ export default [
         layout: "default",
         content: defaultContent(type),
       };
-      await kv?.set(["documents", id, "blocks", blockId], block);
+      await kv?.set(["blocks", id, blockId], block);
+      flash.set("success", "created new block");
       return Response.redirect(new URL(`/document/${id}/edit/`, url));
     },
   },

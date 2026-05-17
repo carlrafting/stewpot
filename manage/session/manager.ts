@@ -30,7 +30,6 @@ export async function createSessionManager(
   if (!sessionID) throw errors.session;
   const key = ["sessions", sessionID];
   const entry = await store.get<Session>(key);
-  console.log(entry);
   if (!entry.value) throw errors.entry;
   const persist = async (data: unknown) =>
     await store.set(key, data, { expireIn: SESSION_TTL_MS });
