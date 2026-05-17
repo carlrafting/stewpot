@@ -1,5 +1,9 @@
 # @stewpot/manage
 
+> ⚠️ **DISCLAIMER**: @stewpot/manage is under active development. Data safety
+> can't be guaranteed. Use at your own risk. Don't store important data in this
+> app.
+
 Manage just about anything. Regardless if you manage photos, videos, markdown,
 html, css or js `@stewpot/manage` can handle it!
 
