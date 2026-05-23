@@ -68,6 +68,7 @@ export async function app(
         //   remoteAddr,
         // });
       }
+      const d = new Date().toISOString();
       const start = performance.now();
       const url = new URL(request.url);
       const headers = new Headers();
@@ -104,17 +105,20 @@ export async function app(
       };
 
       if (staticPathPattern.test(url)) {
+        const quiet = true;
         const fsRoot: string = dirname(fromFileUrl(new URL(import.meta.url)));
         return await serveDir(
           request,
-          { fsRoot },
+          { fsRoot, quiet },
         );
       }
 
-      const response = await matchRoutes(routes, context) as Response;
-      const duration = (performance.now() - start).toFixed(2);
+      const dateFmtStart: string = d.slice(0, 10);
+      const dateFmtEnd: string = d.slice(11, 19);
+      const response: Response = await matchRoutes(routes, context) as Response;
+      const duration: string = (performance.now() - start).toFixed(2);
       console.log(
-        `${request.method} ${url.pathname} ${response.status} ${duration}ms`,
+        `[${dateFmtStart} ${dateFmtEnd}] [${request.method}] ${response.status} ${url.pathname} ${duration}ms`,
       );
 
       return response;
