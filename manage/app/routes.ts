@@ -11,5 +11,5 @@ export const routes: Route[] = [
   ...documentsRoutes,
   ...libraryRoutes,
   sessionsRoute,
-  settingsRoute,
+  ...settingsRoute,
 ];

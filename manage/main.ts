@@ -68,7 +68,6 @@ export async function app(
         //   remoteAddr,
         // });
       }
-      const d = new Date().toISOString();
       const start = performance.now();
       const url = new URL(request.url);
       const headers = new Headers();
@@ -113,6 +112,7 @@ export async function app(
         );
       }
 
+      const d = new Date().toISOString();
       const dateFmtStart: string = d.slice(0, 10);
       const dateFmtEnd: string = d.slice(11, 19);
       const response: Response = await matchRoutes(routes, context) as Response;

@@ -4,7 +4,21 @@
 
 <ul>
   <li><a href="/settings/export/">Export Data</a></li>
-  <li><a href="#">Clear Browser Cookies</a></li>
+  <li><a href="#browser-data">Clear Browser Data</a></li>
 </ul>
+
+<div id="browser-data">
+  <form action="/settings/browser/" method="post">
+    <fieldset>
+      <legend>Clear Browser Data</legend>
+      <menu>
+        <li><input id="cache" type="checkbox" name="data" value="cache"><label for="cache">Cache</label></li>
+        <li><input id="cookies" type="checkbox" name="data" value="cookies"><label for="cookies">Cookies</label></li>
+        <li><input id="storage" type="checkbox" name="data" value="storage"><label for="storage">Storage</label></li>
+      </menu>
+      <button>Clear Data</button>
+    </fieldset>
+  </form>
+</div>
 
 {{ /layout }}
