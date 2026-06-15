@@ -1,14 +1,15 @@
 import { assertEquals, assertGreater } from "@std/assert";
 import { join } from "@std/path/join";
 import { assertSnapshot } from "@std/testing/snapshot";
-import { CONFIG_FILENAME, run } from "./main.ts";
+import { CONFIG_FILENAME } from "./main.ts";
+import { run } from "@stewpot/cli";
 import { loadConfig } from "./config.ts";
 
 Deno.test(
   "listCommand should list feed sources if there are more than 0",
   async () => {
     const args = ["list"];
-    const command = run(args);
+    const command = run(args, null);
     const results = await command.output();
     assertEquals(results.success, true);
     assertEquals(results.code, 0);

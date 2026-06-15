@@ -1,0 +1,11 @@
+export const snapshot = {};
+
+snapshot[`should load config file it exists 1`] = `undefined`;
+
+snapshot[`should load config file it exists > notexists 1`] = `
+{
+  storage: {
+    type: "fs",
+  },
+}
+`;

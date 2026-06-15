@@ -1,7 +1,5 @@
 import { parseArgs, type ParseOptions } from "@std/cli";
 import * as colors from "@std/fmt/colors";
-import { ensureDir } from "@std/fs";
-import { join as joinPath } from "@std/path/join";
 import { parseFeed } from "feedsmith";
 import {
   type Configuration,
@@ -26,13 +24,15 @@ import {
   type KvStorage,
 } from "../cli/storage.ts";
 import pkg from "../deno.json" with { type: "json" };
+import type { CLIDeps, CLIPaths, Command, Input, Options, ParsedArguments } from "@stewpot/cli";
+import { handleArgs, resolvePaths } from "@stewpot/cli";
 
 /**
  * This module contains code related to CLI
  * @module
  */
 
-/** defines where data are stored */
+/** defines where data is stored */
 const ENV_CLI_DIR = "STEWPOT_FEEDS_CLI_ROOT";
 /** parent directory within user home directory */
 const PARENT_DIRNAME = ".stewpot";
@@ -40,7 +40,7 @@ const PARENT_DIRNAME = ".stewpot";
 const ROOT_DIRNAME = "feeds";
 /** where configuration is stored */
 const CONFIG_FILENAME = "config.js";
-/** previous filename for storing sources @deprecated */
+/** previous filename for storing sources @deprecated replaced with {@linkcode SOURCES_FILENAME} */
 const PREV_SOURCES_FILENAME = "feeds.json";
 /** where feed sources metadata are stored */
 const SOURCES_FILENAME = "sources.json";
@@ -61,7 +61,7 @@ export {
 };
 
 /** paths used for file & kv storage */
-export interface Paths {
+export interface Paths extends CLIPaths {
   /** path to root directory */
   root: string;
   /** path to sources file */
@@ -74,78 +74,70 @@ export interface Paths {
   kv?: string;
 }
 
-export function run(
-  args: string[],
-  options: Deno.CommandOptions = {},
-): Deno.Command {
-  return new Deno.Command(Deno.execPath(), {
-    args: ["-P", import.meta.filename ?? "cli.ts", ...args],
-    ...options,
-  });
-}
+// export function run(
+//   args: string[],
+//   options: Deno.CommandOptions = {},
+// ): Deno.Command {
+//   return new Deno.Command(Deno.execPath(), {
+//     args: ["-P", import.meta.filename ?? "cli.ts", ...args],
+//     ...options,
+//   });
+// }
 
-async function resolvePaths(base?: string): Promise<Paths | undefined> {
-  const root = base ?? resolveRootDirectory();
+// async function resolvePaths(base?: string): Promise<Paths | undefined> {
+//   const root = base ?? resolveRootDirectory();
 
-  if (!root) return;
+//   if (!root) return;
 
-  await ensureDir(root);
-  const config = joinPath(root, CONFIG_FILENAME);
-  const sources = joinPath(root, SOURCES_FILENAME);
-  const items = joinPath(root, ITEMS_DIRNAME);
-  const kv = joinPath(root, KV_FILENAME);
+//   await ensureDir(root);
+//   const config = joinPath(root, CONFIG_FILENAME);
+//   const sources = joinPath(root, SOURCES_FILENAME);
+//   const items = joinPath(root, ITEMS_DIRNAME);
+//   const kv = joinPath(root, KV_FILENAME);
 
-  return {
-    root,
-    config,
-    sources,
-    items,
-    kv,
-  };
-}
+//   return {
+//     root,
+//     config,
+//     sources,
+//     items,
+//     kv,
+//   };
+// }
 
-function resolveRootDirectory(): string | undefined {
-  const env = Deno.env;
-  const parent = PARENT_DIRNAME;
-  const root = ROOT_DIRNAME;
+// function resolveRootDirectory(): string | undefined {
+//   const env = Deno.env;
+//   const parent = PARENT_DIRNAME;
+//   const root = ROOT_DIRNAME;
 
-  const override = env.get(ENV_CLI_DIR);
-  if (override) return override;
+//   const override = env.get(ENV_CLI_DIR);
+//   if (override) return override;
 
-  const home = resolveUserHomeDirectory();
-  if (home) {
-    return joinPath(home, parent, root);
-  }
-}
+//   const home = resolveUserHomeDirectory();
+//   if (home) {
+//     return joinPath(home, parent, root);
+//   }
+// }
 
-function resolveUserHomeDirectory(): string {
-  const env = Deno.env;
-  const os = Deno.build.os;
+// function resolveUserHomeDirectory(): string {
+//   const env = Deno.env;
+//   const os = Deno.build.os;
 
-  if (os === "windows") {
-    const home = env.get("USERPROFILE");
-    if (home) {
-      return home;
-    }
-  }
+//   if (os === "windows") {
+//     const home = env.get("USERPROFILE");
+//     if (home) {
+//       return home;
+//     }
+//   }
 
-  if (os === "linux" || os === "darwin") {
-    const home = env.get("HOME");
-    if (home) {
-      return home;
-    }
-  }
+//   if (os === "linux" || os === "darwin") {
+//     const home = env.get("HOME");
+//     if (home) {
+//       return home;
+//     }
+//   }
 
-  throw new Error("unable to resolve user home directory");
-}
-
-/**
- * the type returned by {@linkcode parseArgs}
- */
-export type ParsedArguments = {
-  [x: string]: unknown;
-  _: Array<string | number>;
-};
+//   throw new Error("unable to resolve user home directory");
+// }
 
 class CommandError extends Error {
   constructor(
@@ -157,16 +149,16 @@ class CommandError extends Error {
 }
 
 /** input as array of strings */
-export type Input = readonly string[];
+// export type Input = readonly string[];
 /** options that are returned by {@linkcode parseArgs} and {@linkcode handleArgs} */
-export type Options = { [x: string]: unknown };
+// export type Options = { [x: string]: unknown };
 /** a combined type with convinient access to both input and options */
-export type InputWithOptions = { input: Input; options: Options };
+// export type InputWithOptions = { input: Input; options: Options };
 
 /**
  * shared dependencies commands can make use of
  */
-export type Deps = {
+export interface Deps extends CLIDeps {
   feeds: FeedData[];
   /** storage type used by CLI */
   store: FsStorage | KvStorage;
@@ -181,21 +173,21 @@ export type Deps = {
 /**
  * The type that represents a CLI Command
  */
-export type Command<CommandOptions = Options | unknown> = {
-  /** what name should the command have */
-  name: string;
-  /** a helpful description of what the command does */
-  description: string;
-  /** more in-depth help instructions for command */
-  help?: string;
-  /** method that invokes the command */
-  run(
-    input: Input,
-    options: CommandOptions,
-    deps: Deps,
-    ...rest: unknown[]
-  ): Promise<number | void>;
-};
+// export type Command<CommandOptions = Options | unknown> = {
+//   /** what name should the command have */
+//   name: string;
+//   /** a helpful description of what the command does */
+//   description: string;
+//   /** more in-depth help instructions for command */
+//   help?: string;
+//   /** method that invokes the command */
+//   run(
+//     input: Input,
+//     options: CommandOptions,
+//     deps: Deps,
+//     ...rest: unknown[]
+//   ): Promise<number | void>;
+// };
 
 const init: Command = {
   name: "init",
@@ -697,24 +689,13 @@ const parseArgsOptions: ParseOptions = {
   },
 };
 
-const handleArgs = (
-  args: ParsedArguments,
-): InputWithOptions => {
-  const { _, ...options } = args;
-  const input = _ as string[];
-  return {
-    input,
-    options,
-  };
-};
-
 export default async function main(
   args: string[],
   config: Configuration,
   store: FsStorage | KvStorage,
   paths: Paths,
 ): Promise<number | void> {
-  const commands = [init, list, fetch, reader, upgrade];
+  const commands: Command[] = [init, list, fetch, reader, upgrade];
   const parsedArgs = parseArgs(args, parseArgsOptions);
   const { input, options } = handleArgs(parsedArgs);
   const feeds = await store.loadFeeds();
@@ -804,7 +785,7 @@ ${colors.green("Commands")}:
 
 if (import.meta.main) {
   try {
-    const paths = await resolvePaths();
+    const paths = await resolvePaths<Paths>();
     if (!paths) throw "couldn't resolve paths";
     const config = await loadConfig(paths.config);
     const store = await createStorage(config?.storage, paths);
