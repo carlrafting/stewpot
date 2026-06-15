@@ -1,13 +1,8 @@
 import { join } from "@std/path/join";
-import { ensureDir } from "@std/fs";
-import { CONFIG_FILENAME, ITEMS_DIRNAME, KV_FILENAME, SOURCES_FILENAME } from "@stewpot/feeds/cli";
+import { ENV_CLI_DIR, PARENT_DIRNAME, ROOT_DIRNAME } from "@stewpot/feeds/cli";
 
 export type CLIDeps = {
   [key: string]: unknown
-}
-
-export interface CLIPaths {
-  [key: string]: unknown | undefined
 }
 
 /** input as array of strings */
@@ -36,10 +31,6 @@ export interface Command<CommandOptions = Options | unknown> {
   ): Promise<number | void>;
 };
 
-const ENV_CLI_DIR = "STEWPOT_CLI_ROOT";
-const ROOT_DIRNAME = ".stewpot";
-const PARENT_DIRNAME = ROOT_DIRNAME;
-
 /**
  * the type returned by {@linkcode parseArgs}
  */
@@ -48,6 +39,12 @@ export type ParsedArguments = {
   _: Array<string | number>;
 };
 
+/**
+ * handle CLI arguments parsed by `parseArgs`
+ *
+ * @param args arguments as array of strings
+ * @returns object represented by input and options
+ */
 export const handleArgs = (
   args: ParsedArguments,
 ): InputWithOptions => {
@@ -59,6 +56,14 @@ export const handleArgs = (
   };
 };
 
+/**
+ * run/spawn subcommands
+ *
+ * @param args
+ * @param file
+ * @param options
+ * @returns
+ */
 export function run(
   args: string[],
   file: string | null,
@@ -71,28 +76,11 @@ export function run(
   });
 }
 
-export async function resolvePaths<CLIPaths>(base?: string): Promise<CLIPaths | undefined> {
-  const root = base ?? resolveRootDirectory();
-
-  if (!root) return;
-
-  await ensureDir(root);
-  const config = join(root, CONFIG_FILENAME);
-  const sources = join(root, SOURCES_FILENAME);
-  const items = join(root, ITEMS_DIRNAME);
-  const kv = join(root, KV_FILENAME);
-
-  const results = {
-    root,
-    config,
-    sources,
-    items,
-    kv,
-  };
-
-  return results as CLIPaths;
-}
-
+/**
+ * resolves root directory based on os environment
+ *
+ * @returns {string} the resolved root path as string
+ */
 export function resolveRootDirectory(): string | undefined {
   const env = Deno.env;
   const parent = PARENT_DIRNAME;
@@ -107,6 +95,11 @@ export function resolveRootDirectory(): string | undefined {
   }
 }
 
+/**
+ * determines user home directory by os environment
+ *
+ * @returns path to user home directory
+ */
 export function resolveUserHomeDirectory(): string {
   const env = Deno.env;
   const os = Deno.build.os;

@@ -1,5 +1,7 @@
 import { parseArgs, type ParseOptions } from "@std/cli";
 import * as colors from "@std/fmt/colors";
+import { join } from "@std/path/join";
+import { ensureDir } from "@std/fs";
 import { parseFeed } from "feedsmith";
 import {
   type Configuration,
@@ -24,8 +26,8 @@ import {
   type KvStorage,
 } from "../cli/storage.ts";
 import pkg from "../deno.json" with { type: "json" };
-import type { CLIDeps, CLIPaths, Command, Input, Options, ParsedArguments } from "@stewpot/cli";
-import { handleArgs, resolvePaths } from "@stewpot/cli";
+import type { CLIDeps, Command, Input, Options, ParsedArguments } from "@stewpot/cli";
+import { handleArgs, resolveRootDirectory } from "@stewpot/cli";
 
 /**
  * This module contains code related to CLI
@@ -61,7 +63,7 @@ export {
 };
 
 /** paths used for file & kv storage */
-export interface Paths extends CLIPaths {
+export interface Paths {
   /** path to root directory */
   root: string;
   /** path to sources file */
@@ -84,60 +86,25 @@ export interface Paths extends CLIPaths {
 //   });
 // }
 
-// async function resolvePaths(base?: string): Promise<Paths | undefined> {
-//   const root = base ?? resolveRootDirectory();
+async function resolvePaths(base?: string): Promise<Paths | undefined> {
+  const root = base ?? resolveRootDirectory();
 
-//   if (!root) return;
+  if (!root) return;
 
-//   await ensureDir(root);
-//   const config = joinPath(root, CONFIG_FILENAME);
-//   const sources = joinPath(root, SOURCES_FILENAME);
-//   const items = joinPath(root, ITEMS_DIRNAME);
-//   const kv = joinPath(root, KV_FILENAME);
+  await ensureDir(root);
+  const config = join(root, CONFIG_FILENAME);
+  const sources = join(root, SOURCES_FILENAME);
+  const items = join(root, ITEMS_DIRNAME);
+  const kv = join(root, KV_FILENAME);
 
-//   return {
-//     root,
-//     config,
-//     sources,
-//     items,
-//     kv,
-//   };
-// }
-
-// function resolveRootDirectory(): string | undefined {
-//   const env = Deno.env;
-//   const parent = PARENT_DIRNAME;
-//   const root = ROOT_DIRNAME;
-
-//   const override = env.get(ENV_CLI_DIR);
-//   if (override) return override;
-
-//   const home = resolveUserHomeDirectory();
-//   if (home) {
-//     return joinPath(home, parent, root);
-//   }
-// }
-
-// function resolveUserHomeDirectory(): string {
-//   const env = Deno.env;
-//   const os = Deno.build.os;
-
-//   if (os === "windows") {
-//     const home = env.get("USERPROFILE");
-//     if (home) {
-//       return home;
-//     }
-//   }
-
-//   if (os === "linux" || os === "darwin") {
-//     const home = env.get("HOME");
-//     if (home) {
-//       return home;
-//     }
-//   }
-
-//   throw new Error("unable to resolve user home directory");
-// }
+  return {
+    root,
+    config,
+    sources,
+    items,
+    kv,
+  };
+}
 
 class CommandError extends Error {
   constructor(
@@ -147,13 +114,6 @@ class CommandError extends Error {
     super(message);
   }
 }
-
-/** input as array of strings */
-// export type Input = readonly string[];
-/** options that are returned by {@linkcode parseArgs} and {@linkcode handleArgs} */
-// export type Options = { [x: string]: unknown };
-/** a combined type with convinient access to both input and options */
-// export type InputWithOptions = { input: Input; options: Options };
 
 /**
  * shared dependencies commands can make use of
@@ -169,25 +129,6 @@ export interface Deps extends CLIDeps {
   /** only used for backwards compability @deprecated */
   args: ParsedArguments;
 };
-
-/**
- * The type that represents a CLI Command
- */
-// export type Command<CommandOptions = Options | unknown> = {
-//   /** what name should the command have */
-//   name: string;
-//   /** a helpful description of what the command does */
-//   description: string;
-//   /** more in-depth help instructions for command */
-//   help?: string;
-//   /** method that invokes the command */
-//   run(
-//     input: Input,
-//     options: CommandOptions,
-//     deps: Deps,
-//     ...rest: unknown[]
-//   ): Promise<number | void>;
-// };
 
 const init: Command = {
   name: "init",
