@@ -726,7 +726,7 @@ ${colors.green("Commands")}:
 
 if (import.meta.main) {
   try {
-    const paths = await resolvePaths<Paths>();
+    const paths = await resolvePaths();
     if (!paths) throw "couldn't resolve paths";
     const config = await loadConfig(paths.config);
     const store = await createStorage(config?.storage, paths);
