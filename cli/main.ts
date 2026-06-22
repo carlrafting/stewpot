@@ -2,8 +2,8 @@ import { join } from "@std/path/join";
 import { ENV_CLI_DIR, PARENT_DIRNAME, ROOT_DIRNAME } from "@stewpot/feeds/cli";
 
 export type CLIDeps = {
-  [key: string]: unknown
-}
+  [key: string]: unknown;
+};
 
 /** input as array of strings */
 export type Input = readonly string[];
@@ -29,7 +29,7 @@ export interface Command<CommandOptions = Options | unknown> {
     deps: CLIDeps,
     ...rest: unknown[]
   ): Promise<number | void>;
-};
+}
 
 /**
  * the type returned by {@linkcode parseArgs}
