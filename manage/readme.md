@@ -29,6 +29,7 @@ deno serve: Listening on http://0.0.0.0:8000/
 It's also possible to use `createServer()` API for running the manage app.
 
 ```ts
+// main.ts
 import app, { createServer } from "@stewpot/manage";
 const handler = await app({ meta: import.meta });
 const options: Deno.ServeTcpOptions = {
