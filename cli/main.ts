@@ -1,5 +1,4 @@
 import { join } from "@std/path/join";
-import { ENV_CLI_DIR, PARENT_DIRNAME, ROOT_DIRNAME } from "@stewpot/feeds/cli";
 
 export type CLIDeps = {
   [key: string]: unknown;
@@ -76,22 +75,26 @@ export function run(
   });
 }
 
+/** override directory with environment variable (absolute path) */
+const ENV_CLI_OVERRIDE = "STEWPOT_DIR_OVERRIDE";
+/** stewpot root directory name */
+const STEWPOT_DIRNAME = ".stewpot";
+
 /**
- * resolves root directory based on os environment
+ * resolves path to directory based on os environment
  *
  * @returns {string} the resolved root path as string
  */
-export function resolveRootDirectory(): string | undefined {
+export function resolvePath(to: string): string | undefined {
   const env = Deno.env;
-  const parent = PARENT_DIRNAME;
-  const root = ROOT_DIRNAME;
+  const root = STEWPOT_DIRNAME;
 
-  const override = env.get(ENV_CLI_DIR);
+  const override = env.get(ENV_CLI_OVERRIDE);
   if (override) return override;
 
   const home = resolveUserHomeDirectory();
   if (home) {
-    return join(home, parent, root);
+    return join(home, root, to);
   }
 }
 
@@ -100,7 +103,7 @@ export function resolveRootDirectory(): string | undefined {
  *
  * @returns path to user home directory
  */
-export function resolveUserHomeDirectory(): string {
+function resolveUserHomeDirectory(): string {
   const env = Deno.env;
   const os = Deno.build.os;
 

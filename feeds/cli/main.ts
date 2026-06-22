@@ -27,23 +27,15 @@ import {
 } from "../cli/storage.ts";
 import pkg from "../deno.json" with { type: "json" };
 import type { CLIDeps, Command, Input, Options, ParsedArguments } from "@stewpot/cli";
-import { handleArgs, resolveRootDirectory } from "@stewpot/cli";
+import { handleArgs, resolvePath } from "@stewpot/cli";
 
 /**
- * This module contains code related to CLI
+ * This module contains code related to feeds CLI
  * @module
  */
 
-/** defines where data is stored */
-const ENV_CLI_DIR = "STEWPOT_FEEDS_CLI_ROOT";
-/** parent directory within user home directory */
-const PARENT_DIRNAME = ".stewpot";
-/** where data and config are stored */
-const ROOT_DIRNAME = "feeds";
 /** where configuration is stored */
 const CONFIG_FILENAME = "config.js";
-/** previous filename for storing sources @deprecated replaced with {@linkcode SOURCES_FILENAME} */
-const PREV_SOURCES_FILENAME = "feeds.json";
 /** where feed sources metadata are stored */
 const SOURCES_FILENAME = "sources.json";
 /** where feed items are stored */
@@ -51,16 +43,7 @@ const ITEMS_DIRNAME = "items";
 /** where KV data is stored */
 const KV_FILENAME = "kv.db";
 
-export {
-  CONFIG_FILENAME,
-  ENV_CLI_DIR,
-  ITEMS_DIRNAME,
-  KV_FILENAME,
-  PARENT_DIRNAME,
-  PREV_SOURCES_FILENAME,
-  ROOT_DIRNAME,
-  SOURCES_FILENAME,
-};
+export { ITEMS_DIRNAME, CONFIG_FILENAME, KV_FILENAME, SOURCES_FILENAME };
 
 /** paths used for file & kv storage */
 export interface Paths {
@@ -76,15 +59,7 @@ export interface Paths {
   kv?: string;
 }
 
-// export function run(
-//   args: string[],
-//   options: Deno.CommandOptions = {},
-// ): Deno.Command {
-//   return new Deno.Command(Deno.execPath(), {
-//     args: ["-P", import.meta.filename ?? "cli.ts", ...args],
-//     ...options,
-//   });
-// }
+const resolveRootDirectory = () => resolvePath("feeds");
 
 async function resolvePaths(base?: string): Promise<Paths | undefined> {
   const root = base ?? resolveRootDirectory();
