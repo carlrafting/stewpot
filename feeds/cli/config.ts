@@ -67,7 +67,7 @@ export async function loadConfig(
  *
  * @param path to write config file to
  */
-export async function writeConfigToPath(path: string) {
+export async function writeConfigToPath(path: string): Promise<void> {
   const fileUrl = new URL("./assets/config.default.ts", import.meta.url);
   const response = await fetch(fileUrl);
   const textFile = await response.text();
