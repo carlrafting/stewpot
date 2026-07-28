@@ -699,7 +699,7 @@ ${colors.green("Commands")}:
   return 0;
 }
 
-if (import.meta.main) {
+async function bootstrap() {
   try {
     const paths = await resolvePaths();
     if (!paths) throw "couldn't resolve paths";
@@ -714,4 +714,8 @@ if (import.meta.main) {
     }
     throw error;
   }
+}
+
+if (import.meta.main) {
+  bootstrap();
 }
