@@ -3,7 +3,7 @@ import { join } from "@std/path/join";
 import { assertSnapshot } from "@std/testing/snapshot";
 import { CONFIG_FILENAME } from "./main.ts";
 import { run } from "@stewpot/cli";
-import { loadConfig } from "./config.ts";
+import { loadConfig } from "../core/config.ts";
 
 Deno.test(
   "listCommand should list feed sources if there are more than 0",
