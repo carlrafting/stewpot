@@ -16,10 +16,26 @@
     "@std/path": "jsr:@std/path@^1.1.6",
     "@std/testing": "jsr:@std/testing@^1.0.20",
     "@std/ulid": "jsr:@std/ulid@^1.0.0",
-    "feedsmith": "npm:feedsmith@^2.9.1"
+    "feedsmith": "npm:feedsmith@^2.9.6"
+  },
+  "desktop": {
+    "app": {
+      "name": "@stewpot/feeds Desktop Reader"
+    },
+    "output": {
+      "linux": "./build/reader.AppImage",
+      "macos": "./build/reader.app",
+      "windows": "./build/reader.msi"
+    }
   },
   "publish": {
-    "exclude": ["*_test.ts", "fixtures", "__snapshots__", "cli/dev.ts"]
+    "exclude": [
+      "*_test.ts",
+      "*.test.ts",
+      "fixtures",
+      "__snapshots__",
+      "core/desktop.ts"
+    ]
   },
   "tasks": {
     "dev:reader": {
