@@ -1,6 +1,12 @@
 {
   "compilerOptions": {
-    "strict": true
+    "strict": true,
+    "lib": [
+      "deno.window",
+      "deno.unstable",
+      "deno.desktop",
+      "node"
+    ]
   },
   "workspace": [
     "./cli",
