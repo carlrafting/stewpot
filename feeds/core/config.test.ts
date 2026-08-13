@@ -1,9 +1,4 @@
-import {
-  assert,
-  assertEquals,
-  assertGreater,
-  assertGreaterOrEqual,
-} from "@std/assert";
+import { assert, assertEquals, assertGreater } from "@std/assert";
 import { defineConfig, loadConfig, writeConfigToPath } from "./config.ts";
 
 function setup() {

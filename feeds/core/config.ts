@@ -1,5 +1,5 @@
 import { toFileUrl } from "@std/path/to-file-url";
-import type { Paths } from "./main.ts";
+import type { Paths } from "../cli/main.ts";
 import * as colors from "@std/fmt/colors";
 
 /** config type for filesystem (fs) storage */

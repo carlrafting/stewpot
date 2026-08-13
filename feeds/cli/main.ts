@@ -7,7 +7,7 @@ import {
   type Configuration,
   loadConfig,
   writeConfigToPath,
-} from "../cli/config.ts";
+} from "../core/config.ts";
 import {
   discoverFeed,
   type FeedData,
@@ -24,9 +24,15 @@ import {
   createStorage,
   type FsStorage,
   type KvStorage,
-} from "../cli/storage.ts";
+} from "../core/storage.ts";
 import pkg from "../deno.json" with { type: "json" };
-import type { CLIDeps, Command, Input, Options, ParsedArguments } from "@stewpot/cli";
+import type {
+  CLIDeps,
+  Command,
+  Input,
+  Options,
+  ParsedArguments,
+} from "@stewpot/cli";
 import { handleArgs, resolvePath } from "@stewpot/cli";
 
 /**
@@ -43,7 +49,7 @@ const ITEMS_DIRNAME = "items";
 /** where KV data is stored */
 const KV_FILENAME = "kv.db";
 
-export { ITEMS_DIRNAME, CONFIG_FILENAME, KV_FILENAME, SOURCES_FILENAME };
+export { CONFIG_FILENAME, ITEMS_DIRNAME, KV_FILENAME, SOURCES_FILENAME };
 
 /** paths used for file & kv storage */
 export interface Paths {
@@ -103,7 +109,7 @@ export interface Deps extends CLIDeps {
   config: Configuration;
   /** only used for backwards compability @deprecated */
   args: ParsedArguments;
-};
+}
 
 const init: Command = {
   name: "init",
