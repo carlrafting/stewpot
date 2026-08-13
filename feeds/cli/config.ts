@@ -67,8 +67,11 @@ export async function loadConfig(
  *
  * @param path to write config file to
  */
-export async function writeConfigToPath(path: string): Promise<void> {
-  const fileUrl = new URL("./assets/config.default.ts", import.meta.url);
+export async function writeConfigToPath(
+  path: string,
+  URLPathname: string = "./assets/config.default.ts",
+): Promise<void> {
+  const fileUrl = new URL(URLPathname, import.meta.url);
   const response = await fetch(fileUrl);
   const textFile = await response.text();
   await Deno.writeTextFile(path, textFile);
