@@ -1,4 +1,5 @@
 import { join } from "@std/path/join";
+import { yellow } from "@std/fmt/colors";
 
 export type CLIDeps = {
   [key: string]: unknown;
@@ -79,7 +80,8 @@ export function run(
 const ENV_CLI_OVERRIDE = "STEWPOT_DIR_OVERRIDE";
 /** stewpot root directory name */
 const STEWPOT_DIRNAME = ".stewpot";
-const STEWPOT_SUBDIRNAME = (to: string) => `STEWPOT_${to.toUpperCase()}_MODE`;
+/** what environment stewpot packages should run under */
+const ENV_STEWPOT_MODE = "STEWPOT_MODE";
 
 /**
  * resolves path to directory based on os environment
@@ -89,19 +91,49 @@ const STEWPOT_SUBDIRNAME = (to: string) => `STEWPOT_${to.toUpperCase()}_MODE`;
 export function resolvePath(to: string): string | undefined {
   const env = Deno.env;
   const root = STEWPOT_DIRNAME;
-  const mode = env.get(STEWPOT_SUBDIRNAME(to)) ?? "production";
+  // const subdir = STEWPOT_SUBDIRNAME(to);
+  // const mode = (env.has(subdir) ? env.get(subdir) : null) ??
+  //   "production";
 
   const override = env.get(ENV_CLI_OVERRIDE);
   if (override) return override;
 
-  if (mode && mode === "development") {
+  const mode = detectMode();
+  if (mode === "development") {
     const cwd = Deno.cwd();
     return join(cwd, root, to);
+  }
+
+  if (!env.get(ENV_STEWPOT_MODE)) {
+    console.error(
+      yellow("[warn]"),
+      `${ENV_STEWPOT_MODE} not set & no local checkout detected. use production directory.`,
+    );
   }
 
   const home = resolveUserHomeDirectory();
   if (home) {
     return join(home, root, to);
+  }
+}
+
+/**
+ * determines wether CLI is running from a local checkout (development)
+ * or an installed/cached copy (production). `STEWPOT_ENV`, if set to "development" or "production", always overrides the auto-detected value.
+ *
+ * @returns { "development" | "production" }
+ */
+export function detectMode(): "development" | "production" {
+  const explicit = Deno.env.get(ENV_STEWPOT_MODE);
+  if (explicit === "production" || explicit === "development") {
+    return explicit;
+  }
+  try {
+    const modulePathname = new URL(import.meta.url).pathname;
+    const isLocalCheckout = modulePathname.startsWith(Deno.cwd());
+    return isLocalCheckout ? "development" : "production";
+  } catch (_error) {
+    return "production";
   }
 }
 
