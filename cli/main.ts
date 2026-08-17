@@ -91,17 +91,15 @@ const ENV_STEWPOT_MODE = "STEWPOT_MODE";
 export function resolvePath(to: string): string | undefined {
   const env = Deno.env;
   const root = STEWPOT_DIRNAME;
-  // const subdir = STEWPOT_SUBDIRNAME(to);
-  // const mode = (env.has(subdir) ? env.get(subdir) : null) ??
-  //   "production";
 
   const override = env.get(ENV_CLI_OVERRIDE);
   if (override) return override;
 
   const mode = detectMode();
+  // console.log({ mode });
   if (mode === "development") {
     const cwd = Deno.cwd();
-    return join(cwd, root, to);
+    return join(cwd, "tmp", to);
   }
 
   if (!env.get(ENV_STEWPOT_MODE)) {
@@ -125,14 +123,16 @@ export function resolvePath(to: string): string | undefined {
  */
 export function detectMode(): "development" | "production" {
   const explicit = Deno.env.get(ENV_STEWPOT_MODE);
+  // console.log({ explicit });
   if (explicit === "production" || explicit === "development") {
     return explicit;
   }
   try {
-    const modulePathname = new URL(import.meta.url).pathname;
+    const modulePathname = new URL(Deno.mainModule).pathname;
     const isLocalCheckout = modulePathname.startsWith(Deno.cwd());
+    // console.log({ isLocalCheckout });
     return isLocalCheckout ? "development" : "production";
-  } catch (_error) {
+  } catch (_) {
     return "production";
   }
 }
