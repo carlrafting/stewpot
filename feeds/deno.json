@@ -38,6 +38,13 @@
     ]
   },
   "tasks": {
+    "dev:cli": {
+      "description": "Run CLI in development mode",
+      "env": [
+        "STEWPOT_MODE"
+      ],
+      "command": "STEWPOT_MODE=development deno -P cli/main.ts"
+    },
     "dev:reader": {
       "description": "Run CLI reader application for development",
       "command": "deno -P --watch=assets cli/main.ts reader"
