@@ -26,7 +26,13 @@ import {
   type KvStorage,
 } from "../cli/storage.ts";
 import pkg from "../deno.json" with { type: "json" };
-import type { CLIDeps, Command, Input, Options, ParsedArguments } from "@stewpot/cli";
+import type {
+  CLIDeps,
+  Command,
+  Input,
+  Options,
+  ParsedArguments,
+} from "@stewpot/cli";
 import { handleArgs, resolvePath } from "@stewpot/cli";
 
 /**
@@ -43,7 +49,7 @@ const ITEMS_DIRNAME = "items";
 /** where KV data is stored */
 const KV_FILENAME = "kv.db";
 
-export { ITEMS_DIRNAME, CONFIG_FILENAME, KV_FILENAME, SOURCES_FILENAME };
+export { CONFIG_FILENAME, ITEMS_DIRNAME, KV_FILENAME, SOURCES_FILENAME };
 
 /** paths used for file & kv storage */
 export interface Paths {
@@ -61,7 +67,7 @@ export interface Paths {
 
 const resolveRootDirectory = () => resolvePath("feeds");
 
-async function resolvePaths(base?: string): Promise<Paths | undefined> {
+export async function resolvePaths(base?: string): Promise<Paths | undefined> {
   const root = base ?? resolveRootDirectory();
 
   if (!root) return;
@@ -103,7 +109,7 @@ export interface Deps extends CLIDeps {
   config: Configuration;
   /** only used for backwards compability @deprecated */
   args: ParsedArguments;
-};
+}
 
 const init: Command = {
   name: "init",

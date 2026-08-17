@@ -79,6 +79,7 @@ export function run(
 const ENV_CLI_OVERRIDE = "STEWPOT_DIR_OVERRIDE";
 /** stewpot root directory name */
 const STEWPOT_DIRNAME = ".stewpot";
+const STEWPOT_SUBDIRNAME = (to: string) => `STEWPOT_${to.toUpperCase()}_MODE`;
 
 /**
  * resolves path to directory based on os environment
@@ -88,9 +89,15 @@ const STEWPOT_DIRNAME = ".stewpot";
 export function resolvePath(to: string): string | undefined {
   const env = Deno.env;
   const root = STEWPOT_DIRNAME;
+  const mode = env.get(STEWPOT_SUBDIRNAME(to)) ?? "production";
 
   const override = env.get(ENV_CLI_OVERRIDE);
   if (override) return override;
+
+  if (mode && mode === "development") {
+    const cwd = Deno.cwd();
+    return join(cwd, root, to);
+  }
 
   const home = resolveUserHomeDirectory();
   if (home) {
