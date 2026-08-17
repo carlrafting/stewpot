@@ -1,5 +1,7 @@
 import { join } from "@std/path/join";
 import { yellow } from "@std/fmt/colors";
+import { relative } from "@std/path/relative";
+import { isAbsolute } from "@std/path/is-absolute";
 
 export type CLIDeps = {
   [key: string]: unknown;
@@ -128,12 +130,16 @@ export function detectMode(): "development" | "production" {
     return explicit;
   }
   try {
+    const cwd = Deno.cwd();
     const modulePathname = new URL(Deno.mainModule).pathname;
-    const isLocalCheckout = modulePathname.startsWith(Deno.cwd());
+    const rel = relative(cwd, modulePathname);
+    // const isLocalCheckout = modulePathname.startsWith(Deno.cwd());
+    const isLocalCheckout = !rel.startsWith("..") && !isAbsolute(rel);
     // console.log({ isLocalCheckout });
     return isLocalCheckout ? "development" : "production";
   } catch (_) {
-    return "production";
+    // fallback to development
+    return "development";
   }
 }
 
