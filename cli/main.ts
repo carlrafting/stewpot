@@ -77,11 +77,11 @@ export function run(
 }
 
 /** override directory with environment variable (absolute path) */
-const ENV_CLI_OVERRIDE = "STEWPOT_DIR_OVERRIDE";
+const ENV_OVERRIDE = "STEWPOT_DIR_OVERRIDE";
+/** what environment stewpot packages should run under */
+const ENV_MODE = "STEWPOT_MODE";
 /** stewpot root directory name */
 const STEWPOT_DIRNAME = ".stewpot";
-/** what environment stewpot packages should run under */
-const ENV_STEWPOT_MODE = "STEWPOT_MODE";
 
 /**
  * resolves path to directory based on os environment
@@ -92,7 +92,7 @@ export function resolvePath(to: string): string | undefined {
   const env = Deno.env;
   const root = STEWPOT_DIRNAME;
 
-  const override = env.get(ENV_CLI_OVERRIDE);
+  const override = env.get(ENV_OVERRIDE);
   if (override) return override;
 
   const mode = detectMode();
@@ -102,10 +102,10 @@ export function resolvePath(to: string): string | undefined {
     return join(cwd, "tmp", to);
   }
 
-  if (!env.get(ENV_STEWPOT_MODE)) {
+  if (!env.get(ENV_MODE)) {
     console.error(
       yellow("[warn]"),
-      `${ENV_STEWPOT_MODE} not set & no local checkout detected. use production directory.`,
+      `${ENV_MODE} not set & no local checkout detected. use production directory.`,
     );
   }
 
@@ -122,7 +122,7 @@ export function resolvePath(to: string): string | undefined {
  * @returns { "development" | "production" }
  */
 export function detectMode(): "development" | "production" {
-  const explicit = Deno.env.get(ENV_STEWPOT_MODE);
+  const explicit = Deno.env.get(ENV_MODE);
   // console.log({ explicit });
   if (explicit === "production" || explicit === "development") {
     return explicit;
