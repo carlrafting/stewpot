@@ -7,7 +7,7 @@ import {
   type Configuration,
   loadConfig,
   writeConfigToPath,
-} from "../cli/config.ts";
+} from "../core/config.ts";
 import {
   discoverFeed,
   type FeedData,
@@ -24,7 +24,7 @@ import {
   createStorage,
   type FsStorage,
   type KvStorage,
-} from "../cli/storage.ts";
+} from "../core/storage.ts";
 import pkg from "../deno.json" with { type: "json" };
 import type {
   CLIDeps,

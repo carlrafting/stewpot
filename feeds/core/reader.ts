@@ -1,5 +1,5 @@
 import type { FeedData, FeedItem } from "./main.ts";
-import type { FsStorage, KvStorage } from "../cli/storage.ts";
+import type { FsStorage, KvStorage } from "./storage.ts";
 import denoConfig from "../deno.json" with { type: "json" };
 
 type mapTemplateOutputFn =
