@@ -1,4 +1,4 @@
-import { cyan } from "@std/fmt/colors";
+import { cyan, green } from "@std/fmt/colors";
 import type { Options } from "@stewpot/cli";
 import type { FeedData } from "./main.ts";
 import type { FsStorage, KvStorage } from "./storage.ts";
@@ -10,7 +10,7 @@ export async function createServer(
   options: Options,
   feeds: FeedData[],
   store: FsStorage | KvStorage,
-) {
+): Promise<void> {
   const controller = new AbortController();
   const signal = controller.signal;
   const handler = await app(
@@ -40,4 +40,8 @@ export async function createServer(
     await server.shutdown();
   });
   await server.finished;
+  console.log(
+    green("done"),
+    "reader shutdown was finished successfully",
+  );
 }

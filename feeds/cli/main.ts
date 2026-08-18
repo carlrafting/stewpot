@@ -498,10 +498,6 @@ const reader: Command = {
       return 0;
     }
     await createServer(config, options, feeds, store);
-    console.log(
-      colors.green("done"),
-      "reader shutdown was finished successfully",
-    );
   },
 };
 
