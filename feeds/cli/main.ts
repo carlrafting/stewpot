@@ -501,7 +501,7 @@ const reader: Command = {
   },
 };
 
-async function uninstall() {
+async function uninstall(): Promise<boolean> {
   console.log(colors.cyan("info"), "uninstall previous version...");
   const signal = new AbortController().signal;
   const [, name] = pkg.name.split("/");
