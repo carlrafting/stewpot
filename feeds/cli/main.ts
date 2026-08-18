@@ -34,6 +34,7 @@ import type {
   ParsedArguments,
 } from "@stewpot/cli";
 import { handleArgs, resolvePath } from "@stewpot/cli";
+import { createServer } from "../core/server.ts";
 
 /**
  * This module contains code related to feeds CLI
@@ -496,35 +497,7 @@ const reader: Command = {
       console.log("this is help for list command");
       return 0;
     }
-    const controller = new AbortController();
-    const signal = controller.signal;
-    const handler = await app(
-      feeds,
-      store,
-    );
-    const hostname = (Deno.env.get("HOSTNAME") || options.hostname ||
-      config?.reader?.hostname) ??
-      "localhost";
-    const port =
-      (Deno.env.get("PORT") || options.port || config?.reader?.port) ?? 8000;
-    const serveOptions: Deno.ServeTcpOptions = {
-      hostname,
-      port,
-      signal,
-      onListen({ port, hostname }) {
-        console.log(
-          colors.cyan("info"),
-          `Serving reader at http://${hostname}:${port}`,
-        );
-        console.log(colors.cyan("info"), "Press Ctrl+C to exit");
-      },
-    } as Deno.ServeTcpOptions;
-    const server = Deno.serve(serveOptions, handler.fetch);
-    Deno.addSignalListener("SIGINT", async () => {
-      console.log(colors.cyan("info"), "shutting down reader...");
-      await server.shutdown();
-    });
-    await server.finished;
+    await createServer(config, options, feeds, store);
     console.log(
       colors.green("done"),
       "reader shutdown was finished successfully",
