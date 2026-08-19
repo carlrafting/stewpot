@@ -19,7 +19,6 @@ import {
   mapToFeedItems,
   parseInputToURL,
 } from "../core/main.ts";
-import app from "../core/reader.ts";
 import {
   createStorage,
   type FsStorage,
