@@ -66,5 +66,8 @@
       "net": true,
       "run": true
     }
+  },
+  "compile": {
+    "include": ["assets", "templates"]
   }
 }
