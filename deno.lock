@@ -17,6 +17,7 @@
     "jsr:@std/http@^1.0.20": "1.1.3",
     "jsr:@std/http@^1.0.24": "1.1.3",
     "jsr:@std/http@^1.0.25": "1.1.3",
+    "jsr:@std/http@^1.1.3": "1.1.3",
     "jsr:@std/internal@^1.0.12": "1.0.14",
     "jsr:@std/internal@^1.0.14": "1.0.14",
     "jsr:@std/media-types@^1.1.0": "1.1.0",
@@ -37,7 +38,7 @@
     "jsr:@stewpot/middleware@0.3": "0.3.1",
     "npm:feedsmith@^2.9.6": "2.9.6",
     "npm:marked@^17.0.1": "17.0.5",
-    "npm:ventojs@^2.3.1": "2.3.1"
+    "npm:ventojs@^2.4.0": "2.4.0"
   },
   "jsr": {
     "@std/assert@1.0.19": {
@@ -218,8 +219,8 @@
         "anynum"
       ]
     },
-    "ventojs@2.3.1": {
-      "integrity": "sha512-saGBMwQF+TZZJLTixSzwbZl+O5cNdBhMXNYAwegQ+/EsXSllSzrzgrZN7MU07ZOea3M+I/xBTwEFVb0HU6moUw=="
+    "ventojs@2.4.0": {
+      "integrity": "sha512-U2qmlBKdhkqwcbtU6ivk2K5zKTsTg9fgoODrAzoSQBzQn+c5Q7RfkOdWimb/IJqqkd5fyEzqEowC6mH0JuOhTQ=="
     },
     "xml-naming@0.3.0": {
       "integrity": "sha512-ghig2TBE/H11aOVgmahA3MhimvkBr6JIYknH/Dhdk10nXwdbIqBJsbfMxpvFPG8bAw77gN29aQWvKpmVoPlvPQ=="
@@ -305,12 +306,12 @@
       },
       "manage": {
         "dependencies": [
-          "jsr:@std/assert@1",
+          "jsr:@std/assert@^1.0.19",
           "jsr:@std/front-matter@^1.0.9",
-          "jsr:@std/http@1",
-          "jsr:@std/path@^1.1.4",
+          "jsr:@std/http@^1.1.3",
+          "jsr:@std/path@^1.1.6",
           "jsr:@std/ulid@1",
-          "npm:ventojs@^2.3.1"
+          "npm:ventojs@^2.4.0"
         ]
       },
       "middleware": {
