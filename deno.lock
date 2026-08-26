@@ -1,7 +1,6 @@
 {
   "version": "5",
   "specifiers": {
-    "jsr:@std/assert@1": "1.0.19",
     "jsr:@std/assert@^1.0.19": "1.0.19",
     "jsr:@std/async@^1.5.0": "1.5.0",
     "jsr:@std/cli@^1.0.32": "1.0.32",
@@ -13,10 +12,7 @@
     "jsr:@std/fs@^1.0.24": "1.0.24",
     "jsr:@std/html@^1.0.5": "1.0.7",
     "jsr:@std/html@^1.0.7": "1.0.7",
-    "jsr:@std/http@1": "1.1.3",
-    "jsr:@std/http@^1.0.20": "1.1.3",
     "jsr:@std/http@^1.0.24": "1.1.3",
-    "jsr:@std/http@^1.0.25": "1.1.3",
     "jsr:@std/http@^1.1.3": "1.1.3",
     "jsr:@std/internal@^1.0.12": "1.0.14",
     "jsr:@std/internal@^1.0.14": "1.0.14",
@@ -26,18 +22,15 @@
     "jsr:@std/path@^1.1.5": "1.1.6",
     "jsr:@std/path@^1.1.6": "1.1.6",
     "jsr:@std/streams@^1.1.2": "1.1.2",
-    "jsr:@std/testing@^1.0.15": "1.0.20",
-    "jsr:@std/testing@^1.0.16": "1.0.20",
-    "jsr:@std/testing@^1.0.17": "1.0.20",
     "jsr:@std/testing@^1.0.20": "1.0.20",
     "jsr:@std/toml@^1.0.3": "1.0.11",
     "jsr:@std/ulid@*": "1.0.0",
     "jsr:@std/ulid@1": "1.0.0",
     "jsr:@std/yaml@^1.0.5": "1.1.0",
     "jsr:@stewpot/html@~0.3.1": "0.3.1",
-    "jsr:@stewpot/middleware@0.3": "0.3.1",
+    "jsr:@stewpot/middleware@~0.3.1": "0.3.1",
     "npm:feedsmith@^2.9.6": "2.9.6",
-    "npm:marked@^17.0.1": "17.0.5",
+    "npm:marked@^17.0.6": "17.0.6",
     "npm:ventojs@^2.4.0": "2.4.0"
   },
   "jsr": {
@@ -130,7 +123,7 @@
     "@std/testing@1.0.20": {
       "integrity": "21380ed438672762e4ec549cbf4fe41c5b68f5598773a30b64abe7375513e721",
       "dependencies": [
-        "jsr:@std/assert@^1.0.19",
+        "jsr:@std/assert",
         "jsr:@std/async",
         "jsr:@std/data-structures",
         "jsr:@std/fs",
@@ -206,8 +199,8 @@
     "is-unsafe@2.0.0": {
       "integrity": "sha512-2LdV822R+wmI86unXA93WCFpL6g+av8ynWk0nrHyJqGop5VoocYsSLFgN8jrfalT6iGeLNM4KXuVSsULP53kEA=="
     },
-    "marked@17.0.5": {
-      "integrity": "sha512-6hLvc0/JEbRjRgzI6wnT2P1XuM1/RrrDEX0kPt0N7jGm1133g6X7DlxFasUIx+72aKAr904GTxhSLDrd5DIlZg==",
+    "marked@17.0.6": {
+      "integrity": "sha512-gB0gkNafnonOw0obSTEGZTT86IuhILt2Wfx0mWH/1Au83kybTayroZ/V6nS25mN7u8ASy+5fMhgB3XPNrOZdmA==",
       "bin": true
     },
     "path-expression-matcher@1.6.2": {
@@ -278,10 +271,10 @@
     "members": {
       "cli": {
         "dependencies": [
-          "jsr:@std/assert@1",
+          "jsr:@std/assert@^1.0.19",
           "jsr:@std/fmt@^1.0.10",
           "jsr:@std/fs@^1.0.24",
-          "jsr:@std/path@^1.1.5"
+          "jsr:@std/path@^1.1.6"
         ]
       },
       "feeds": {
@@ -299,9 +292,9 @@
       },
       "html": {
         "dependencies": [
-          "jsr:@std/assert@1",
-          "jsr:@std/html@^1.0.5",
-          "jsr:@std/testing@^1.0.17"
+          "jsr:@std/assert@^1.0.19",
+          "jsr:@std/html@^1.0.7",
+          "jsr:@std/testing@^1.0.20"
         ]
       },
       "manage": {
@@ -317,23 +310,23 @@
       "middleware": {
         "dependencies": [
           "jsr:@std/assert@^1.0.19",
-          "jsr:@std/http@^1.0.25",
-          "jsr:@std/path@^1.1.4"
+          "jsr:@std/http@^1.1.3",
+          "jsr:@std/path@^1.1.6"
         ]
       },
       "routes": {
         "dependencies": [
-          "jsr:@std/http@^1.0.20",
-          "jsr:@std/testing@^1.0.15",
-          "jsr:@stewpot/middleware@0.3"
+          "jsr:@std/http@^1.1.3",
+          "jsr:@std/testing@^1.0.20",
+          "jsr:@stewpot/middleware@~0.3.1"
         ]
       },
       "ui": {
         "dependencies": [
-          "jsr:@std/assert@1",
-          "jsr:@std/http@1",
-          "jsr:@std/testing@^1.0.16",
-          "npm:marked@^17.0.1"
+          "jsr:@std/assert@^1.0.19",
+          "jsr:@std/http@^1.1.3",
+          "jsr:@std/testing@^1.0.20",
+          "npm:marked@^17.0.6"
         ]
       }
     }
