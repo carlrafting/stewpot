@@ -50,7 +50,7 @@ export async function loadConfig(
     console.log(colors.cyan("info"), `loading config at ${config}`);
     const configModule = await import(toFileUrl(config).href);
     return configModule.default;
-  } catch (error) {
+  } catch (_) {
     console.error(
       colors.red("error"),
       "error occured while fetching config file, fallback to default",
