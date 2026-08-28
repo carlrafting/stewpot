@@ -89,33 +89,33 @@ export function simpleRoutes(
     handler,
   }));
   return async function routesMiddleware(request: Request, next: NextHandler) {
-    try {
-      const url = new URL(request.url);
-      const pathname = options?.normalizePath
-        ? normalizePath(url.pathname)
-        : url.pathname;
-      for (const route of routes) {
-        if (request.method !== route.method) continue;
-        const match = route.pattern.exec({ pathname });
-        if (match) {
-          const params = match?.pathname.groups ?? {};
+    const url = new URL(request.url);
+    const pathname = options?.normalizePath
+      ? normalizePath(url.pathname)
+      : url.pathname;
+    for (const route of routes) {
+      if (request.method !== route.method) continue;
+      const match = route.pattern.exec({ pathname });
+      if (match) {
+        const params = match?.pathname.groups ?? {};
+        try {
           return await route.handler(request, params);
+        } catch (error) {
+          if (options.onError) {
+            return await options.onError(
+              request,
+              error instanceof Error ? error : new Error(`${error}`),
+            );
+          }
+
+          return onError(
+            request,
+            error instanceof Error ? error : new Error(`${error}`),
+          );
         }
       }
-      return await next();
-    } catch (error) {
-      if (options.onError) {
-        return await options.onError(
-          request,
-          error instanceof Error ? error : new Error(String(error)),
-        );
-      }
-
-      return onError(
-        request,
-        error instanceof Error ? error : new Error(String(error)),
-      );
     }
+    return await next();
   };
 }
 
