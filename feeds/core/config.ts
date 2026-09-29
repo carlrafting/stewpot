@@ -46,7 +46,7 @@ export async function loadConfig(
   const config = path;
 
   try {
-    if (!config) throw "no config path provided";
+    if (!config) throw new Error("Config path must be provided");
     console.log(colors.cyan("info"), `loading config at ${config}`);
     const configModule = await import(toFileUrl(config).href);
     return configModule.default;

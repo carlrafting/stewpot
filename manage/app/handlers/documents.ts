@@ -70,7 +70,7 @@ export default [
         data,
       ).commit();
       if (!commit?.ok) {
-        throw "there was an error while creating the document!";
+        throw new Error("There was an error while creating the document!");
       }
       return Response.redirect(new URL(`/document/${id}/edit/`, url));
     },
@@ -85,7 +85,7 @@ export default [
       const connection = getConnection(connections, "kv");
       const kv = new KvRepository("kv");
       const id = params?.id;
-      if (!id) throw "no id parameter found in URL!";
+      if (!id) throw new Error("No id path segment provided in URL!");
       const blockTypes: Data.BlockType[] = [
         "file",
         "heading",
@@ -121,9 +121,9 @@ export default [
     pattern: new URLPattern({ pathname: "/document/:id/blocks/new/" }),
     async handler({ params, url, connections, request, flash }) {
       const id = params.id;
-      if (!id) throw "no document id found in params";
+      if (!id) throw new Error("No document id found in URL params");
       const kv = getConnection(connections, "kv");
-      if (!kv) throw "no connection with that key found!";
+      if (!kv) throw new Error("No connection with provided key found!");
       const formData = await request.formData();
       const type = formData.get("type") as Data.BlockType;
       const blockId = crypto.randomUUID();

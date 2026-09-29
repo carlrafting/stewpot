@@ -44,7 +44,7 @@ const fetchFile = async (filePath: string, options?: RequestInit) => {
     },
   );
   if (!response.ok) {
-    throw "response did not return a 200 OK status";
+    throw new Error("response did not return a 200 OK status");
   }
   return await response.text();
 };

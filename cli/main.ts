@@ -106,7 +106,7 @@ export function resolvePath(to: string): string | undefined {
 
   if (!env.get(ENV_MODE)) {
     console.error(
-      yellow("[warn]"),
+      yellow("warn"),
       `${ENV_MODE} not set & no local checkout detected. use production directory.`,
     );
   }

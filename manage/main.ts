@@ -75,7 +75,7 @@ export async function app(
       const cookies = getCookies(request.headers);
       const sessionId = cookies[COOKIE_NAME];
       if (!sessionKv) {
-        throw "session kv store was undefined!";
+        throw new Error("KV session store could not be determined!");
       }
       if (!sessionId) {
         {

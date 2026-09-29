@@ -34,7 +34,7 @@ export default [
     method: "POST",
     pathname: "/library/upload/",
     async handler({ request, flash }) {
-      throw "upload feature is under development!";
+      throw new Error("upload feature is under development!");
       /*
       const formData = await request.formData();
       const file: File | null = formData?.get("file") as File;

@@ -17,11 +17,12 @@ export async function createServer(
     feeds,
     store,
   );
-  const hostname = (Deno.env.get("HOSTNAME") || options.hostname ||
-    config?.reader?.hostname) ??
+  const hostname = Deno.env.get("HOSTNAME") ?? options?.hostname as string ??
+    config?.reader?.hostname ??
     "localhost";
-  const port = (Deno.env.get("PORT") || options.port || config?.reader?.port) ??
-    8000;
+  const port =
+    Number(Deno.env.get("PORT") || options.port || config?.reader?.port) ??
+      8000;
   const serveOptions: Deno.ServeTcpOptions = {
     hostname,
     port,
@@ -33,12 +34,19 @@ export async function createServer(
       );
       console.log(cyan("info"), "Press Ctrl+C to exit");
     },
-  } as Deno.ServeTcpOptions;
+  };
+  // } as Deno.ServeTcpOptions;
+
   const server = Deno.serve(serveOptions, handler.fetch);
-  Deno.addSignalListener("SIGINT", async () => {
+  const shutdown = async () => {
     console.log(cyan("info"), "shutting down reader...");
+    controller.abort();
     await server.shutdown();
-  });
+  };
+
+  Deno.addSignalListener("SIGINT", shutdown);
+  Deno.addSignalListener("SIGTERM", shutdown);
+
   await server.finished;
   console.log(
     green("done"),

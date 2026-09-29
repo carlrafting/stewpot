@@ -676,7 +676,7 @@ ${colors.green("Commands")}:
 async function bootstrap() {
   try {
     const paths = await resolvePaths();
-    if (!paths) throw "couldn't resolve paths";
+    if (!paths) throw new Error("Failed to resolve paths!");
     const config = await loadConfig(paths.config);
     const store = await createStorage(config?.storage, paths);
     const code = await main(Deno.args, config, store, paths);
