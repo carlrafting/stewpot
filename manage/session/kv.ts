@@ -8,17 +8,24 @@ export interface Session {
   forwardedIP?: string;
   flash?: Record<string, string>;
   csrf?: string;
+}
+
+export interface SessionData extends Session {
   [key: string]: unknown;
 }
 
-interface SessionData extends Session {}
-
 export const SESSION_TTL_MS = duration({ hours: 1 });
 
-export async function createSession(
-  request: Request,
-  store: Deno.Kv,
-): Promise<string>;
+/**
+ * creates a new session kv entry. returns the newly created session id.
+ * throws error if the `Deno.KvCommitResult.ok` value is false.
+ *
+ * @param request
+ * @param store
+ * @param data
+ * @throws {Error}
+ * @returns {Promise<string>}
+ */
 export async function createSession(
   request: Request,
   store: Deno.Kv,
@@ -36,7 +43,11 @@ export async function createSession(
     forwardedIP,
     ...data,
   };
-  // console.log(id, now);
-  await store.set(["sessions", id], session, { expireIn: SESSION_TTL_MS });
+  const result = await store.set(["sessions", id], session, {
+    expireIn: SESSION_TTL_MS,
+  });
+  if (!result.ok) {
+    throw new Error("An error occured during save of session data.");
+  }
   return id;
 }
