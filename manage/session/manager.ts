@@ -1,6 +1,6 @@
 import { getCookies } from "@std/http/cookie";
 import { COOKIE_NAME } from "./cookie.ts";
-import { type Session, SESSION_TTL_MS } from "./kv.ts";
+import { SESSION_TTL_MS, type SessionData as SessionType } from "./kv.ts";
 import { type ConnectionKey, getConnection } from "../kv/connections.ts";
 
 export type SessionManager = {
@@ -29,7 +29,7 @@ export async function createSessionManager(
   const sessionID = cookies[COOKIE_NAME];
   if (!sessionID) throw errors.session;
   const key = ["sessions", sessionID];
-  const entry = await store.get<Session>(key);
+  const entry = await store.get<SessionType>(key);
   if (!entry.value) throw errors.entry;
   const persist = async (data: unknown) =>
     await store.set(key, data, { expireIn: SESSION_TTL_MS });
@@ -38,7 +38,7 @@ export async function createSessionManager(
       return sessionID;
     },
     async touch(): Promise<void> {
-      const data: Session = { ...entry.value, lastAccessedAt: Date.now() };
+      const data: SessionType = { ...entry.value, lastAccessedAt: Date.now() };
       await persist(data);
     },
     async set(key: string, value: unknown) {
@@ -46,15 +46,15 @@ export async function createSessionManager(
       await persist(data);
     },
     get<T>(key: string): T | undefined {
-      const data: Session = entry.value;
+      const data: SessionType = entry.value;
       return data[key] as T | undefined;
     },
     getAll<T>(): T | undefined {
-      const data: Session = entry.value;
+      const data: SessionType = entry.value;
       return data as T | undefined;
     },
     async delete(key: string) {
-      const { [key]: _, ...data }: Session = entry.value;
+      const { [key]: _, ...data }: SessionType = entry.value;
       await persist(data);
     },
     async destroy() {
