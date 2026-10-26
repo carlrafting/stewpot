@@ -16,7 +16,8 @@
     "@std/path": "jsr:@std/path@^1.1.6",
     "@std/testing": "jsr:@std/testing@^1.0.20",
     "@std/ulid": "jsr:@std/ulid@^1.0.0",
-    "feedsmith": "npm:feedsmith@^2.9.6"
+    "feedsmith": "npm:feedsmith@^2.9.6",
+    "ventojs": "npm:ventojs@^2.4.0"
   },
   "desktop": {
     "app": {

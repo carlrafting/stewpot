@@ -1,33 +1,8 @@
-import type { FeedData, FeedItem } from "./main.ts";
+import { fromFileUrl } from "@std/path/from-file-url";
+import vento from "ventojs/mod.js";
 import type { FsStorage, KvStorage } from "./storage.ts";
 import denoConfig from "../deno.json" with { type: "json" };
-
-type mapTemplateOutputFn =
-  & ((value: TemplateStyles, index: number, array: TemplateStyles[]) => unknown)
-  & ((
-    value: TemplateScripts,
-    index: number,
-    array: TemplateScripts[],
-  ) => unknown);
-
-interface TemplateStyles {
-  inline?: string;
-  media?: "screen" | "print" | "all" | string;
-  href?: string | URL;
-}
-
-interface TemplateScripts {
-  src: string | URL;
-  inline?: string;
-  type?: "module";
-}
-
-interface TemplateData {
-  title: string;
-  body: string;
-  styles?: TemplateStyles[];
-  scripts?: TemplateScripts[];
-}
+import type { FeedData } from "./main.ts";
 
 const htmlContentType = {
   "content-type": "text/html; charset=utf-8",
@@ -35,51 +10,16 @@ const htmlContentType = {
 const svgContentType = {
   "content-type": "image/svg+xml; charset=utf-8",
 };
-const fetchFile = async (filePath: string, options?: RequestInit) => {
+
+const fetchFile = async (filePath: string) => {
   const response = await fetch(
     new URL(filePath, import.meta.url),
-    {
-      cache: "no-cache",
-      ...options,
-    },
+    { cache: "no-cache" },
   );
   if (!response.ok) {
     throw new Error("response did not return a 200 OK status");
   }
   return await response.text();
-};
-
-const mapStylesFn = (style: TemplateStyles) => {
-  if (!style) return "";
-  if (style?.inline) return `<style>${style.inline}</style>`;
-  return `<link rel="stylesheet" href="${style.href}" media="${style.media}">`;
-};
-const mapScriptsFn = (script: TemplateScripts) => {
-  if (!script) return "";
-  if (script?.inline) return `<script>${script.inline}</script>`;
-  return `<script type="${script.type}" src="${script.src}"></script>`;
-};
-const newLine = "\n";
-
-const outputTemplateAssetsHTML = (
-  input: TemplateScripts[] | TemplateStyles[] = [],
-  fn: mapTemplateOutputFn,
-): string => input?.map(fn)?.join(newLine) ?? "";
-
-const replace = (
-  data: { [s: string]: unknown } | ArrayLike<unknown>,
-  src: string,
-) => {
-  const entries = Object.entries(data);
-  let result = src;
-  for (const [key, value] of entries) {
-    if (typeof value === "function") {
-      result = value();
-      continue;
-    }
-    result = result.replaceAll(key, value as string);
-  }
-  return result;
 };
 
 export async function app(
@@ -89,60 +29,11 @@ export async function app(
   const css = await fetchFile("../assets/styles.css");
   const js = await fetchFile("../assets/reader.js");
   const icon = await fetchFile("../assets/rss-icon.svg");
-  const template = {
-    Document: await fetchFile("../templates/document.html"),
-    Header: await fetchFile("../templates/partials/header.html"),
-    Footer: await fetchFile("../templates/partials/footer.html"),
-    ToggleDetails: await fetchFile(
-      "../templates/partials/toggle-details-template.html",
-    ),
-    ToggleTheme: await fetchFile(
-      "../templates/partials/toggle-theme-template.html",
-    ),
-    FetchItems: await fetchFile(
-      "../templates/partials/fetch-items-template.html",
-    ),
-    header(content: string): string {
-      return ["<header>", content, "</header>"].join(newLine);
-    },
-    main(content: string): string {
-      return ["<main class=flow>", content, "</main>"].join(newLine);
-    },
-    html(data: TemplateData) {
-      return `
-  <!doctype html>
-  <html lang="en" data-theme="auto">
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="icon" href="/rss-icon.svg" type="image/svg+xml">
-  ${outputTemplateAssetsHTML(data?.styles, mapStylesFn)}
-  <style>
-  ${css.trim()}
-  </style>
-  <script type="module">
-  ${js.trim()}
-  </script>
-  <title>${data.title}</title>
-  <body class="flow">
-  ${data.body}
-    `.trim();
-    },
-  };
-  const data = new Map();
-  for (const feed of feeds) {
-    const items: FeedItem[] = await store.loadItems(feed.id);
-    data.set(feed.id, items);
-  }
-  // const subscribeButton =
-  //   `<button type="button" name="subscribe" class="primary">Subscribe</button>`;
-  const subscribeButton = await fetchFile(
-    "../templates/partials/subscribeButton.html",
-  );
-  // const fetchAllButton =
-  //   `<button type="button" name="fetch-all" class="primary">Fetch All</button>`;
-  const fetchAllButton = await fetchFile(
-    "../templates/partials/fetchAllButton.html",
-  );
+  const templates = vento({
+    includes: fromFileUrl(new URL("../templates", import.meta.url)),
+    autoescape: true,
+  });
+
   return {
     async fetch(request: Request): Promise<Response> {
       const url = new URL(request.url);
@@ -165,88 +56,32 @@ export async function app(
       }
 
       if (url.pathname === "/rss-icon.svg") {
-        try {
-          return new Response(icon, {
-            headers: {
-              ...svgContentType,
-            },
-          });
-        } catch (error) {
-          throw error;
-        }
+        return new Response(icon, {
+          headers: svgContentType,
+        });
       }
 
       if (url.pathname === "/") {
-        const title = `${denoConfig.name} - v${denoConfig.version}`;
-
-        const header = replace({
-          "<!--$HEADER-->": `<h1 class="tac">Feed Sources</h1>
-             <header-toolbar>
-               <toggle-details></toggle-details>
-               ${fetchAllButton}
-             </header-toolbar>`,
-        }, template.Header);
-
-        const main = template.main(
-          `${
-            feeds.map((feed) => {
-              const hostname = `<h3>${new URL(feed.url).hostname}</h3>`;
-              const items: FeedItem[] = data.get(feed.id);
-              const format =
-                `<span class="br pi format">${feed?.format}</span>`;
-              const count = `<span class="count">${items.length} items</span>`;
-              const lastModified = feed.fetch_timestamp
-                ? `<span>${feed?.fetch_timestamp}</span>`
-                : "";
-              return [
-                '<details class="br flow">',
-                '<summary class="bgcolor boc pi rounded">',
-                hostname,
-                format,
-                count,
-                lastModified,
-                `<fetch-items for="${feed.id}"></fetch-items>`,
-                "</summary>",
-                "<ul>",
-                items.map((item) =>
-                  `<li><a href="${item.url}">${item.title}</a><time>${
-                    item.published ?? item.updated
-                  }</time></li>`
-                ).join(newLine),
-                "</ul>",
-                "</details>",
-              ].join(newLine);
-            }).join(newLine)
-          }`,
+        const pageFeeds = await Promise.all(
+          feeds.map(async (feed) => ({
+            ...feed,
+            hostname: new URL(feed.url).hostname,
+            items: await store.loadItems(feed.id),
+          })),
         );
-        const footer = replace({
-          "$NAME": denoConfig.name,
-          "$VERSION": denoConfig.version,
-        }, template.Footer);
-        const templates = [
-          template.ToggleTheme,
-          template.ToggleDetails,
-          template.FetchItems,
-        ].join(newLine);
-        const body = [
-          header,
-          main,
-          footer,
-          templates,
-        ].join(newLine);
-        const html = template.html({
-          title,
-          body,
+        const result = await templates.run("reader.html.vto", {
+          title: `${denoConfig.name} - v${denoConfig.version}`,
+          name: denoConfig.name,
+          version: denoConfig.version,
+          feeds: pageFeeds,
+          css: css.trim(),
+          js: js.trim(),
         });
-        return new Response(
-          html,
-          {
-            headers: {
-              ...htmlContentType,
-            },
-          },
-        );
+        return new Response(result.content, {
+          headers: htmlContentType,
+        });
       }
+
       return new Response("404 Not Found", {
         status: 404,
       });
