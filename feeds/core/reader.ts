@@ -17,17 +17,30 @@ const jsContentType = {
   "content-type": "text/javascript; charset=utf-8",
 };
 
-const readFile = async (filePath: string) => {
-  return await Deno.readTextFile(new URL(filePath, import.meta.url));
-};
+export async function readAsset(
+  filePath: string,
+  baseUrl = import.meta.url,
+  fetchAsset: typeof fetch = fetch,
+): Promise<string> {
+  const url = new URL(filePath, baseUrl);
+  if (url.protocol === "file:") {
+    return await Deno.readTextFile(url);
+  }
+
+  const response = await fetchAsset(url, { cache: "no-cache" });
+  if (!response.ok) {
+    throw new Error(`Failed to load reader asset: ${url} (${response.status})`);
+  }
+  return await response.text();
+}
 
 export async function app(
   feeds: FeedData[],
   store: FsStorage | KvStorage,
 ): Promise<Deno.ServeDefaultExport> {
-  const css = await readFile("../assets/styles.css");
-  const js = await readFile("../assets/reader.js");
-  const icon = await readFile("../assets/rss-icon.svg");
+  const css = await readAsset("../assets/styles.css");
+  const js = await readAsset("../assets/reader.js");
+  const icon = await readAsset("../assets/rss-icon.svg");
   const templates = vento({
     includes: fromFileUrl(new URL("../templates", import.meta.url)),
     autoescape: true,

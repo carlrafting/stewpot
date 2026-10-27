@@ -2,7 +2,7 @@ import { assertEquals, assertStringIncludes } from "@std/assert";
 import { join } from "@std/path/join";
 import { FsStorage } from "./storage.ts";
 import type { FeedData } from "./main.ts";
-import app from "./reader.ts";
+import app, { readAsset } from "./reader.ts";
 
 const handlerInfo: Deno.ServeHandlerInfo = {
   remoteAddr: {
@@ -12,6 +12,24 @@ const handlerInfo: Deno.ServeHandlerInfo = {
   },
   completed: Promise.resolve(),
 };
+
+Deno.test("reader loads assets relative to a JSR module URL", async () => {
+  let fetchedUrl: string | undefined;
+  const content = await readAsset(
+    "../assets/styles.css",
+    "https://jsr.io/@stewpot/feeds/0.14.0/core/reader.ts",
+    async (input) => {
+      fetchedUrl = String(input);
+      return new Response("stylesheet");
+    },
+  );
+
+  assertEquals(
+    fetchedUrl,
+    "https://jsr.io/@stewpot/feeds/0.14.0/assets/styles.css",
+  );
+  assertEquals(content, "stylesheet");
+});
 
 Deno.test("reader renders feeds and escapes feed content", async () => {
   const directory = await Deno.makeTempDir();
