@@ -2,7 +2,7 @@ import type { Options } from "../main.ts";
 
 export type ConnectionKey = "sessions" | "kv";
 
-async function createDirectory(meta: ImportMeta): Promise<void> {
+async function createDirectory(meta: Pick<ImportMeta, "url">): Promise<void> {
   const recursive: boolean = true;
   const url = new URL("database", meta.url);
   await Deno.mkdir(url, { recursive });

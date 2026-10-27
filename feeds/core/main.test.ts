@@ -8,8 +8,12 @@ import {
 } from "./main.ts";
 import { stub } from "@std/testing/mock";
 
-const atomFixture = await Deno.readTextFile("./fixtures/atom.xml");
-const rssFixture = await Deno.readTextFile("./fixtures/rss.xml");
+const atomFixture = await Deno.readTextFile(
+  new URL("../fixtures/atom.xml", import.meta.url),
+);
+const rssFixture = await Deno.readTextFile(
+  new URL("../fixtures/rss.xml", import.meta.url),
+);
 
 const baseFeed: FeedData = {
   id: "01HZFAKEULID000000000000",

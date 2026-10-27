@@ -1,19 +1,40 @@
-import { assertEquals, assertGreater } from "@std/assert";
+import { assertEquals, assertStringIncludes } from "@std/assert";
 import { join } from "@std/path/join";
 import { assertSnapshot } from "@std/testing/snapshot";
 import { CONFIG_FILENAME } from "./main.ts";
-import { run } from "@stewpot/cli";
 import { loadConfig } from "../core/config.ts";
 
 Deno.test(
-  "listCommand should list feed sources if there are more than 0",
+  "list command prints subscribed feed sources",
   async () => {
-    const args = ["list"];
-    const command = run(args, null);
-    const results = await command.output();
-    assertEquals(results.success, true);
-    assertEquals(results.code, 0);
-    assertGreater(results.stdout.length, 0);
+    const root = await Deno.makeTempDir();
+    try {
+      await Deno.writeTextFile(
+        join(root, CONFIG_FILENAME),
+        'export default { storage: { type: "fs" } };',
+      );
+      await Deno.writeTextFile(
+        join(root, "sources.json"),
+        JSON.stringify([{
+          id: "feed-1",
+          url: "https://example.com/feed.xml",
+          format: "rss",
+        }]),
+      );
+
+      const results = await new Deno.Command(Deno.execPath(), {
+        args: ["-P", import.meta.resolve("./main.ts"), "list"],
+        env: { STEWPOT_DIR_OVERRIDE: root },
+      }).output();
+      assertEquals(results.success, true);
+      assertEquals(results.code, 0);
+      assertStringIncludes(
+        new TextDecoder().decode(results.stdout),
+        "example.com",
+      );
+    } finally {
+      await Deno.remove(root, { recursive: true });
+    }
   },
 );
 
