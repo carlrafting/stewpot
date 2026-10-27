@@ -1,0 +1,12 @@
+{{ layout "layouts/page.vto" }}
+
+{{ if data.sessions }}
+  <ul>
+  {{ for [key, value ] of data.sessions.entries() }}
+    <li>
+        {{ JSON.stringify(value) }}
+    </li>
+  {{ /for }}
+  </ul>
+  {{ /if }}
+{{ /layout }}

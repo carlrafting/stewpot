@@ -10,18 +10,50 @@
   "imports": {
     "@stewpot/html": "jsr:@stewpot/html@^0.3.1",
     "@std/assert": "jsr:@std/assert@^1.0.19",
-    "@std/cli": "jsr:@std/cli@^1.0.28",
-    "@std/fmt": "jsr:@std/fmt@^1.0.9",
-    "@std/fs": "jsr:@std/fs@^1.0.23",
-    "@std/path": "jsr:@std/path@^1.1.4",
-    "@std/testing": "jsr:@std/testing@^1.0.17",
+    "@std/cli": "jsr:@std/cli@^1.0.32",
+    "@std/fmt": "jsr:@std/fmt@^1.0.10",
+    "@std/fs": "jsr:@std/fs@^1.0.24",
+    "@std/path": "jsr:@std/path@^1.1.6",
+    "@std/testing": "jsr:@std/testing@^1.0.20",
     "@std/ulid": "jsr:@std/ulid@^1.0.0",
-    "feedsmith": "npm:feedsmith@^2.9.1"
+    "feedsmith": "npm:feedsmith@^2.9.6",
+    "ventojs": "npm:ventojs@^2.4.0"
+  },
+  "desktop": {
+    "app": {
+      "name": "@stewpot/feeds Desktop Reader"
+    },
+    "output": {
+      "linux": "./build/reader.AppImage",
+      "macos": "./build/reader.app",
+      "windows": "./build/reader.msi"
+    }
   },
   "publish": {
-    "exclude": ["**/*_test.ts", "fixtures", "__snapshots__", "cli/dev.ts"]
+    "exclude": [
+      "**/*_test.ts",
+      "**/*.test.ts",
+      "fixtures",
+      "**/__snapshots__/**",
+      "__snapshots__",
+      "core/desktop.ts"
+    ]
   },
   "tasks": {
+    "dev:cli": {
+      "description": "Run CLI in development mode",
+      "env": [
+        "STEWPOT_MODE"
+      ],
+      "command": "STEWPOT_MODE=development deno -P cli/main.ts"
+    },
+    "dev:desktop": {
+      "description": "Run reader desktop in development mode",
+      "env": [
+        "STEWPOT_MODE"
+      ],
+      "command": "STEWPOT_MODE=development deno -P cli/main.ts"
+    },
     "dev:reader": {
       "description": "Run CLI reader application for development",
       "command": "deno -P --watch=assets cli/main.ts reader"
@@ -43,5 +75,8 @@
       "net": true,
       "run": true
     }
+  },
+  "compile": {
+    "include": ["assets", "templates"]
   }
 }

@@ -2,9 +2,9 @@
 
 <a href="./create/">New Route</a> <span>Create new route</span>
 
-{{ if routes }}
+{{ if data?.routes }}
 <ul>
-{{ for route of routes }}
+{{ for route of data.routes }}
   <li>
     name: {{ route.name }}<br>
     path: {{ route.path }}<br>

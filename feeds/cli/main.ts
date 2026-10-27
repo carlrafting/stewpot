@@ -1,13 +1,13 @@
 import { parseArgs, type ParseOptions } from "@std/cli";
 import * as colors from "@std/fmt/colors";
+import { join } from "@std/path/join";
 import { ensureDir } from "@std/fs";
-import { join as joinPath } from "@std/path/join";
 import { parseFeed } from "feedsmith";
 import {
   type Configuration,
   loadConfig,
   writeConfigToPath,
-} from "../cli/config.ts";
+} from "../core/config.ts";
 import {
   discoverFeed,
   type FeedData,
@@ -19,30 +19,30 @@ import {
   mapToFeedItems,
   parseInputToURL,
 } from "../core/main.ts";
-import app from "../core/reader.ts";
 import {
   createStorage,
   type FsStorage,
   type KvStorage,
   type Storage,
-} from "../cli/storage.ts";
+} from "../core/storage.ts";
 import pkg from "../deno.json" with { type: "json" };
+import type {
+  CLIDeps,
+  Command,
+  Input,
+  Options,
+  ParsedArguments,
+} from "@stewpot/cli";
+import { handleArgs, resolvePath } from "@stewpot/cli";
+import { createServer } from "../core/server.ts";
 
 /**
- * This module contains code related to CLI
+ * This module contains code related to feeds CLI
  * @module
  */
 
-/** defines where data are stored */
-const ENV_CLI_DIR = "STEWPOT_FEEDS_CLI_ROOT";
-/** parent directory within user home directory */
-const PARENT_DIRNAME = ".stewpot";
-/** where data and config are stored */
-const ROOT_DIRNAME = "feeds";
 /** where configuration is stored */
 const CONFIG_FILENAME = "config.js";
-/** previous filename for storing sources @deprecated */
-const PREV_SOURCES_FILENAME = "feeds.json";
 /** where feed sources metadata are stored */
 const SOURCES_FILENAME = "sources.json";
 /** where feed items are stored */
@@ -50,16 +50,7 @@ const ITEMS_DIRNAME = "items";
 /** where KV data is stored */
 const KV_FILENAME = "kv.db";
 
-export {
-  CONFIG_FILENAME,
-  ENV_CLI_DIR,
-  ITEMS_DIRNAME,
-  KV_FILENAME,
-  PARENT_DIRNAME,
-  PREV_SOURCES_FILENAME,
-  ROOT_DIRNAME,
-  SOURCES_FILENAME,
-};
+export { CONFIG_FILENAME, ITEMS_DIRNAME, KV_FILENAME, SOURCES_FILENAME };
 
 /** paths used for file & kv storage */
 export interface Paths {
@@ -75,26 +66,18 @@ export interface Paths {
   kv?: string;
 }
 
-export function run(
-  args: string[],
-  options: Deno.CommandOptions = {},
-): Deno.Command {
-  return new Deno.Command(Deno.execPath(), {
-    args: ["-P", import.meta.filename ?? "cli.ts", ...args],
-    ...options,
-  });
-}
+const resolveRootDirectory = () => resolvePath("feeds");
 
-async function resolvePaths(base?: string): Promise<Paths | undefined> {
+export async function resolvePaths(base?: string): Promise<Paths | undefined> {
   const root = base ?? resolveRootDirectory();
 
   if (!root) return;
 
   await ensureDir(root);
-  const config = joinPath(root, CONFIG_FILENAME);
-  const sources = joinPath(root, SOURCES_FILENAME);
-  const items = joinPath(root, ITEMS_DIRNAME);
-  const kv = joinPath(root, KV_FILENAME);
+  const config = join(root, CONFIG_FILENAME);
+  const sources = join(root, SOURCES_FILENAME);
+  const items = join(root, ITEMS_DIRNAME);
+  const kv = join(root, KV_FILENAME);
 
   return {
     root,
@@ -105,49 +88,6 @@ async function resolvePaths(base?: string): Promise<Paths | undefined> {
   };
 }
 
-function resolveRootDirectory(): string | undefined {
-  const env = Deno.env;
-  const parent = PARENT_DIRNAME;
-  const root = ROOT_DIRNAME;
-
-  const override = env.get(ENV_CLI_DIR);
-  if (override) return override;
-
-  const home = resolveUserHomeDirectory();
-  if (home) {
-    return joinPath(home, parent, root);
-  }
-}
-
-function resolveUserHomeDirectory(): string {
-  const env = Deno.env;
-  const os = Deno.build.os;
-
-  if (os === "windows") {
-    const home = env.get("USERPROFILE");
-    if (home) {
-      return home;
-    }
-  }
-
-  if (os === "linux" || os === "darwin") {
-    const home = env.get("HOME");
-    if (home) {
-      return home;
-    }
-  }
-
-  throw new Error("unable to resolve user home directory");
-}
-
-/**
- * the type returned by {@linkcode parseArgs}
- */
-export type ParsedArguments = {
-  [x: string]: unknown;
-  _: Array<string | number>;
-};
-
 class CommandError extends Error {
   constructor(
     message: string,
@@ -157,17 +97,10 @@ class CommandError extends Error {
   }
 }
 
-/** input as array of strings */
-export type Input = readonly string[];
-/** options that are returned by {@linkcode parseArgs} and {@linkcode handleArgs} */
-export type Options = { [x: string]: unknown };
-/** a combined type with convinient access to both input and options */
-export type InputWithOptions = { input: Input; options: Options };
-
 /**
  * shared dependencies commands can make use of
  */
-export type Deps = {
+export interface Deps extends CLIDeps {
   feeds: FeedData[];
   /** storage type used by CLI */
   store: FsStorage | KvStorage;
@@ -177,26 +110,7 @@ export type Deps = {
   config: Configuration;
   /** only used for backwards compability @deprecated */
   args: ParsedArguments;
-};
-
-/**
- * The type that represents a CLI Command
- */
-export type Command<CommandOptions = Options | unknown> = {
-  /** what name should the command have */
-  name: string;
-  /** a helpful description of what the command does */
-  description: string;
-  /** more in-depth help instructions for command */
-  help?: string;
-  /** method that invokes the command */
-  run(
-    input: Input,
-    options: CommandOptions,
-    deps: Deps,
-    ...rest: unknown[]
-  ): Promise<number | void>;
-};
+}
 
 export function getCommandInput(args: ParsedArguments): string | undefined {
   const [, input] = args._;
@@ -250,14 +164,18 @@ export async function persistFeedSubscription(
 const init: Command = {
   name: "init",
   description: "init cli config",
+  help: `Usage:
+  feeds init
+
+Create the default configuration file for feeds. If a configuration file
+already exists, it is left unchanged.`,
   async run(
     input: Input,
     options: Options,
     deps: Deps,
   ): Promise<number> {
     if (options.help) {
-      console.log("this is the help for this command");
-      return 0;
+      return printCommandHelp(init);
     }
     const { paths } = deps;
     if (paths.config) {
@@ -282,6 +200,11 @@ const init: Command = {
 const list: Command = {
   name: "list",
   description: "list subscribed feed sources",
+  help: `Usage:
+  feeds list [--update]
+
+Options:
+  --update  Refresh the metadata for each subscribed feed before saving it.`,
   async run(
     _input: Input,
     options: Options,
@@ -290,8 +213,7 @@ const list: Command = {
     store: FsStorage | KvStorage,
   ): Promise<number> {
     if (options.help) {
-      console.log("this is help for list command");
-      return 0;
+      return printCommandHelp(list);
     }
 
     if (feeds.length === 0) {
@@ -315,6 +237,15 @@ const list: Command = {
 const subscribe: Command = {
   name: "subscribe",
   description: "subscribe to new feed source",
+  help: `Usage:
+  feeds subscribe <url>
+
+Arguments:
+  url  Feed URL, or a website hostname to discover its feed.
+
+A hostname without a scheme is treated as HTTPS. When subscribing to a
+hostname, the discovered feed URL is shown for confirmation. The feed and its
+current items are then saved.`,
   async run(
     _input: Input,
     options: Options,
@@ -324,8 +255,7 @@ const subscribe: Command = {
     store: Storage,
   ) {
     if (options.help) {
-      console.log("this is help for subscribe command");
-      return 0;
+      return printCommandHelp(subscribe);
     }
 
     const input = getCommandInput(args);
@@ -395,6 +325,13 @@ const subscribe: Command = {
 const unsubscribe: Command = {
   name: "unsubscribe",
   description: "unsubscribe to feed source",
+  help: `Usage:
+  feeds unsubscribe <url>
+
+Arguments:
+  url  URL of the subscribed feed, or its hostname.
+
+Remove the matching subscription and its cached items.`,
   async run(
     _input: Input,
     options: Options,
@@ -404,8 +341,7 @@ const unsubscribe: Command = {
     store: Storage,
   ): Promise<number | void> {
     if (options.help) {
-      console.log("this is help for unsubscribe command");
-      return 0;
+      return printCommandHelp(unsubscribe);
     }
 
     const input = getCommandInput(args);
@@ -440,7 +376,10 @@ async function tryFetchAndParse(
 > {
   try {
     const url = new URL(feed.url);
-    const metadata: FeedData = await fetchFeedMetadata(url);
+    const metadata: FeedData = {
+      ...await fetchFeedMetadata(url),
+      id: feed.id,
+    };
     const results: FetchResults = await fetchFeedItemsFromURL(
       url,
       feed,
@@ -535,6 +474,14 @@ async function fetchAllFeeds(
 const fetch: Command = {
   name: "fetch",
   description: "fetch updated feed sources and items",
+  help: `Usage:
+  feeds fetch [url]
+
+Arguments:
+  url  URL or hostname of one subscribed feed to refresh.
+
+With no URL, refresh all subscribed feeds. Updated items and feed metadata are
+saved to the configured storage.`,
   async run(
     _input: Input,
     options: Options,
@@ -543,8 +490,7 @@ const fetch: Command = {
     store: FsStorage | KvStorage,
   ): Promise<number> {
     if (options.help) {
-      console.log("this is help for fetch command");
-      return 0;
+      return printCommandHelp(fetch);
     }
 
     const [command, input] = _input;
@@ -605,6 +551,14 @@ async function updateFeedSource(
 const reader: Command = {
   name: "reader",
   description: "start http server for reading feeds",
+  help: `Usage:
+  feeds reader [--hostname <hostname>] [--port <port>]
+
+Options:
+  --hostname  Hostname for the HTTP server (default: localhost).
+  --port      Port for the HTTP server (default: 8000).
+
+The hostname and port can also be set in the feeds configuration file.`,
   async run(
     _input: Input,
     options: Options,
@@ -616,46 +570,13 @@ const reader: Command = {
     store: FsStorage | KvStorage,
   ): Promise<void | number> {
     if (options.help) {
-      console.log("this is help for list command");
-      return 0;
+      return printCommandHelp(reader);
     }
-    const controller = new AbortController();
-    const signal = controller.signal;
-    const handler = await app(
-      feeds,
-      store,
-    );
-    const hostname = (Deno.env.get("HOSTNAME") || options.hostname ||
-      config?.reader?.hostname) ??
-      "localhost";
-    const port =
-      (Deno.env.get("PORT") || options.port || config?.reader?.port) ?? 8000;
-    const serveOptions: Deno.ServeTcpOptions = {
-      hostname,
-      port,
-      signal,
-      onListen({ port, hostname }) {
-        console.log(
-          colors.cyan("info"),
-          `Serving reader at http://${hostname}:${port}`,
-        );
-        console.log(colors.cyan("info"), "Press Ctrl+C to exit");
-      },
-    } as Deno.ServeTcpOptions;
-    const server = Deno.serve(serveOptions, handler.fetch);
-    Deno.addSignalListener("SIGINT", async () => {
-      console.log(colors.cyan("info"), "shutting down reader...");
-      await server.shutdown();
-    });
-    await server.finished;
-    console.log(
-      colors.green("done"),
-      "reader shutdown was finished successfully",
-    );
+    await createServer(config, options, feeds, store);
   },
 };
 
-async function uninstall() {
+async function uninstall(): Promise<boolean> {
   console.log(colors.cyan("info"), "uninstall previous version...");
   const signal = new AbortController().signal;
   const [, name] = pkg.name.split("/");
@@ -671,22 +592,17 @@ async function uninstall() {
 const upgrade: Command = {
   name: "upgrade",
   description: "upgrade cli to latest version",
+  help: `Usage:
+  feeds upgrade
+
+Reinstall the latest published version of @stewpot/feeds from JSR.`,
   async run(
     _input: Input,
     options: Options,
     ..._rest: unknown[]
   ): Promise<number> {
     if (options.help) {
-      console.log(`
-${printHeader()}
-
-${colors.green("Description")}:
-  ${upgrade.description}
-
-${colors.green("Usage")}:
-  how do you use this thing?
-      `);
-      return 0;
+      return printCommandHelp(upgrade);
     }
     const controller = new AbortController();
     const signal = controller.signal;
@@ -742,17 +658,6 @@ const parseArgsOptions: ParseOptions = {
     help: "h",
     force: "f",
   },
-};
-
-const handleArgs = (
-  args: ParsedArguments,
-): InputWithOptions => {
-  const { _, ...options } = args;
-  const input = _ as string[];
-  return {
-    input,
-    options,
-  };
 };
 
 export default async function main(
@@ -848,10 +753,22 @@ ${colors.green("Commands")}:
   return 0;
 }
 
-if (import.meta.main) {
+function printCommandHelp(command: Command): number {
+  console.log(`
+${printHeader()}
+
+${colors.green("Description")}:
+  ${command.description}
+
+${command.help}
+  `);
+  return 0;
+}
+
+async function bootstrap() {
   try {
     const paths = await resolvePaths();
-    if (!paths) throw "couldn't resolve paths";
+    if (!paths) throw new Error("Failed to resolve paths!");
     const config = await loadConfig(paths.config);
     const store = await createStorage(config?.storage, paths);
     const code = await main(Deno.args, config, store, paths);
@@ -863,4 +780,8 @@ if (import.meta.main) {
     }
     throw error;
   }
+}
+
+if (import.meta.main) {
+  bootstrap();
 }

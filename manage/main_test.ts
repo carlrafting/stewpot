@@ -1,41 +1,30 @@
-import { assertEquals } from "@std/assert";
-import server from "./serve.ts";
+import { assertEquals, assertStringIncludes } from "@std/assert";
+import { toFileUrl } from "@std/path/to-file-url";
+import { app } from "./main.ts";
 
-const info: Deno.ServeHandlerInfo = {
-  remoteAddr: {
-    hostname: "localhost",
-    port: 8000,
-    transport: "tcp",
-  },
-  get completed(): Promise<void> {
-    return Promise.try(() => undefined);
-  },
-};
+Deno.test("requests without a session receive a new session cookie", async () => {
+  const root = await Deno.makeTempDir();
+  try {
+    const handler = await app({
+      meta: { url: toFileUrl(root).href.replace(/\/?$/, "/") },
+      sessions: {},
+      kv: {},
+    });
+    const request = new Request("https://example.com/");
+    const info: Deno.ServeHandlerInfo = {
+      remoteAddr: {
+        hostname: "127.0.0.1",
+        port: 0,
+        transport: "tcp",
+      },
+      completed: Promise.resolve(),
+    };
+    const response = await handler.fetch(request, info);
 
-Deno.test(async function serverFetch() {
-  const req = new Request("https://deno.land");
-  const res = await server.fetch(req, info);
-  assertEquals(await res.text(), "Home page");
-});
-
-Deno.test(async function serverFetchNotFound() {
-  const req = new Request("https://deno.land/404");
-  const res = await server.fetch(req, info);
-  assertEquals(res.status, 404);
-});
-
-Deno.test(async function serverFetchUsers() {
-  const req = new Request("https://deno.land/users/123");
-  const res = await server.fetch(req, info);
-  assertEquals(await res.text(), "123");
-});
-
-Deno.test(async function serverFetchStatic() {
-  const req = new Request("https://deno.land/static/hello.js");
-  const res = await server.fetch(req, info);
-  assertEquals(await res.text(), 'console.log("Hello, world!");\n');
-  assertEquals(
-    res.headers.get("content-type"),
-    "text/javascript; charset=UTF-8",
-  );
+    assertEquals(response.status, 302);
+    assertEquals(response.headers.get("location"), request.url);
+    assertStringIncludes(response.headers.get("set-cookie") ?? "", "session=");
+  } finally {
+    await Deno.remove(root, { recursive: true });
+  }
 });
