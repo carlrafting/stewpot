@@ -1,13 +1,13 @@
 import { parseArgs, type ParseOptions } from "@std/cli";
 import * as colors from "@std/fmt/colors";
+import { join } from "@std/path/join";
 import { ensureDir } from "@std/fs";
-import { join as joinPath } from "@std/path/join";
 import { parseFeed } from "feedsmith";
 import {
   type Configuration,
   loadConfig,
   writeConfigToPath,
-} from "../cli/config.ts";
+} from "../core/config.ts";
 import {
   discoverFeed,
   type FeedData,
@@ -19,7 +19,6 @@ import {
   mapToFeedItems,
   parseInputToURL,
 } from "../core/main.ts";
-import app from "../core/reader.ts";
 import {
   createStorage,
   type FsStorage,
@@ -27,22 +26,23 @@ import {
   type Storage,
 } from "../cli/storage.ts";
 import pkg from "../deno.json" with { type: "json" };
+import type {
+  CLIDeps,
+  Command,
+  Input,
+  Options,
+  ParsedArguments,
+} from "@stewpot/cli";
+import { handleArgs, resolvePath } from "@stewpot/cli";
+import { createServer } from "../core/server.ts";
 
 /**
- * This module contains code related to CLI
+ * This module contains code related to feeds CLI
  * @module
  */
 
-/** defines where data are stored */
-const ENV_CLI_DIR = "STEWPOT_FEEDS_CLI_ROOT";
-/** parent directory within user home directory */
-const PARENT_DIRNAME = ".stewpot";
-/** where data and config are stored */
-const ROOT_DIRNAME = "feeds";
 /** where configuration is stored */
 const CONFIG_FILENAME = "config.js";
-/** previous filename for storing sources @deprecated */
-const PREV_SOURCES_FILENAME = "feeds.json";
 /** where feed sources metadata are stored */
 const SOURCES_FILENAME = "sources.json";
 /** where feed items are stored */
@@ -50,16 +50,7 @@ const ITEMS_DIRNAME = "items";
 /** where KV data is stored */
 const KV_FILENAME = "kv.db";
 
-export {
-  CONFIG_FILENAME,
-  ENV_CLI_DIR,
-  ITEMS_DIRNAME,
-  KV_FILENAME,
-  PARENT_DIRNAME,
-  PREV_SOURCES_FILENAME,
-  ROOT_DIRNAME,
-  SOURCES_FILENAME,
-};
+export { CONFIG_FILENAME, ITEMS_DIRNAME, KV_FILENAME, SOURCES_FILENAME };
 
 /** paths used for file & kv storage */
 export interface Paths {
@@ -75,26 +66,18 @@ export interface Paths {
   kv?: string;
 }
 
-export function run(
-  args: string[],
-  options: Deno.CommandOptions = {},
-): Deno.Command {
-  return new Deno.Command(Deno.execPath(), {
-    args: ["-P", import.meta.filename ?? "cli.ts", ...args],
-    ...options,
-  });
-}
+const resolveRootDirectory = () => resolvePath("feeds");
 
-async function resolvePaths(base?: string): Promise<Paths | undefined> {
+export async function resolvePaths(base?: string): Promise<Paths | undefined> {
   const root = base ?? resolveRootDirectory();
 
   if (!root) return;
 
   await ensureDir(root);
-  const config = joinPath(root, CONFIG_FILENAME);
-  const sources = joinPath(root, SOURCES_FILENAME);
-  const items = joinPath(root, ITEMS_DIRNAME);
-  const kv = joinPath(root, KV_FILENAME);
+  const config = join(root, CONFIG_FILENAME);
+  const sources = join(root, SOURCES_FILENAME);
+  const items = join(root, ITEMS_DIRNAME);
+  const kv = join(root, KV_FILENAME);
 
   return {
     root,
@@ -105,49 +88,6 @@ async function resolvePaths(base?: string): Promise<Paths | undefined> {
   };
 }
 
-function resolveRootDirectory(): string | undefined {
-  const env = Deno.env;
-  const parent = PARENT_DIRNAME;
-  const root = ROOT_DIRNAME;
-
-  const override = env.get(ENV_CLI_DIR);
-  if (override) return override;
-
-  const home = resolveUserHomeDirectory();
-  if (home) {
-    return joinPath(home, parent, root);
-  }
-}
-
-function resolveUserHomeDirectory(): string {
-  const env = Deno.env;
-  const os = Deno.build.os;
-
-  if (os === "windows") {
-    const home = env.get("USERPROFILE");
-    if (home) {
-      return home;
-    }
-  }
-
-  if (os === "linux" || os === "darwin") {
-    const home = env.get("HOME");
-    if (home) {
-      return home;
-    }
-  }
-
-  throw new Error("unable to resolve user home directory");
-}
-
-/**
- * the type returned by {@linkcode parseArgs}
- */
-export type ParsedArguments = {
-  [x: string]: unknown;
-  _: Array<string | number>;
-};
-
 class CommandError extends Error {
   constructor(
     message: string,
@@ -157,17 +97,10 @@ class CommandError extends Error {
   }
 }
 
-/** input as array of strings */
-export type Input = readonly string[];
-/** options that are returned by {@linkcode parseArgs} and {@linkcode handleArgs} */
-export type Options = { [x: string]: unknown };
-/** a combined type with convinient access to both input and options */
-export type InputWithOptions = { input: Input; options: Options };
-
 /**
  * shared dependencies commands can make use of
  */
-export type Deps = {
+export interface Deps extends CLIDeps {
   feeds: FeedData[];
   /** storage type used by CLI */
   store: FsStorage | KvStorage;
@@ -177,26 +110,7 @@ export type Deps = {
   config: Configuration;
   /** only used for backwards compability @deprecated */
   args: ParsedArguments;
-};
-
-/**
- * The type that represents a CLI Command
- */
-export type Command<CommandOptions = Options | unknown> = {
-  /** what name should the command have */
-  name: string;
-  /** a helpful description of what the command does */
-  description: string;
-  /** more in-depth help instructions for command */
-  help?: string;
-  /** method that invokes the command */
-  run(
-    input: Input,
-    options: CommandOptions,
-    deps: Deps,
-    ...rest: unknown[]
-  ): Promise<number | void>;
-};
+}
 
 export function getCommandInput(args: ParsedArguments): string | undefined {
   const [, input] = args._;
@@ -619,43 +533,11 @@ const reader: Command = {
       console.log("this is help for list command");
       return 0;
     }
-    const controller = new AbortController();
-    const signal = controller.signal;
-    const handler = await app(
-      feeds,
-      store,
-    );
-    const hostname = (Deno.env.get("HOSTNAME") || options.hostname ||
-      config?.reader?.hostname) ??
-      "localhost";
-    const port =
-      (Deno.env.get("PORT") || options.port || config?.reader?.port) ?? 8000;
-    const serveOptions: Deno.ServeTcpOptions = {
-      hostname,
-      port,
-      signal,
-      onListen({ port, hostname }) {
-        console.log(
-          colors.cyan("info"),
-          `Serving reader at http://${hostname}:${port}`,
-        );
-        console.log(colors.cyan("info"), "Press Ctrl+C to exit");
-      },
-    } as Deno.ServeTcpOptions;
-    const server = Deno.serve(serveOptions, handler.fetch);
-    Deno.addSignalListener("SIGINT", async () => {
-      console.log(colors.cyan("info"), "shutting down reader...");
-      await server.shutdown();
-    });
-    await server.finished;
-    console.log(
-      colors.green("done"),
-      "reader shutdown was finished successfully",
-    );
+    await createServer(config, options, feeds, store);
   },
 };
 
-async function uninstall() {
+async function uninstall(): Promise<boolean> {
   console.log(colors.cyan("info"), "uninstall previous version...");
   const signal = new AbortController().signal;
   const [, name] = pkg.name.split("/");
@@ -742,17 +624,6 @@ const parseArgsOptions: ParseOptions = {
     help: "h",
     force: "f",
   },
-};
-
-const handleArgs = (
-  args: ParsedArguments,
-): InputWithOptions => {
-  const { _, ...options } = args;
-  const input = _ as string[];
-  return {
-    input,
-    options,
-  };
 };
 
 export default async function main(
@@ -848,10 +719,10 @@ ${colors.green("Commands")}:
   return 0;
 }
 
-if (import.meta.main) {
+async function bootstrap() {
   try {
     const paths = await resolvePaths();
-    if (!paths) throw "couldn't resolve paths";
+    if (!paths) throw new Error("Failed to resolve paths!");
     const config = await loadConfig(paths.config);
     const store = await createStorage(config?.storage, paths);
     const code = await main(Deno.args, config, store, paths);
@@ -863,4 +734,8 @@ if (import.meta.main) {
     }
     throw error;
   }
+}
+
+if (import.meta.main) {
+  bootstrap();
 }

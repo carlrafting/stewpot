@@ -1,0 +1,18 @@
+{{ for feed of feeds }}
+<details class="br flow">
+  <summary class="bgcolor boc pi rounded">
+    <h3>{{ feed.hostname }}</h3>
+    <span class="br pi format">{{ feed.format }}</span>
+    <span class="count">{{ feed.items.length }} items</span>
+    {{ if feed.fetch_timestamp }}
+    <span>{{ feed.fetch_timestamp }}</span>
+    {{ /if }}
+    <fetch-items for="{{ feed.id }}"></fetch-items>
+  </summary>
+  <ul>
+    {{ for item of feed.items }}
+    <li><a href="{{ item.url }}">{{ item.title }}</a><time>{{ item.published ?? item.updated }}</time></li>
+    {{ /for }}
+  </ul>
+</details>
+{{ /for }}

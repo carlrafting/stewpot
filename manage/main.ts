@@ -1,29 +1,22 @@
-import { getCookies, serveDir } from "@std/http";
-import type { Options as VentoOptions } from "ventojs/mod.js";
-import vento from "ventojs/mod.js";
+import { getCookies, serveDir, setCookie } from "@std/http";
+import { FileLoader } from "ventojs/loaders/file.js";
+import { createSession } from "./session/kv.ts";
 import { COOKIE_NAME, createSessionCookie } from "./session/cookie.ts";
-import { html } from "./http/response.ts";
 import { createServer } from "./http/server.ts";
-import { createConnections } from "./kv/connections.ts";
+import { createConnections, getConnection } from "./kv/connections.ts";
 import { KvRepository } from "./kv/repository.ts";
-import {
-  type Extract,
-  // extractJson,
-  // extractToml,
-  extractYaml,
-  type Format as FrontMatterFormat,
-  test as testFM,
-} from "@std/front-matter";
+import { matchRoutes, type RouteContext } from "./http/routes.ts";
+import { dirname, fromFileUrl } from "@std/path";
+import { routes } from "./app/routes.ts";
+import { createSessionManager } from "./session/manager.ts";
 import { createFlash } from "./flash/message.ts";
-import { matchRoutes, type Route, type RouteContext } from "./http/routes.ts";
-
-export type { VentoOptions };
-export { createServer };
+import { I18n } from "./i18n/locale.ts";
+import { createTemplateRender } from "./vento/templates.ts";
 
 /** app options interface */
 export interface Options {
-  /** vento options from vento package */
-  vento: VentoOptions;
+  /** Import meta from the entrypoint, used to resolve paths */
+  meta: ImportMeta;
   /** session config options */
   sessions: {
     /** path to session kv db */
@@ -37,10 +30,8 @@ export interface Options {
 }
 
 /** default app config options */
-export const defaultOptions: Options = {
-  vento: {
-    includes: "templates",
-  },
+const defaultOptions: Options = {
+  meta: import.meta,
   sessions: {
     path: "database/sessions.db",
   },
@@ -48,141 +39,6 @@ export const defaultOptions: Options = {
     path: "database/kv.db",
   },
 };
-
-export type TemplateRenderFunction = (
-  data: Record<string, unknown> | undefined,
-) => Promise<string>;
-
-function createTemplateRender(options: VentoOptions) {
-  return (async (
-    file: string,
-  ): Promise<TemplateRenderFunction> => {
-    const templates = vento(options);
-    const template = await templates.load(file);
-    // console.log({ template });
-    const source = template.source;
-    const frontmatterFormat = "yaml";
-    const hasFrontmatter = testFM(source, [frontmatterFormat]);
-    // const hasFrontmatter = false;
-    return async (data: Record<string, unknown> | undefined) => {
-      if (!hasFrontmatter) {
-        const view = await template(data);
-        return view.content;
-      }
-      const frontmatterData: Extract<FrontMatterFormat> = extractYaml(source);
-      const attrs = frontmatterData;
-      const view = await templates.runString(frontmatterData.body, {
-        ...attrs,
-        ...data,
-      });
-      return view.content;
-    };
-  });
-}
-
-const nav = [
-  { text: "Home", href: "/" },
-  { text: "Routes", href: "/routes/" },
-  { text: "Library", href: "/library/" },
-  { text: "Sessions", href: "/sessions/" },
-  { text: "Settings", href: "/settings/" },
-];
-
-const routes: Route[] = [
-  {
-    name: "home",
-    pathname: "/",
-    method: "GET",
-    async handler({
-      render,
-      url,
-      headers,
-    }): Promise<Response> {
-      const title = "Manage anything!";
-      const page = await render("welcome/index.vto");
-      const body = await page({ title, url, nav });
-      return html(body, { headers });
-    },
-  },
-  {
-    name: "routes",
-    method: "GET",
-    pathname: "/routes/",
-    async handler({ render, url, headers }) {
-      const title = "Routes";
-      const routes = [
-        {
-          name: "Black",
-          path: "/black/",
-          type: "static",
-          ref: "files/black.png",
-        },
-      ];
-      const page = await render("routes/index.vto");
-      const body = await page({ title, url, nav, routes });
-      return html(body, { headers });
-    },
-  },
-  {
-    name: "library",
-    method: "GET",
-    pathname: "/library/",
-    async handler({ render, url, headers }) {
-      const title = "Library";
-      const description = "This is the library...";
-      const page = await render("library/index.vto");
-      const body = await page({ title, description, url, nav });
-      return html(body, { headers });
-    },
-  },
-  {
-    name: "library_upload",
-    method: "GET",
-    pathname: "/library/upload/",
-    async handler({ connections, request }) {
-      const connection = connections.get("sessions");
-      if (!connection) throw "no session connection available!";
-      const flash = await createFlash(request, connection);
-      flash.set("success", "file uploaded successfully!");
-      return Response.redirect(new URL("/library/", import.meta.url));
-    },
-  },
-  {
-    name: "library_upload",
-    method: "POST",
-    pathname: "/library/upload/",
-    async handler({ request }) {
-      const formData = await request.formData();
-      const file: File | null = formData?.get("file") as File;
-      if (!file) {
-        return new Response("File required but not provided.", {
-          status: 400,
-        });
-      }
-      const tmp = await Deno.makeTempFile({
-        dir: "./tmp",
-      });
-      await Deno.writeFile(tmp, await file.bytes());
-      const fileURL = new URL(`files/${file.name}`, import.meta.url);
-      await Deno.rename(tmp, fileURL);
-      return Response.redirect(new URL("/library/", request.url));
-    },
-  },
-  {
-    name: "sessions",
-    method: "GET",
-    pathname: "/sessions/",
-    async handler({ render, headers, url }) {
-      const title = "Sessions";
-      const key = "sessions";
-      const repository = new KvRepository(key);
-      const page = await render("dev/index.vto");
-      const data = await repository.getAllByKey(key);
-      const body = await page({ title, url, nav, data });
-      return html(body, { headers });
-    },
-  },
-];
 
 /** create app instance */
 export async function app(
@@ -195,8 +51,11 @@ export async function app(
   const connections = await createConnections(options);
   // console.log(connections);
   KvRepository.connections = connections;
-  const render = createTemplateRender(options.vento);
-  const userPagePattern = new URLPattern({ pathname: "/users/:id" });
+  const render = createTemplateRender({
+    includes: new FileLoader(
+      new URL("templates", import.meta.url).pathname,
+    ),
+  });
   const staticPathPattern = new URLPattern({ pathname: "/assets/*" });
   return {
     async fetch(
@@ -205,19 +64,32 @@ export async function app(
     ) {
       if (info) {
         const remoteAddr = info.remoteAddr;
-        console.log({
-          remoteAddr,
-        });
+        // console.log({
+        //   remoteAddr,
+        // });
       }
-      const cookies = getCookies(request.headers);
-      // console.log(cookies);
-      const headers = new Headers();
-      const sessionID = cookies[COOKIE_NAME];
-      // console.log(sessionID);
+      const start = performance.now();
       const url = new URL(request.url);
-      const method: string = request.method;
-      const isGET = method === "GET";
-      const isPOST = method === "POST";
+      const headers = new Headers();
+      const sessionKv = getConnection(connections, "sessions");
+      const cookies = getCookies(request.headers);
+      const sessionId = cookies[COOKIE_NAME];
+      if (!sessionKv) {
+        throw new Error("KV session store could not be determined!");
+      }
+      if (!sessionId) {
+        {
+          const id = await createSession(request, sessionKv);
+          const sessionCookie = createSessionCookie(request, id);
+          setCookie(headers, sessionCookie);
+          headers.set("location", request.url);
+          return new Response(null, { status: 302, headers });
+        }
+      }
+      const sessionManager = await createSessionManager(request, connections);
+      const i18n = new I18n(request, sessionManager);
+      const flash = createFlash(sessionManager);
+      const params = {};
 
       const context: RouteContext = {
         request,
@@ -225,22 +97,34 @@ export async function app(
         url,
         render,
         connections,
+        sessionManager,
+        i18n,
+        flash,
+        params,
       };
 
-      if (!sessionID) {
-        await createSessionCookie(connections, request, headers);
-      }
-
       if (staticPathPattern.test(url)) {
-        return serveDir(request);
+        const quiet = true;
+        const fsRoot: string = dirname(fromFileUrl(new URL(import.meta.url)));
+        return await serveDir(
+          request,
+          { fsRoot, quiet },
+        );
       }
 
-      return await matchRoutes(routes, context) as Response;
+      const d = new Date().toISOString();
+      const dateFmtStart: string = d.slice(0, 10);
+      const dateFmtEnd: string = d.slice(11, 19);
+      const response: Response = await matchRoutes(routes, context) as Response;
+      const duration: string = (performance.now() - start).toFixed(2);
+      console.log(
+        `[${dateFmtStart} ${dateFmtEnd}] [${request.method}] ${response.status} ${url.pathname} ${duration}ms`,
+      );
+
+      return response;
     },
   } satisfies Deno.ServeDefaultExport;
 }
-
-export default app;
 
 if (import.meta.main) {
   {
@@ -248,3 +132,6 @@ if (import.meta.main) {
     await createServer(handler);
   }
 }
+
+export default app;
+export { createServer };
