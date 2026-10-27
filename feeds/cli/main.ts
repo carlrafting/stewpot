@@ -36,6 +36,11 @@ import type {
 import { handleArgs, resolvePath } from "@stewpot/cli";
 import { createServer } from "../core/server.ts";
 
+export type { CLIDeps, Command, Input, Options, ParsedArguments };
+export type { Configuration, Storage };
+export type { FsStorageConfig, KvStorageConfig } from "../core/config.ts";
+export { FsStorage, KvStorage };
+
 /**
  * This module contains code related to feeds CLI
  * @module
@@ -68,6 +73,7 @@ export interface Paths {
 
 const resolveRootDirectory = () => resolvePath("feeds");
 
+/** Resolves the feed CLI's storage and configuration paths. */
 export async function resolvePaths(base?: string): Promise<Paths | undefined> {
   const root = base ?? resolveRootDirectory();
 
@@ -101,6 +107,7 @@ class CommandError extends Error {
  * shared dependencies commands can make use of
  */
 export interface Deps extends CLIDeps {
+  /** Feed subscriptions available to the command. */
   feeds: FeedData[];
   /** storage type used by CLI */
   store: FsStorage | KvStorage;
@@ -112,11 +119,13 @@ export interface Deps extends CLIDeps {
   args: ParsedArguments;
 }
 
+/** Returns the first positional argument after the command name. */
 export function getCommandInput(args: ParsedArguments): string | undefined {
   const [, input] = args._;
   return typeof input === "string" ? input : undefined;
 }
 
+/** Resolves a feed input string to a URL, adding HTTPS when needed. */
 export function resolveFeedInput(
   input: string | number | undefined,
 ): URL | undefined {
@@ -124,6 +133,7 @@ export function resolveFeedInput(
   return parseInputToURL(input.trim());
 }
 
+/** Finds a subscription by exact URL or matching hostname. */
 export function findFeedByUrl(
   feeds: FeedData[],
   value: URL | string | undefined,
@@ -141,6 +151,7 @@ export function findFeedByUrl(
   });
 }
 
+/** Removes the subscription matching the given URL or hostname. */
 export function removeFeedByUrl(
   feeds: FeedData[],
   value: URL | string | undefined,
@@ -150,6 +161,7 @@ export function removeFeedByUrl(
   return feeds.filter((feed) => feed.id !== target.id);
 }
 
+/** Adds a subscription and persists its metadata and items. */
 export async function persistFeedSubscription(
   store: Storage,
   feeds: FeedData[],
@@ -639,6 +651,7 @@ Reinstall the latest published version of @stewpot/feeds from JSR.`,
   },
 };
 
+/** The commands supported by the feeds CLI. */
 export const COMMANDS: Command[] = [
   init,
   list,
@@ -660,6 +673,7 @@ const parseArgsOptions: ParseOptions = {
   },
 };
 
+/** Dispatches CLI arguments to the matching feeds command. */
 export default async function main(
   args: string[],
   config: Configuration,

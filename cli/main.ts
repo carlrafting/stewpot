@@ -3,6 +3,7 @@ import { yellow } from "@std/fmt/colors";
 import { relative } from "@std/path/relative";
 import { isAbsolute } from "@std/path/is-absolute";
 
+/** Base dependencies shared by CLI commands. */
 export type CLIDeps = {
   [key: string]: unknown;
 };

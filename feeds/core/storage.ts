@@ -7,15 +7,21 @@ import type { Paths } from "../cli/main.ts";
 import type { Configuration } from "./config.ts";
 import type { FeedData, FeedID, FeedItem } from "./main.ts";
 
+/** Persistence interface for feed subscriptions and their items. */
 export interface Storage {
+  /** Loads all feed subscriptions. */
   loadFeeds(): Promise<FeedData[]>;
+  /** Persists all feed subscriptions. */
   saveFeeds(feeds: FeedData[]): Promise<void>;
+  /** Loads items for a feed subscription. */
   loadItems(id: FeedID): Promise<FeedItem[]>;
+  /** Persists items for a feed subscription. */
   saveItems(
     feedID: FeedData["id"],
     items: FeedItem[],
     feeds: FeedData[],
   ): Promise<void>;
+  /** Removes items for a feed subscription. */
   removeItems(id: FeedID): Promise<void>;
 }
 
@@ -164,24 +170,30 @@ export class FsStorage implements Storage {
   }
 }
 
+/** Persists feed subscriptions and items in Deno KV. */
 export class KvStorage implements Storage {
+  /** Creates KV-backed storage using the provided database. */
   constructor(private kv: Deno.Kv) {}
 
+  /** Loads all feed subscriptions. */
   async loadFeeds(): Promise<FeedData[]> {
     const data = await this.kv.get<FeedData[]>(["feeds"]);
     return data.value ?? [];
   }
 
+  /** Persists all feed subscriptions. */
   async saveFeeds(feeds: FeedData[]): Promise<void> {
     await this.kv.set(["feeds"], feeds);
   }
 
+  /** Loads items for a feed subscription. */
   async loadItems(id: FeedID): Promise<FeedItem[]> {
     const kv = this.kv;
     const data = await kv.get<FeedItem[]>(["items", id]);
     return data.value ?? [];
   }
 
+  /** Persists items for a feed subscription. */
   async saveItems(
     feedID: FeedData["id"],
     items: FeedItem[],
@@ -191,6 +203,7 @@ export class KvStorage implements Storage {
     await kv.set(["items", feedID], items);
   }
 
+  /** Removes items for a feed subscription. */
   async removeItems(id: FeedID): Promise<void> {
     await this.kv.delete(["items", id]);
   }

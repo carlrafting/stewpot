@@ -11,8 +11,6 @@ import {
   parseRdfFeed,
   parseRssFeed,
 } from "feedsmith";
-import type { Atom, DeepPartial, Json, Rdf, Rss } from "feedsmith/types";
-
 export { defineConfig } from "./config.ts";
 
 /**
@@ -92,20 +90,22 @@ export interface FetchResults extends FeedData {
   };
 }
 
+/** A parsed feed's format and feedsmith payload. */
+export type ParsedFeed = {
+  format: "rss" | "atom" | "rdf" | "json";
+  feed: object;
+};
+
 /**
  * This function takes parsed feed, content from response, metadata from headers, url and returns array of `FeedItems`
  *
- * @param parsed parsed feed by feedsmith
+ * @param parsed parsed feed from feedsmith
  * @param content response body content
  * @param metadata FeedData
  * @param url feed source URL instance
  */
 export function mapToFeedItems(
-  parsed:
-    | { format: "rss"; feed: DeepPartial<Rss.Feed<string>> }
-    | { format: "atom"; feed: DeepPartial<Atom.Feed<string>> }
-    | { format: "rdf"; feed: DeepPartial<Rdf.Feed<string>> }
-    | { format: "json"; feed: DeepPartial<Json.Feed<string>> },
+  parsed: ParsedFeed,
   content: string,
   metadata: FeedData,
   url: URL,
@@ -376,27 +376,7 @@ export type FetchedFeed = {
   /** The feed's stored metadata, retrieved prior to fetching. */
   metadata: FeedData;
   /** The parsed feed content, discriminated by format. */
-  parsed: {
-    format: "rss";
-    feed: import("feedsmith/types").DeepPartial<
-      import("feedsmith/types").Rss.Feed<string>
-    >;
-  } | {
-    format: "atom";
-    feed: import("feedsmith/types").DeepPartial<
-      import("feedsmith/types").Atom.Feed<string>
-    >;
-  } | {
-    format: "rdf";
-    feed: import("feedsmith/types").DeepPartial<
-      import("feedsmith/types").Rdf.Feed<string>
-    >;
-  } | {
-    format: "json";
-    feed: import("feedsmith/types").DeepPartial<
-      import("feedsmith/types").Json.Feed<string>
-    >;
-  };
+  parsed: ParsedFeed;
   /** The raw response body string, used during item mapping. */
   body: string;
   /** The resolved URL the feed was fetched from. */
