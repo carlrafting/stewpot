@@ -164,14 +164,18 @@ export async function persistFeedSubscription(
 const init: Command = {
   name: "init",
   description: "init cli config",
+  help: `Usage:
+  feeds init
+
+Create the default configuration file for feeds. If a configuration file
+already exists, it is left unchanged.`,
   async run(
     input: Input,
     options: Options,
     deps: Deps,
   ): Promise<number> {
     if (options.help) {
-      console.log("this is the help for this command");
-      return 0;
+      return printCommandHelp(init);
     }
     const { paths } = deps;
     if (paths.config) {
@@ -196,6 +200,11 @@ const init: Command = {
 const list: Command = {
   name: "list",
   description: "list subscribed feed sources",
+  help: `Usage:
+  feeds list [--update]
+
+Options:
+  --update  Refresh the metadata for each subscribed feed before saving it.`,
   async run(
     _input: Input,
     options: Options,
@@ -204,8 +213,7 @@ const list: Command = {
     store: FsStorage | KvStorage,
   ): Promise<number> {
     if (options.help) {
-      console.log("this is help for list command");
-      return 0;
+      return printCommandHelp(list);
     }
 
     if (feeds.length === 0) {
@@ -229,6 +237,15 @@ const list: Command = {
 const subscribe: Command = {
   name: "subscribe",
   description: "subscribe to new feed source",
+  help: `Usage:
+  feeds subscribe <url>
+
+Arguments:
+  url  Feed URL, or a website hostname to discover its feed.
+
+A hostname without a scheme is treated as HTTPS. When subscribing to a
+hostname, the discovered feed URL is shown for confirmation. The feed and its
+current items are then saved.`,
   async run(
     _input: Input,
     options: Options,
@@ -238,8 +255,7 @@ const subscribe: Command = {
     store: Storage,
   ) {
     if (options.help) {
-      console.log("this is help for subscribe command");
-      return 0;
+      return printCommandHelp(subscribe);
     }
 
     const input = getCommandInput(args);
@@ -309,6 +325,13 @@ const subscribe: Command = {
 const unsubscribe: Command = {
   name: "unsubscribe",
   description: "unsubscribe to feed source",
+  help: `Usage:
+  feeds unsubscribe <url>
+
+Arguments:
+  url  URL of the subscribed feed, or its hostname.
+
+Remove the matching subscription and its cached items.`,
   async run(
     _input: Input,
     options: Options,
@@ -318,8 +341,7 @@ const unsubscribe: Command = {
     store: Storage,
   ): Promise<number | void> {
     if (options.help) {
-      console.log("this is help for unsubscribe command");
-      return 0;
+      return printCommandHelp(unsubscribe);
     }
 
     const input = getCommandInput(args);
@@ -452,6 +474,14 @@ async function fetchAllFeeds(
 const fetch: Command = {
   name: "fetch",
   description: "fetch updated feed sources and items",
+  help: `Usage:
+  feeds fetch [url]
+
+Arguments:
+  url  URL or hostname of one subscribed feed to refresh.
+
+With no URL, refresh all subscribed feeds. Updated items and feed metadata are
+saved to the configured storage.`,
   async run(
     _input: Input,
     options: Options,
@@ -460,8 +490,7 @@ const fetch: Command = {
     store: FsStorage | KvStorage,
   ): Promise<number> {
     if (options.help) {
-      console.log("this is help for fetch command");
-      return 0;
+      return printCommandHelp(fetch);
     }
 
     const [command, input] = _input;
@@ -522,6 +551,14 @@ async function updateFeedSource(
 const reader: Command = {
   name: "reader",
   description: "start http server for reading feeds",
+  help: `Usage:
+  feeds reader [--hostname <hostname>] [--port <port>]
+
+Options:
+  --hostname  Hostname for the HTTP server (default: localhost).
+  --port      Port for the HTTP server (default: 8000).
+
+The hostname and port can also be set in the feeds configuration file.`,
   async run(
     _input: Input,
     options: Options,
@@ -533,8 +570,7 @@ const reader: Command = {
     store: FsStorage | KvStorage,
   ): Promise<void | number> {
     if (options.help) {
-      console.log("this is help for list command");
-      return 0;
+      return printCommandHelp(reader);
     }
     await createServer(config, options, feeds, store);
   },
@@ -556,22 +592,17 @@ async function uninstall(): Promise<boolean> {
 const upgrade: Command = {
   name: "upgrade",
   description: "upgrade cli to latest version",
+  help: `Usage:
+  feeds upgrade
+
+Reinstall the latest published version of @stewpot/feeds from JSR.`,
   async run(
     _input: Input,
     options: Options,
     ..._rest: unknown[]
   ): Promise<number> {
     if (options.help) {
-      console.log(`
-${printHeader()}
-
-${colors.green("Description")}:
-  ${upgrade.description}
-
-${colors.green("Usage")}:
-  how do you use this thing?
-      `);
-      return 0;
+      return printCommandHelp(upgrade);
     }
     const controller = new AbortController();
     const signal = controller.signal;
@@ -718,6 +749,18 @@ ${colors.green("Commands")}:
   ${colors.yellow(fetch.name)}            - ${fetch.description}
   ${colors.yellow(reader.name)}           - ${reader.description}
   ${colors.yellow(upgrade.name)}          - ${upgrade.description}
+  `);
+  return 0;
+}
+
+function printCommandHelp(command: Command): number {
+  console.log(`
+${printHeader()}
+
+${colors.green("Description")}:
+  ${command.description}
+
+${command.help}
   `);
   return 0;
 }
