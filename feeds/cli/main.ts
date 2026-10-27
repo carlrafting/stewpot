@@ -24,7 +24,7 @@ import {
   type FsStorage,
   type KvStorage,
   type Storage,
-} from "../cli/storage.ts";
+} from "../core/storage.ts";
 import pkg from "../deno.json" with { type: "json" };
 import type {
   CLIDeps,
@@ -354,7 +354,10 @@ async function tryFetchAndParse(
 > {
   try {
     const url = new URL(feed.url);
-    const metadata: FeedData = await fetchFeedMetadata(url);
+    const metadata: FeedData = {
+      ...await fetchFeedMetadata(url),
+      id: feed.id,
+    };
     const results: FetchResults = await fetchFeedItemsFromURL(
       url,
       feed,

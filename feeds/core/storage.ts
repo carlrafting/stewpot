@@ -40,12 +40,12 @@ export class FsStorage implements Storage {
     try {
       const file = await Deno.readTextFile(this.filePath);
       if (file === "") {
-        this.writeFile();
+        await this.writeFile();
       }
       return true;
     } catch (error) {
       if (error instanceof Deno.errors.NotFound) {
-        this.writeFile();
+        await this.writeFile();
         return true;
       }
       throw error;
@@ -140,6 +140,9 @@ export class FsStorage implements Storage {
       const items: FeedItem[] = parsedJSON;
       return items;
     } catch (error) {
+      if (error instanceof Deno.errors.NotFound) {
+        return [];
+      }
       throw error;
     }
   }
