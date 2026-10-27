@@ -20,9 +20,12 @@ export async function createServer(
   const hostname = Deno.env.get("HOSTNAME") ?? options?.hostname as string ??
     config?.reader?.hostname ??
     "localhost";
-  const port =
-    Number(Deno.env.get("PORT") || options.port || config?.reader?.port) ??
-      8000;
+  const envPort = Deno.env.get("PORT");
+  const configuredPort = envPort || (options.port ?? config?.reader?.port);
+  const port = configuredPort === undefined ? 8000 : Number(configuredPort);
+  if (!Number.isInteger(port) || port < 0 || port > 65535) {
+    throw new RangeError(`invalid reader port: ${configuredPort}`);
+  }
   const serveOptions: Deno.ServeTcpOptions = {
     hostname,
     port,

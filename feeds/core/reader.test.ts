@@ -85,3 +85,28 @@ Deno.test("reader serves its icon and returns 404 for unknown paths", async () =
   assertEquals(missingResponse.status, 404);
   assertEquals(await missingResponse.text(), "404 Not Found");
 });
+
+Deno.test("reader renders feeds without cached item files", async () => {
+  const feed: FeedData = {
+    id: "feed-without-items",
+    url: "https://example.com/rss.xml",
+    format: "rss",
+  };
+  const directory = await Deno.makeTempDir();
+  try {
+    const handler = await app(
+      [feed],
+      new FsStorage(join(directory, "feeds.json")),
+    );
+    const response = await handler.fetch(
+      new Request("http://localhost/"),
+      handlerInfo,
+    );
+
+    const html = await response.text();
+    assertEquals(response.status, 200);
+    assertStringIncludes(html, "<h3>example.com</h3>");
+  } finally {
+    await Deno.remove(directory, { recursive: true });
+  }
+});

@@ -3,10 +3,12 @@ import { ulid } from "@std/ulid";
 import {
   detectAtomFeed,
   detectJsonFeed,
+  detectRdfFeed,
   detectRssFeed,
   parseAtomFeed,
   parseFeed,
   parseJsonFeed,
+  parseRdfFeed,
   parseRssFeed,
 } from "feedsmith";
 import type { Atom, DeepPartial, Json, Rdf, Rss } from "feedsmith/types";
@@ -32,7 +34,7 @@ export type FeedContentType =
   | "text/json";
 
 /** what format the feed uses, unknown if it can't be determined  */
-export type FeedFormat = "rss" | "atom" | "json" | "unknown";
+export type FeedFormat = "rss" | "atom" | "rdf" | "json" | "unknown";
 
 /**
  * feed source data eg. website
@@ -127,6 +129,21 @@ export function mapToFeedItems(
     }
   }
 
+  if (format === "rdf") {
+    const rdf = parseRdfFeed(content);
+    if (rdf?.items) {
+      for (const item of rdf.items) {
+        items.push({
+          id: item.link ?? ulid(),
+          feed: metadata.id,
+          title: item.title ?? null,
+          content: item.description ?? null,
+          url: item.link,
+        });
+      }
+    }
+  }
+
   if (format === "atom") {
     const atom = parseAtomFeed(content);
     if (atom?.entries) {
@@ -205,6 +222,9 @@ export async function discoverFeed(url: string): Promise<string | undefined> {
 function detectFeedFormat(value: string): FeedFormat {
   if (detectAtomFeed(value)) {
     return "atom";
+  }
+  if (detectRdfFeed(value)) {
+    return "rdf";
   }
   if (detectRssFeed(value)) {
     return "rss";
@@ -419,7 +439,10 @@ export async function fetchAndParseFeed(
 
   let metadata: FeedData;
   try {
-    metadata = await fetchFeedMetadata(url);
+    metadata = {
+      ...await fetchFeedMetadata(url),
+      id: feed.id,
+    };
   } catch (error) {
     console.error(
       colors.red("error"),

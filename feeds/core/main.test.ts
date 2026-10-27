@@ -3,6 +3,7 @@ import {
   discoverFeed,
   type FeedData,
   fetchAndParseFeed,
+  mapToFeedItems,
   parseInputToURL,
 } from "./main.ts";
 import { stub } from "@std/testing/mock";
@@ -77,6 +78,7 @@ Deno.test("fetchAndParseFeed - parses atom feed successfully", async () => {
   const result = await fetchAndParseFeed({ ...baseFeed, format: "atom" });
   assertEquals(result?.parsed.format, "atom");
   assertEquals(result?.url.href, baseFeed.url);
+  assertEquals(result?.metadata.id, baseFeed.id);
 });
 
 Deno.test("fetchAndParseFeed - parses rss feed successfully", async () => {
@@ -84,4 +86,31 @@ Deno.test("fetchAndParseFeed - parses rss feed successfully", async () => {
   const result = await fetchAndParseFeed({ ...baseFeed, format: "rss" });
   assertEquals(result?.parsed.format, "rss");
   assertEquals(result?.url.href, baseFeed.url);
+});
+
+Deno.test("mapToFeedItems maps RDF feed entries", () => {
+  const rdfFixture =
+    `<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns="http://purl.org/rss/1.0/"><channel><title>Example</title><link>https://example.com/</link><description>Example</description></channel><item><title>Entry</title><link>https://example.com/item</link><description>Entry body</description></item></rdf:RDF>`;
+  const result = mapToFeedItems(
+    { format: "rdf", feed: {} },
+    rdfFixture,
+    { ...baseFeed, id: "feed-1" },
+    new URL("https://example.com/feed.rdf"),
+  );
+  assertEquals(result.length, 1);
+  assertEquals(result[0].id, "https://example.com/item");
+  assertEquals(result[0].feed, "feed-1");
+  assertEquals(result[0].title, "Entry");
+  assertEquals(result[0].url, "https://example.com/item");
+});
+
+Deno.test("fetchAndParseFeed detects RDF and preserves the subscribed feed ID", async () => {
+  const rdfFixture =
+    `<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns="http://purl.org/rss/1.0/"><channel><title>Example</title><link>https://example.com/</link><description>Example</description></channel><item><title>Entry</title><link>https://example.com/item</link><description>Entry body</description></item></rdf:RDF>`;
+  using _ = mockFetch(rdfFixture);
+  const result = await fetchAndParseFeed(baseFeed);
+
+  assertEquals(result?.parsed.format, "rdf");
+  assertEquals(result?.metadata.format, "rdf");
+  assertEquals(result?.metadata.id, baseFeed.id);
 });

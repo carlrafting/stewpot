@@ -29,6 +29,14 @@ Deno.test("FsStorage should load and save feeds correctly", async () => {
   assertEquals(loaded.length, feeds.length);
 });
 
+Deno.test("FsStorage initializes a missing feeds file and reads missing items as empty", async () => {
+  const root = await Deno.makeTempDir();
+  const store = new FsStorage(join(root, SOURCES_FILENAME));
+
+  assertEquals(await store.loadFeeds(), []);
+  assertEquals(await store.loadItems("missing-feed"), []);
+});
+
 Deno.test("KvStorage should load and save feeds correctly", async () => {
   const path = await Deno.makeTempFile();
   const kv = await Deno.openKv(path);
