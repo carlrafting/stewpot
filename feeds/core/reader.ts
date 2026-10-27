@@ -10,25 +10,24 @@ const htmlContentType = {
 const svgContentType = {
   "content-type": "image/svg+xml; charset=utf-8",
 };
+const cssContentType = {
+  "content-type": "text/css; charset=utf-8",
+};
+const jsContentType = {
+  "content-type": "text/javascript; charset=utf-8",
+};
 
-const fetchFile = async (filePath: string) => {
-  const response = await fetch(
-    new URL(filePath, import.meta.url),
-    { cache: "no-cache" },
-  );
-  if (!response.ok) {
-    throw new Error("response did not return a 200 OK status");
-  }
-  return await response.text();
+const readFile = async (filePath: string) => {
+  return await Deno.readTextFile(new URL(filePath, import.meta.url));
 };
 
 export async function app(
   feeds: FeedData[],
   store: FsStorage | KvStorage,
 ): Promise<Deno.ServeDefaultExport> {
-  const css = await fetchFile("../assets/styles.css");
-  const js = await fetchFile("../assets/reader.js");
-  const icon = await fetchFile("../assets/rss-icon.svg");
+  const css = await readFile("../assets/styles.css");
+  const js = await readFile("../assets/reader.js");
+  const icon = await readFile("../assets/rss-icon.svg");
   const templates = vento({
     includes: fromFileUrl(new URL("../templates", import.meta.url)),
     autoescape: true,
@@ -61,6 +60,18 @@ export async function app(
         });
       }
 
+      if (url.pathname === "/styles.css") {
+        return new Response(css, {
+          headers: cssContentType,
+        });
+      }
+
+      if (url.pathname === "/reader.js") {
+        return new Response(js, {
+          headers: jsContentType,
+        });
+      }
+
       if (url.pathname === "/") {
         const pageFeeds = await Promise.all(
           feeds.map(async (feed) => ({
@@ -74,8 +85,6 @@ export async function app(
           name: denoConfig.name,
           version: denoConfig.version,
           feeds: pageFeeds,
-          css: css.trim(),
-          js: js.trim(),
         });
         return new Response(result.content, {
           headers: htmlContentType,

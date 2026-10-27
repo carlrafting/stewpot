@@ -52,6 +52,8 @@ Deno.test("reader renders feeds and escapes feed content", async () => {
     );
     assertStringIncludes(html, "<title>@stewpot/feeds - v0.14.0</title>");
     assertStringIncludes(html, "<h3>example.com</h3>");
+    assertStringIncludes(html, 'href="/styles.css"');
+    assertStringIncludes(html, 'src="/reader.js"');
     assertStringIncludes(html, 'name="fetch-all"');
     assertStringIncludes(html, 'id="toggle-theme-template"');
     assertStringIncludes(html, 'id="toggle-details-template"');
@@ -71,6 +73,14 @@ Deno.test("reader serves its icon and returns 404 for unknown paths", async () =
     new Request("http://localhost/rss-icon.svg"),
     handlerInfo,
   );
+  const cssResponse = await handler.fetch(
+    new Request("http://localhost/styles.css"),
+    handlerInfo,
+  );
+  const jsResponse = await handler.fetch(
+    new Request("http://localhost/reader.js"),
+    handlerInfo,
+  );
   const missingResponse = await handler.fetch(
     new Request("http://localhost/missing"),
     handlerInfo,
@@ -82,6 +92,24 @@ Deno.test("reader serves its icon and returns 404 for unknown paths", async () =
     "image/svg+xml; charset=utf-8",
   );
   assertStringIncludes(await iconResponse.text(), "<svg");
+  assertEquals(cssResponse.status, 200);
+  assertEquals(
+    cssResponse.headers.get("content-type"),
+    "text/css; charset=utf-8",
+  );
+  assertStringIncludes(
+    await cssResponse.text(),
+    "@layer reset, base, colors, theme, utils, scratch;",
+  );
+  assertEquals(jsResponse.status, 200);
+  assertEquals(
+    jsResponse.headers.get("content-type"),
+    "text/javascript; charset=utf-8",
+  );
+  assertEquals(
+    await jsResponse.text(),
+    await Deno.readTextFile(new URL("../assets/reader.js", import.meta.url)),
+  );
   assertEquals(missingResponse.status, 404);
   assertEquals(await missingResponse.text(), "404 Not Found");
 });
