@@ -1,22 +1,3 @@
 {{ layout "layouts/page.vto" }}
-  {{ if data }}
-  <h2>Data</h2>
-  <ul>
-  {{ for entry of data }}
-    <li>
-      <details>
-        <summary>{{ JSON.stringify(entry.key) }}</summary>
-        <ul>
-          {{ console.log(entry) }}
-          {{ for value of entry.value }}
-            {{ if value }}
-            <li>{{ value }}</li>
-            {{ /if }}
-          {{ /for }}
-        </ul>
-        </details>
-    </li>
-  {{ /for }}
-  </ul>
-  {{ /if }}
+  <h1>Development Area</h1>
 {{ /layout }}

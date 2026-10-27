@@ -1,4 +1,4 @@
-import { assertEquals, assertGreater, assertExists } from "@std/assert";
+import { assertEquals, assertExists, assertGreater } from "@std/assert";
 import { join } from "@std/path/join";
 import { assertSnapshot } from "@std/testing/snapshot";
 import {
@@ -8,7 +8,7 @@ import {
   resolveFeedInput,
   run,
 } from "./main.ts";
-import { loadConfig } from "./config.ts";
+import { loadConfig } from "../core/config.ts";
 import type { FeedData } from "../core/main.ts";
 
 const sampleFeeds: FeedData[] = [
@@ -68,7 +68,8 @@ Deno.test("should load config file it exists", async (t) => {
     const results = await loadConfig(path);
     await assertSnapshot(t, results);
   });
-  await t.step("notexists", async (t) => {
+
+  await t.step("notexists", async () => {
     const path = undefined;
     const results = await loadConfig(path);
     await assertSnapshot(t, results);

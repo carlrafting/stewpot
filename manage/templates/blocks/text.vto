@@ -1,0 +1,12 @@
+<form method="POST" action="/block/{{ block.id }}/edit/">
+  <fieldset>
+    <legend>{{ block.type }}</legend>
+    <input type="hidden" name="type" value="text">
+    <label for="text-{{ block.id }}">Text</label><br>
+    <textarea id="text-{{ block.id }}" name="body">
+    {{ block.body }}
+    </textarea>
+    <br>
+    <button>Save block</button>
+  </fieldset>
+</form>
