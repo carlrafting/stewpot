@@ -1,11 +1,12 @@
 import { serveDir, STATUS_CODE, STATUS_TEXT } from "@std/http";
+import { fromFileUrl } from "@std/path/from-file-url";
 import vento, { type Options as VentoOptions } from "ventojs/vento";
 import colorPalette from "./components/color/palette.json" with {
   type: "json",
 };
 
 const templateOptions: VentoOptions = {
-  includes: "./templates",
+  includes: fromFileUrl(new URL("./templates", import.meta.url)),
   strict: true,
 };
 const templateData: Record<string, unknown> = {

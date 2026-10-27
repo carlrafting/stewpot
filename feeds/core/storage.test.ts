@@ -3,7 +3,7 @@ import { ulid } from "@std/ulid/ulid";
 import { join } from "@std/path/join";
 import type { FeedData, FeedFormat } from "@stewpot/feeds";
 import { FsStorage, KvStorage } from "./storage.ts";
-import { type Paths, SOURCES_FILENAME } from "./main.ts";
+import { type Paths, SOURCES_FILENAME } from "../cli/main.ts";
 
 Deno.test("FsStorage should load and save feeds correctly", async () => {
   const root = await Deno.makeTempDir();
@@ -27,6 +27,14 @@ Deno.test("FsStorage should load and save feeds correctly", async () => {
 
   assertEquals(loaded, feeds);
   assertEquals(loaded.length, feeds.length);
+});
+
+Deno.test("FsStorage initializes a missing feeds file and reads missing items as empty", async () => {
+  const root = await Deno.makeTempDir();
+  const store = new FsStorage(join(root, SOURCES_FILENAME));
+
+  assertEquals(await store.loadFeeds(), []);
+  assertEquals(await store.loadItems("missing-feed"), []);
 });
 
 Deno.test("KvStorage should load and save feeds correctly", async () => {

@@ -1,23 +1,25 @@
+import { type ConnectionKey, getConnection } from "./connections.ts";
+
 export class KvRepository {
-  public connection: Deno.Kv | null = null;
+  #connection: Deno.Kv | null = null;
 
-  static #connections: Map<string, Deno.Kv> = new Map();
+  static #connections: Map<ConnectionKey, Deno.Kv> = new Map();
 
-  static set connections(connections: Map<string, Deno.Kv>) {
+  static set connections(connections: Map<ConnectionKey, Deno.Kv>) {
     this.#connections = connections;
   }
 
-  constructor(key: string) {
-    const connection = KvRepository.#connections.has(key)
-      ? KvRepository.#connections.get(key)
-      : null;
+  constructor(key: ConnectionKey) {
+    const connection = getConnection(KvRepository.#connections, key);
     if (!connection) throw `no connection with key: "${key}" exists!`;
-    this.connection = connection;
+    this.#connection = connection;
   }
 
-  async getAllByKey(key: string) {
+  async getAllByKey<T>(
+    key: string,
+  ): Promise<Deno.KvEntry<T>[]> {
     const prefix = [key];
-    const results = this.connection?.list({
+    const results = this.#connection?.list<T>({
       prefix,
     });
     const data = [];
@@ -27,5 +29,22 @@ export class KvRepository {
       }
     }
     return data;
+  }
+
+  async getAllByPrefix<T>(prefix: Deno.KvKey): Promise<Deno.KvEntry<T>[]> {
+    const entries: Deno.KvEntry<T>[] = [];
+    const iter = this.#connection?.list<T>({ prefix });
+    if (iter) {
+      for await (const entry of iter) {
+        entries.push(entry);
+      }
+    }
+    return entries;
+  }
+
+  async getByKey<T>(key: Deno.KvKey): Promise<Deno.KvEntry<T> | null> {
+    const entry = await this.#connection?.get<T>(key);
+    if (!entry?.value) return null;
+    return entry as Deno.KvEntry<T>;
   }
 }

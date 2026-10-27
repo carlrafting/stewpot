@@ -12,7 +12,7 @@ export function html(body: BodyInit, options?: ResponseInit): Response {
   });
 }
 
-type Data = Record<string, unknown> | string[] | number[];
+type Data = Record<string, unknown> | string[] | number[] | unknown[];
 
 export function json(data: Data, options?: ResponseInit): Response {
   const headers = new Headers(options?.headers);

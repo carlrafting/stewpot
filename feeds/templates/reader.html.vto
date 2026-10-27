@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en" data-theme="auto">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="/rss-icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/styles.css">
+<script type="module" src="/reader.js"></script>
+<title>{{ title }}</title>
+<body class="flow">
+  {{ include "partials/header.html.vto" }}
+  <main class="flow">
+    {{ include "partials/feeds.html.vto" }}
+  </main>
+  {{ include "partials/footer.html.vto" }}
+  {{ include "partials/toggle-theme.html.vto" }}
+  {{ include "partials/toggle-details.html.vto" }}
+  {{ include "partials/fetch-items.html.vto" }}
+</body>
+</html>

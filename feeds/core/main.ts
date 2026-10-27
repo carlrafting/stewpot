@@ -3,15 +3,15 @@ import { ulid } from "@std/ulid";
 import {
   detectAtomFeed,
   detectJsonFeed,
+  detectRdfFeed,
   detectRssFeed,
   parseAtomFeed,
   parseFeed,
   parseJsonFeed,
+  parseRdfFeed,
   parseRssFeed,
 } from "feedsmith";
-import type { Atom, DeepPartial, Json, Rdf, Rss } from "feedsmith/types";
-
-export { defineConfig } from "../cli/config.ts";
+export { defineConfig } from "./config.ts";
 
 /**
  * This is the main module. It handles everything related to feeds.
@@ -32,7 +32,7 @@ export type FeedContentType =
   | "text/json";
 
 /** what format the feed uses, unknown if it can't be determined  */
-export type FeedFormat = "rss" | "atom" | "json" | "unknown";
+export type FeedFormat = "rss" | "atom" | "rdf" | "json" | "unknown";
 
 /**
  * feed source data eg. website
@@ -90,20 +90,22 @@ export interface FetchResults extends FeedData {
   };
 }
 
+/** A parsed feed's format and feedsmith payload. */
+export type ParsedFeed = {
+  format: "rss" | "atom" | "rdf" | "json";
+  feed: object;
+};
+
 /**
  * This function takes parsed feed, content from response, metadata from headers, url and returns array of `FeedItems`
  *
- * @param parsed parsed feed by feedsmith
+ * @param parsed parsed feed from feedsmith
  * @param content response body content
  * @param metadata FeedData
  * @param url feed source URL instance
  */
 export function mapToFeedItems(
-  parsed:
-    | { format: "rss"; feed: DeepPartial<Rss.Feed<string>> }
-    | { format: "atom"; feed: DeepPartial<Atom.Feed<string>> }
-    | { format: "rdf"; feed: DeepPartial<Rdf.Feed<string>> }
-    | { format: "json"; feed: DeepPartial<Json.Feed<string>> },
+  parsed: ParsedFeed,
   content: string,
   metadata: FeedData,
   url: URL,
@@ -122,6 +124,21 @@ export function mapToFeedItems(
           content: item.description ?? null,
           url: item?.link,
           published: item?.pubDate,
+        });
+      }
+    }
+  }
+
+  if (format === "rdf") {
+    const rdf = parseRdfFeed(content);
+    if (rdf?.items) {
+      for (const item of rdf.items) {
+        items.push({
+          id: item.link ?? ulid(),
+          feed: metadata.id,
+          title: item.title ?? null,
+          content: item.description ?? null,
+          url: item.link,
         });
       }
     }
@@ -205,6 +222,9 @@ export async function discoverFeed(url: string): Promise<string | undefined> {
 function detectFeedFormat(value: string): FeedFormat {
   if (detectAtomFeed(value)) {
     return "atom";
+  }
+  if (detectRdfFeed(value)) {
+    return "rdf";
   }
   if (detectRssFeed(value)) {
     return "rss";
@@ -356,27 +376,7 @@ export type FetchedFeed = {
   /** The feed's stored metadata, retrieved prior to fetching. */
   metadata: FeedData;
   /** The parsed feed content, discriminated by format. */
-  parsed: {
-    format: "rss";
-    feed: import("feedsmith/types").DeepPartial<
-      import("feedsmith/types").Rss.Feed<string>
-    >;
-  } | {
-    format: "atom";
-    feed: import("feedsmith/types").DeepPartial<
-      import("feedsmith/types").Atom.Feed<string>
-    >;
-  } | {
-    format: "rdf";
-    feed: import("feedsmith/types").DeepPartial<
-      import("feedsmith/types").Rdf.Feed<string>
-    >;
-  } | {
-    format: "json";
-    feed: import("feedsmith/types").DeepPartial<
-      import("feedsmith/types").Json.Feed<string>
-    >;
-  };
+  parsed: ParsedFeed;
   /** The raw response body string, used during item mapping. */
   body: string;
   /** The resolved URL the feed was fetched from. */
@@ -419,7 +419,10 @@ export async function fetchAndParseFeed(
 
   let metadata: FeedData;
   try {
-    metadata = await fetchFeedMetadata(url);
+    metadata = {
+      ...await fetchFeedMetadata(url),
+      id: feed.id,
+    };
   } catch (error) {
     console.error(
       colors.red("error"),
