@@ -17,30 +17,24 @@ const jsContentType = {
   "content-type": "text/javascript; charset=utf-8",
 };
 
-export async function readAsset(
-  filePath: string,
-  baseUrl = import.meta.url,
-  fetchAsset: typeof fetch = fetch,
-): Promise<string> {
-  const url = new URL(filePath, baseUrl);
-  if (url.protocol === "file:") {
-    return await Deno.readTextFile(url);
-  }
-
-  const response = await fetchAsset(url, { cache: "no-cache" });
+const fetchFile = async (filePath: string) => {
+  const response = await fetch(
+    new URL(filePath, import.meta.url),
+    { cache: "no-cache" },
+  );
   if (!response.ok) {
-    throw new Error(`Failed to load reader asset: ${url} (${response.status})`);
+    throw new Error("response did not return a 200 OK status");
   }
   return await response.text();
-}
+};
 
 export async function app(
   feeds: FeedData[],
   store: FsStorage | KvStorage,
 ): Promise<Deno.ServeDefaultExport> {
-  const css = await readAsset("../assets/styles.css");
-  const js = await readAsset("../assets/reader.js");
-  const icon = await readAsset("../assets/rss-icon.svg");
+  const css = await fetchFile("../assets/styles.css");
+  const js = await fetchFile("../assets/reader.js");
+  const icon = await fetchFile("../assets/rss-icon.svg");
   const templates = vento({
     includes: fromFileUrl(new URL("../templates", import.meta.url)),
     autoescape: true,
