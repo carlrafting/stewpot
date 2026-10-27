@@ -10,6 +10,12 @@ const htmlContentType = {
 const svgContentType = {
   "content-type": "image/svg+xml; charset=utf-8",
 };
+const cssContentType = {
+  "content-type": "text/css; charset=utf-8",
+};
+const jsContentType = {
+  "content-type": "text/javascript; charset=utf-8",
+};
 
 const fetchFile = async (filePath: string) => {
   const response = await fetch(
@@ -61,6 +67,18 @@ export async function app(
         });
       }
 
+      if (url.pathname === "/styles.css") {
+        return new Response(css, {
+          headers: cssContentType,
+        });
+      }
+
+      if (url.pathname === "/reader.js") {
+        return new Response(js, {
+          headers: jsContentType,
+        });
+      }
+
       if (url.pathname === "/") {
         const pageFeeds = await Promise.all(
           feeds.map(async (feed) => ({
@@ -74,8 +92,6 @@ export async function app(
           name: denoConfig.name,
           version: denoConfig.version,
           feeds: pageFeeds,
-          css: css.trim(),
-          js: js.trim(),
         });
         return new Response(result.content, {
           headers: htmlContentType,
