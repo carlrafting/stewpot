@@ -1,12 +1,12 @@
-import { assertEquals } from "@std/assert";
-import { assertSnapshot } from "@std/testing/snapshot";
+import { assertEquals, assertStringIncludes } from "@std/assert";
 import server from "./serve.ts";
 
-Deno.test(async function fetchIndexPage(t) {
+Deno.test(async function fetchIndexPage() {
   const req = new Request("https://example.com");
   const res = await server.fetch(req);
-  const template = await Deno.readTextFile("./templates/index.html");
+  const body = await res.text();
   assertEquals(res.ok, true);
   assertEquals(res.headers.get("content-type"), "text/html; charset=utf-8");
-  await assertSnapshot(t, template, "HTML template for index page");
+  assertStringIncludes(body, "<h1>Stewpot UI System</h1>");
+  assertStringIncludes(body, "<section>");
 });

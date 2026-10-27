@@ -16,7 +16,7 @@ import { createTemplateRender } from "./vento/templates.ts";
 /** app options interface */
 export interface Options {
   /** Import meta from the entrypoint, used to resolve paths */
-  meta: ImportMeta;
+  meta: Pick<ImportMeta, "url">;
   /** session config options */
   sessions: {
     /** path to session kv db */
