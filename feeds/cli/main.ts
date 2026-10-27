@@ -23,7 +23,8 @@ import {
   createStorage,
   type FsStorage,
   type KvStorage,
-} from "../core/storage.ts";
+  type Storage,
+} from "../cli/storage.ts";
 import pkg from "../deno.json" with { type: "json" };
 import type {
   CLIDeps,
@@ -111,6 +112,55 @@ export interface Deps extends CLIDeps {
   args: ParsedArguments;
 }
 
+export function getCommandInput(args: ParsedArguments): string | undefined {
+  const [, input] = args._;
+  return typeof input === "string" ? input : undefined;
+}
+
+export function resolveFeedInput(
+  input: string | number | undefined,
+): URL | undefined {
+  if (typeof input !== "string" || !input.trim()) return;
+  return parseInputToURL(input.trim());
+}
+
+export function findFeedByUrl(
+  feeds: FeedData[],
+  value: URL | string | undefined,
+): FeedData | undefined {
+  const url = typeof value === "string" ? resolveFeedInput(value) : value;
+  if (!url) return undefined;
+
+  return feeds.find((feed) => {
+    try {
+      const current = new URL(feed.url);
+      return current.href === url.href || current.hostname === url.hostname;
+    } catch {
+      return false;
+    }
+  });
+}
+
+export function removeFeedByUrl(
+  feeds: FeedData[],
+  value: URL | string | undefined,
+): FeedData[] {
+  const target = findFeedByUrl(feeds, value);
+  if (!target) return feeds;
+  return feeds.filter((feed) => feed.id !== target.id);
+}
+
+export async function persistFeedSubscription(
+  store: Storage,
+  feeds: FeedData[],
+  metadata: FeedData,
+  items: FeedItem[],
+): Promise<void> {
+  feeds.push(metadata);
+  await store.saveFeeds(feeds);
+  await store.saveItems(metadata.id, items, feeds);
+}
+
 const init: Command = {
   name: "init",
   description: "init cli config",
@@ -192,27 +242,24 @@ const subscribe: Command = {
       return 0;
     }
 
-    const [command, input] = args._;
-
+    const input = getCommandInput(args);
     if (typeof input !== "string") {
       console.error(colors.red("error"), "invalid input format!");
       return 1;
     }
 
-    const url = parseInputToURL(input);
-
+    const url = resolveFeedInput(input);
     if (!url) {
       return 1;
     }
 
-    const exists = feeds.find((value) => value.url === url?.href);
-
+    const exists = findFeedByUrl(feeds, url);
     if (exists) {
       console.error(colors.red("error"), "URL already exists!");
       return 1;
     }
 
-    if (url?.pathname === "/") {
+    if (url.pathname === "/") {
       const oldHref = url.href;
       const feedURL = await discoverFeed(url.href);
       if (feedURL && feedURL !== url.href) {
@@ -250,16 +297,11 @@ const subscribe: Command = {
     }
 
     const items: FeedItem[] = mapToFeedItems(parsed, content, metadata, url);
-
     parsed = null;
 
-    feeds.push(metadata);
-    await store.saveFeeds(feeds);
-    await store.saveItems(metadata.id, items, feeds);
+    await persistFeedSubscription(store, feeds, metadata, items);
     console.log(colors.green("done"), `saved feed items for ${url.hostname}`);
-
     console.log(colors.green("subscribed!"), metadata.url);
-
     return 0;
   },
 };
@@ -279,31 +321,28 @@ const unsubscribe: Command = {
       console.log("this is help for unsubscribe command");
       return 0;
     }
-    const [command, input] = args._;
+
+    const input = getCommandInput(args);
     if (typeof input !== "string") {
       console.error(colors.red("error"), "invalid input format!");
       return 1;
     }
-    const url = parseInputToURL(input);
-    const exists = feeds.find((value) =>
-      new URL(value.url).hostname === url?.hostname
-    );
-    if (!exists) {
+
+    const url = resolveFeedInput(input);
+    const exists = url ? findFeedByUrl(feeds, url) : undefined;
+    if (!exists || !url) {
       console.error(
         colors.red("error"),
-        `feed source doesn't exist for ${url?.hostname}`,
+        `feed source doesn't exist for ${url?.hostname ?? input}`,
       );
       return 1;
     }
-    const filtered = feeds.filter((item) =>
-      new URL(item.url).hostname !== url?.hostname
-    );
-    if (filtered.length >= 0) {
-      await store.saveFeeds(filtered);
-      console.log(colors.green("ok"), `unsubscribed to ${url?.href}`);
-    }
-    await store.removeItems(exists?.id);
-    console.log(colors.green("done"), `remove feed items for ${url?.hostname}`);
+
+    const filtered = removeFeedByUrl(feeds, url);
+    await store.saveFeeds(filtered);
+    console.log(colors.green("ok"), `unsubscribed to ${url.href}`);
+    await store.removeItems(exists.id);
+    console.log(colors.green("done"), `remove feed items for ${url.hostname}`);
     return 0;
   },
 };
@@ -375,11 +414,9 @@ async function fetchSingleFeed(
   store: FsStorage | KvStorage,
 ): Promise<FetchedFeed | undefined> {
   if (typeof input !== "string") return;
-  const url = parseInputToURL(input);
+  const url = resolveFeedInput(input);
   if (!url) return;
-  const exists = feeds.find((value) =>
-    new URL(value.url).hostname === url?.hostname
-  );
+  const exists = findFeedByUrl(feeds, url);
   if (!exists) {
     console.error(
       colors.red("error"),
@@ -568,6 +605,16 @@ ${colors.green("Usage")}:
   },
 };
 
+export const COMMANDS: Command[] = [
+  init,
+  list,
+  subscribe,
+  unsubscribe,
+  fetch,
+  reader,
+  upgrade,
+];
+
 const parseArgsOptions: ParseOptions = {
   boolean: ["help", "force", "quiet", "silent"],
   default: {
@@ -585,7 +632,6 @@ export default async function main(
   store: FsStorage | KvStorage,
   paths: Paths,
 ): Promise<number | void> {
-  const commands: Command[] = [init, list, fetch, reader, upgrade];
   const parsedArgs = parseArgs(args, parseArgsOptions);
   const { input, options } = handleArgs(parsedArgs);
   const feeds = await store.loadFeeds();
