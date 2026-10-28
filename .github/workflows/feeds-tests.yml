@@ -1,0 +1,20 @@
+name: Feeds tests
+
+on:
+  pull_request:
+  push:
+
+permissions:
+  contents: read
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+      - name: Setup Deno
+        uses: denoland/setup-deno@v2
+      - name: Run feeds tests
+        working-directory: feeds
+        run: deno task tests
