@@ -1,4 +1,5 @@
 import { assertEquals, assertExists, assertGreater } from "@std/assert";
+import { fromFileUrl } from "@std/path/from-file-url";
 import { join } from "@std/path/join";
 import { assertSnapshot } from "@std/testing/snapshot";
 import {
@@ -10,6 +11,8 @@ import {
 import { run } from "@stewpot/cli";
 import { loadConfig } from "../core/config.ts";
 import type { FeedData } from "../core/main.ts";
+
+const cliPath = fromFileUrl(new URL("./main.ts", import.meta.url));
 
 const sampleFeeds: FeedData[] = [
   {
@@ -38,27 +41,22 @@ Deno.test("should load config file it exists", async (t) => {
   await t.step("notexists", async () => {
     const path = undefined;
     const results = await loadConfig(path);
-    await assertSnapshot(t, results);
+    assertEquals(results, { storage: { type: "fs" } });
   });
 });
 
 Deno.test(
   "listCommand should list feed sources if there are more than 0",
   async () => {
+    const root = await Deno.makeTempDir();
+    await Deno.writeTextFile(
+      join(root, "sources.json"),
+      JSON.stringify(sampleFeeds),
+    );
     const args = ["list"];
-    const command = run(args, null);
-    const results = await command.output();
-    assertEquals(results.success, true);
-    assertEquals(results.code, 0);
-    assertGreater(results.stdout.length, 0);
-  },
-);
-
-Deno.test(
-  "listCommand should list feed sources if there are more than 0",
-  async () => {
-    const args = ["list"];
-    const command = run(args, null);
+    const command = run(args, cliPath, {
+      env: { STEWPOT_DIR_OVERRIDE: root },
+    });
     const results = await command.output();
     assertEquals(results.success, true);
     assertEquals(results.code, 0);

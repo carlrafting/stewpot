@@ -26,15 +26,16 @@ import {
   type Storage,
 } from "../core/storage.ts";
 import pkg from "../deno.json" with { type: "json" };
-import type {
-  CLIDeps,
-  Command,
-  Input,
-  Options,
-  ParsedArguments,
-} from "@stewpot/cli";
-import { handleArgs, resolvePath } from "@stewpot/cli";
 import { createServer } from "../core/server.ts";
+import {
+  type CLIDeps,
+  type Command,
+  handleArgs,
+  type Input,
+  type Options,
+  type ParsedArguments,
+  resolvePath,
+} from "@stewpot/cli";
 
 export type { CLIDeps, Command, Input, Options, ParsedArguments };
 export type { Configuration, Storage };

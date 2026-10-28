@@ -287,6 +287,7 @@
           "jsr:@std/path@^1.1.6",
           "jsr:@std/testing@^1.0.20",
           "jsr:@std/ulid@1",
+          "jsr:@stewpot/cli@0.1",
           "jsr:@stewpot/html@~0.3.1",
           "npm:feedsmith@^2.9.6",
           "npm:ventojs@^2.4.0"
