@@ -37,9 +37,11 @@ Deno.test("load", async () => {
 Deno.test("write", async () => {
   const tmp = await Deno.makeTempFile();
   assert(tmp, "creates tmp file");
-  await writeConfigToPath(tmp, "../assets/config.default.ts");
+  await writeConfigToPath(tmp);
   const info = await Deno.stat(tmp);
   assertGreater(info.size, 0);
   const actual = await Deno.readTextFile(tmp);
   assertGreater(actual.length, 0);
+  assert(actual.includes('storage: { type: "fs" }'));
+  assert(!actual.includes("404 Not Found"));
 });

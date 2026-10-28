@@ -50,7 +50,7 @@ Deno.test("reader renders feeds and escapes feed content", async () => {
       response.headers.get("content-type"),
       "text/html; charset=utf-8",
     );
-    assertStringIncludes(html, "<title>@stewpot/feeds - v0.15.2</title>");
+    assertStringIncludes(html, "<title>@stewpot/feeds - v0.15.3</title>");
     assertStringIncludes(html, "<h3>example.com</h3>");
     assertStringIncludes(html, 'href="/styles.css"');
     assertStringIncludes(html, 'src="/reader.js"');
