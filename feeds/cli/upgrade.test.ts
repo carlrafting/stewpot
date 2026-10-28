@@ -13,6 +13,10 @@ Deno.test("compareVersions orders prereleases before releases", () => {
   assertEquals(compareVersions("1.0.0-rc.1", "1.0.0"), -1);
 });
 
+Deno.test("compareVersions ignores build metadata", () => {
+  assertEquals(compareVersions("1.0.0+build.2", "1.0.0+build.1"), 0);
+});
+
 Deno.test("compareVersions rejects invalid versions", () => {
   assertThrows(() => compareVersions("latest", "0.15.2"), TypeError);
 });
