@@ -1,4 +1,5 @@
 import { assertEquals, assertExists, assertGreater } from "@std/assert";
+import { fromFileUrl } from "@std/path/from-file-url";
 import { join } from "@std/path/join";
 import { assertSnapshot } from "@std/testing/snapshot";
 import {
@@ -7,9 +8,19 @@ import {
   removeFeedByUrl,
   resolveFeedInput,
 } from "./main.ts";
-import { run } from "@stewpot/cli";
 import { loadConfig } from "../core/config.ts";
 import type { FeedData } from "../core/main.ts";
+
+function run(
+  args: string[],
+  _file: string | null,
+  options: Deno.CommandOptions = {},
+): Deno.Command {
+  return new Deno.Command(Deno.execPath(), {
+    args: ["-P", fromFileUrl(new URL("./main.ts", import.meta.url)), ...args],
+    ...options,
+  });
+}
 
 const sampleFeeds: FeedData[] = [
   {

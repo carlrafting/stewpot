@@ -1,5 +1,5 @@
 import { cyan, green } from "@std/fmt/colors";
-import type { Options } from "@stewpot/cli";
+import type { Options } from "../cli/shared.ts";
 import type { FeedData } from "./main.ts";
 import type { FsStorage, KvStorage } from "./storage.ts";
 import type { Configuration } from "./config.ts";
