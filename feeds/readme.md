@@ -11,12 +11,17 @@ To create a fresh installation of the CLI program, run the command displayed
 below.
 
 ```sh
-deno install -RWNE -g jsr:@stewpot/feeds/cli
+deno install -RWNE -g --min-dep-age=0 jsr:@stewpot/feeds/cli
 ```
+
+`--min-dep-age=0` allows Deno to install a release as soon as it is published,
+rather than waiting for Deno's default 24-hour minimum dependency age.
 
 ## CLI Upgrade
 
-Update to newer versions by running the following in your terminal.
+Update to newer versions by running the following in your terminal. The
+`feeds upgrade` command checks JSR for the latest version and installs that
+exact version, including releases published within the last 24 hours.
 
 ```sh
 $ feeds upgrade

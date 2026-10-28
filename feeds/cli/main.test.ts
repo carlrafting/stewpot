@@ -18,6 +18,31 @@ Deno.test("detectMode treats modules in a local Git checkout as development", ()
   assertEquals(detectMode(), "development");
 });
 
+Deno.test("init writes the default config file", async () => {
+  const root = await Deno.makeTempDir();
+  const result = await run(["init"], cliPath, {
+    env: { STEWPOT_DIR_OVERRIDE: root },
+  }).output();
+
+  assertEquals(result.success, true, new TextDecoder().decode(result.stderr));
+  const config = await Deno.readTextFile(join(root, CONFIG_FILENAME));
+  assertEquals(config.includes("404 Not Found"), false);
+  assertEquals(config.includes('storage: { type: "fs" }'), true);
+});
+
+Deno.test("init repairs the config file created by the previous 404 bug", async () => {
+  const root = await Deno.makeTempDir();
+  await Deno.writeTextFile(join(root, CONFIG_FILENAME), "404 Not Found");
+  const result = await run(["init"], cliPath, {
+    env: { STEWPOT_DIR_OVERRIDE: root },
+  }).output();
+
+  assertEquals(result.success, true, new TextDecoder().decode(result.stderr));
+  const config = await Deno.readTextFile(join(root, CONFIG_FILENAME));
+  assertEquals(config.includes("404 Not Found"), false);
+  assertEquals(config.includes('storage: { type: "fs" }'), true);
+});
+
 Deno.test("detectMode treats installed modules outside a Git checkout as production", async () => {
   const cwd = await Deno.makeTempDir();
   const scriptPath = join(cwd, "detect-mode.ts");
