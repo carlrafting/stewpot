@@ -25,6 +25,8 @@ import {
   type KvStorage,
   type Storage,
 } from "../core/storage.ts";
+import pkg from "../deno.json" with { type: "json" };
+import { createServer } from "../core/server.ts";
 import {
   type CLIDeps,
   type Command,
@@ -33,9 +35,7 @@ import {
   type Options,
   type ParsedArguments,
   resolvePath,
-} from "./shared.ts";
-import pkg from "../deno.json" with { type: "json" };
-import { createServer } from "../core/server.ts";
+} from "@stewpot/cli";
 
 export type { CLIDeps, Command, Input, Options, ParsedArguments };
 export type { Configuration, Storage };

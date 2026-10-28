@@ -8,6 +8,7 @@
     "./cli": "./cli/main.ts"
   },
   "imports": {
+    "@stewpot/cli": "jsr:@stewpot/cli@^0.1.0",
     "@stewpot/html": "jsr:@stewpot/html@^0.3.1",
     "@std/assert": "jsr:@std/assert@^1.0.19",
     "@std/cli": "jsr:@std/cli@^1.0.32",
