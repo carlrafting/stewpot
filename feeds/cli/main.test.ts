@@ -8,11 +8,39 @@ import {
   removeFeedByUrl,
   resolveFeedInput,
 } from "./main.ts";
-import { run } from "@stewpot/cli";
+import { detectMode, run } from "@stewpot/cli";
 import { loadConfig } from "../core/config.ts";
 import type { FeedData } from "../core/main.ts";
 
 const cliPath = fromFileUrl(new URL("./main.ts", import.meta.url));
+
+Deno.test("detectMode treats modules in a local Git checkout as development", () => {
+  assertEquals(detectMode(), "development");
+});
+
+Deno.test("detectMode treats installed modules outside a Git checkout as production", async () => {
+  const cwd = await Deno.makeTempDir();
+  const scriptPath = join(cwd, "detect-mode.ts");
+  const sharedCliURL = new URL("../../cli/main.ts", import.meta.url);
+  const cliConfigPath = fromFileUrl(
+    new URL("../../cli/deno.json", import.meta.url),
+  );
+  await Deno.writeTextFile(
+    scriptPath,
+    `import { detectMode } from "${sharedCliURL.href}";\nconsole.log(detectMode());\n`,
+  );
+
+  const result = await new Deno.Command(Deno.execPath(), {
+    args: ["run", "-A", "-c", cliConfigPath, scriptPath],
+    cwd,
+    env: { STEWPOT_MODE: "auto" },
+    stdout: "piped",
+    stderr: "piped",
+  }).output();
+
+  assertEquals(result.success, true, new TextDecoder().decode(result.stderr));
+  assertEquals(new TextDecoder().decode(result.stdout).trim(), "production");
+});
 
 const sampleFeeds: FeedData[] = [
   {
