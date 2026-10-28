@@ -72,9 +72,8 @@ export function run(
   file: string | null,
   options: Deno.CommandOptions = {},
 ): Deno.Command {
-  if (!file) file = "cli.ts";
   return new Deno.Command(Deno.execPath(), {
-    args: ["-P", import.meta.filename ?? file, ...args],
+    args: ["-P", file ?? import.meta.filename ?? "cli.ts", ...args],
     ...options,
   });
 }
