@@ -1,5 +1,7 @@
 import { join } from "@std/path/join";
+import { dirname } from "@std/path/dirname";
 import { yellow } from "@std/fmt/colors";
+import { fromFileUrl } from "@std/path/from-file-url";
 import { relative } from "@std/path/relative";
 import { isAbsolute } from "@std/path/is-absolute";
 
@@ -72,9 +74,8 @@ export function run(
   file: string | null,
   options: Deno.CommandOptions = {},
 ): Deno.Command {
-  if (!file) file = "cli.ts";
   return new Deno.Command(Deno.execPath(), {
-    args: ["-P", import.meta.filename ?? file, ...args],
+    args: ["-P", file ?? import.meta.filename ?? "cli.ts", ...args],
     ...options,
   });
 }
@@ -126,21 +127,38 @@ export function resolvePath(to: string): string | undefined {
  */
 export function detectMode(): "development" | "production" {
   const explicit = Deno.env.get(ENV_MODE);
-  // console.log({ explicit });
   if (explicit === "production" || explicit === "development") {
     return explicit;
   }
   try {
-    const cwd = Deno.cwd();
-    const modulePathname = new URL(Deno.mainModule).pathname;
-    const rel = relative(cwd, modulePathname);
-    // const isLocalCheckout = modulePathname.startsWith(Deno.cwd());
-    const isLocalCheckout = !rel.startsWith("..") && !isAbsolute(rel);
-    // console.log({ isLocalCheckout });
+    const moduleURL = new URL(Deno.mainModule);
+    if (moduleURL.protocol !== "file:") return "production";
+
+    const repoRoot = findGitRoot(Deno.cwd());
+    if (!repoRoot) return "production";
+
+    const modulePath = relative(repoRoot, fromFileUrl(moduleURL));
+    const isLocalCheckout = !modulePath.startsWith("..") &&
+      !isAbsolute(modulePath);
     return isLocalCheckout ? "development" : "production";
-  } catch (_) {
-    // fallback to development
-    return "development";
+  } catch {
+    return "production";
+  }
+}
+
+function findGitRoot(directory: string): string | undefined {
+  let current = directory;
+  while (true) {
+    try {
+      Deno.statSync(join(current, ".git"));
+      return current;
+    } catch (error) {
+      if (!(error instanceof Deno.errors.NotFound)) throw error;
+    }
+
+    const parent = dirname(current);
+    if (parent === current) return;
+    current = parent;
   }
 }
 

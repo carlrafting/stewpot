@@ -26,15 +26,17 @@ import {
   type Storage,
 } from "../core/storage.ts";
 import pkg from "../deno.json" with { type: "json" };
-import type {
-  CLIDeps,
-  Command,
-  Input,
-  Options,
-  ParsedArguments,
-} from "@stewpot/cli";
-import { handleArgs, resolvePath } from "@stewpot/cli";
 import { createServer } from "../core/server.ts";
+import {
+  type CLIDeps,
+  type Command,
+  handleArgs,
+  type Input,
+  type Options,
+  type ParsedArguments,
+  resolvePath,
+} from "@stewpot/cli";
+import { compareVersions, createUpgradeArgs } from "./upgrade.ts";
 
 export type { CLIDeps, Command, Input, Options, ParsedArguments };
 export type { Configuration, Storage };
@@ -192,10 +194,18 @@ already exists, it is left unchanged.`,
     const { paths } = deps;
     if (paths.config) {
       try {
-        const file = await Deno.open(paths.config, { read: true });
-        console.log(colors.cyan("info"), "config already exists!");
-        file.close();
-      } catch {
+        const existingConfig = await Deno.readTextFile(paths.config);
+        if (existingConfig.trim() === "404 Not Found") {
+          await writeConfigToPath(paths.config);
+          console.log(
+            colors.green("ok"),
+            `replaced invalid config file at ${paths.config}`,
+          );
+        } else {
+          console.log(colors.cyan("info"), "config already exists!");
+        }
+      } catch (error) {
+        if (!(error instanceof Deno.errors.NotFound)) throw error;
         await writeConfigToPath(paths.config);
         console.log(
           colors.green("ok"),
@@ -588,17 +598,27 @@ The hostname and port can also be set in the feeds configuration file.`,
   },
 };
 
-async function uninstall(): Promise<boolean> {
-  console.log(colors.cyan("info"), "uninstall previous version...");
-  const signal = new AbortController().signal;
-  const [, name] = pkg.name.split("/");
-  const args = ["uninstall", "-g", name];
-  const command = new Deno.Command(Deno.execPath(), {
-    args,
-    signal,
+async function fetchLatestVersion(): Promise<string> {
+  const url = new URL(`https://jsr.io/${pkg.name}/meta.json`);
+  url.searchParams.set("_", Date.now().toString());
+  const response = await globalThis.fetch(url, {
+    cache: "no-store",
+    headers: { "cache-control": "no-cache" },
   });
-  const output = await command.output();
-  return output.success;
+  if (!response.ok) {
+    throw new Error(
+      `JSR returned ${response.status} ${response.statusText} while checking for updates`,
+    );
+  }
+
+  const metadata: unknown = await response.json();
+  if (
+    typeof metadata !== "object" || metadata === null ||
+    !("latest" in metadata) || typeof metadata.latest !== "string"
+  ) {
+    throw new Error("JSR returned invalid package metadata");
+  }
+  return metadata.latest;
 }
 
 const upgrade: Command = {
@@ -616,20 +636,34 @@ Reinstall the latest published version of @stewpot/feeds from JSR.`,
     if (options.help) {
       return printCommandHelp(upgrade);
     }
+    let latestVersion: string;
+    try {
+      latestVersion = await fetchLatestVersion();
+    } catch (error) {
+      console.error(
+        colors.red("error"),
+        "could not check the latest version:",
+        error,
+      );
+      return 1;
+    }
+
+    const versionComparison = compareVersions(latestVersion, pkg.version);
+    if (versionComparison < 0) {
+      console.error(
+        colors.red("error"),
+        `JSR reports ${latestVersion} as latest, older than installed version ${pkg.version}; refusing to downgrade`,
+      );
+      return 1;
+    }
+    if (versionComparison === 0) {
+      console.log(colors.cyan("info"), `${pkg.name} is already up to date`);
+      return 0;
+    }
+
     const controller = new AbortController();
     const signal = controller.signal;
-    const args = [
-      "install",
-      "-RWNE",
-      "-g",
-      "-r",
-      "-f",
-      "--allow-run",
-      `jsr:${pkg.name}/cli`,
-    ];
-    if (!await uninstall()) {
-      console.info(colors.cyan("info"), "nothing to cleanup");
-    }
+    const args = createUpgradeArgs(pkg.name, latestVersion);
     const command = new Deno.Command(Deno.execPath(), {
       args,
       signal,
@@ -647,7 +681,9 @@ Reinstall the latest published version of @stewpot/feeds from JSR.`,
       colors.red("error"),
       "there was a problem upgrading to the latest version",
     );
-    return 1;
+    const output = new TextDecoder().decode(info.stderr).trim();
+    if (output) console.error(output);
+    return info.code || 1;
   },
 };
 
