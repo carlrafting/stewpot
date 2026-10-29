@@ -1,5 +1,5 @@
-import { fromFileUrl } from "@std/path/from-file-url";
 import vento from "ventojs/mod.js";
+import { UrlLoader } from "ventojs/loaders/url.js";
 import type { FsStorage, KvStorage } from "./storage.ts";
 import denoConfig from "../deno.json" with { type: "json" };
 import type { FeedData } from "./main.ts";
@@ -36,7 +36,7 @@ export async function app(
   const js = await fetchFile("../assets/reader.js");
   const icon = await fetchFile("../assets/rss-icon.svg");
   const templates = vento({
-    includes: fromFileUrl(new URL("../templates", import.meta.url)),
+    includes: new UrlLoader(new URL("../templates/", import.meta.url)),
     autoescape: true,
   });
 
