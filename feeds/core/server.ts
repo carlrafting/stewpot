@@ -4,6 +4,7 @@ import type { FeedData } from "./main.ts";
 import type { FsStorage, KvStorage } from "./storage.ts";
 import type { Configuration } from "./config.ts";
 import app from "./reader.ts";
+import type { ReaderAuth } from "./reader.ts";
 
 export async function createServer(
   config: Configuration,
@@ -11,15 +12,21 @@ export async function createServer(
   feeds: FeedData[],
   store: FsStorage | KvStorage,
 ): Promise<void> {
+  const optionHostname = typeof options?.hostname === "string"
+    ? options.hostname
+    : undefined;
+  const hostname = resolveReaderHostname(
+    optionHostname,
+    config?.reader?.hostname,
+  );
+  const auth = resolveReaderAuth(
+    hostname,
+    Deno.env.get("READER_USERNAME"),
+    Deno.env.get("READER_PASSWORD"),
+  );
   const controller = new AbortController();
   const signal = controller.signal;
-  const handler = await app(
-    feeds,
-    store,
-  );
-  const hostname = Deno.env.get("HOSTNAME") ?? options?.hostname as string ??
-    config?.reader?.hostname ??
-    "localhost";
+  const handler = await app(feeds, store, auth);
   const envPort = Deno.env.get("PORT");
   const configuredPort = envPort || (options.port ?? config?.reader?.port);
   const port = configuredPort === undefined ? 8000 : Number(configuredPort);
@@ -55,4 +62,33 @@ export async function createServer(
     green("done"),
     "reader shutdown was finished successfully",
   );
+}
+
+export function resolveReaderHostname(
+  optionHostname: string | undefined,
+  configuredHostname: string | undefined,
+): string {
+  return optionHostname ?? configuredHostname ?? "127.0.0.1";
+}
+
+export function resolveReaderAuth(
+  hostname: string,
+  username: string | undefined,
+  password: string | undefined,
+): ReaderAuth | undefined {
+  const normalizedHostname = hostname.toLowerCase().replace(/^\[|\]$/g, "");
+  if (
+    normalizedHostname === "localhost" ||
+    normalizedHostname === "127.0.0.1" ||
+    normalizedHostname === "::1"
+  ) {
+    return undefined;
+  }
+
+  if (!username || !password) {
+    throw new Error(
+      "Non-loopback reader binding requires READER_USERNAME and READER_PASSWORD environment variables",
+    );
+  }
+  return { username, password };
 }

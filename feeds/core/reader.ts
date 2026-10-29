@@ -4,6 +4,11 @@ import type { FsStorage, KvStorage } from "./storage.ts";
 import denoConfig from "../deno.json" with { type: "json" };
 import type { FeedData } from "./main.ts";
 
+export interface ReaderAuth {
+  username: string;
+  password: string;
+}
+
 const htmlContentType = {
   "content-type": "text/html; charset=utf-8",
 };
@@ -31,6 +36,7 @@ const fetchFile = async (filePath: string) => {
 export async function app(
   feeds: FeedData[],
   store: FsStorage | KvStorage,
+  auth?: ReaderAuth,
 ): Promise<Deno.ServeDefaultExport> {
   const css = await fetchFile("../assets/styles.css");
   const js = await fetchFile("../assets/reader.js");
@@ -39,9 +45,28 @@ export async function app(
     includes: new UrlLoader(new URL("../templates/", import.meta.url)),
     autoescape: true,
   });
+  let expectedCredentials: string | undefined;
+  if (auth) {
+    const bytes = new TextEncoder().encode(`${auth.username}:${auth.password}`);
+    let binary = "";
+    for (const byte of bytes) binary += String.fromCharCode(byte);
+    expectedCredentials = btoa(binary);
+  }
 
   return {
     async fetch(request: Request): Promise<Response> {
+      const providedCredentials = request.headers.get("authorization")
+        ?.match(/^Basic\s+([A-Za-z0-9+/]+={0,2})$/i)?.[1];
+      if (expectedCredentials && providedCredentials !== expectedCredentials) {
+        return new Response("Unauthorized", {
+          status: 401,
+          headers: {
+            "www-authenticate": 'Basic realm="Stewpot Reader", charset="UTF-8"',
+            "cache-control": "no-store",
+          },
+        });
+      }
+
       const url = new URL(request.url);
 
       if (request.headers.get("upgrade") === "websocket") {
@@ -93,8 +118,10 @@ export async function app(
           version: denoConfig.version,
           feeds: pageFeeds,
         });
+        const headers = new Headers(htmlContentType);
+        if (auth) headers.set("cache-control", "no-store");
         return new Response(result.content, {
-          headers: htmlContentType,
+          headers,
         });
       }
 

@@ -2,6 +2,7 @@ import { assertEquals, assertStringIncludes } from "@std/assert";
 import { join } from "@std/path/join";
 import { FsStorage } from "./storage.ts";
 import type { FeedData } from "./main.ts";
+import denoConfig from "../deno.json" with { type: "json" };
 import app from "./reader.ts";
 
 const handlerInfo: Deno.ServeHandlerInfo = {
@@ -50,7 +51,10 @@ Deno.test("reader renders feeds and escapes feed content", async () => {
       response.headers.get("content-type"),
       "text/html; charset=utf-8",
     );
-    assertStringIncludes(html, "<title>@stewpot/feeds - v0.15.3</title>");
+    assertStringIncludes(
+      html,
+      `<title>${denoConfig.name} - v${denoConfig.version}</title>`,
+    );
     assertStringIncludes(html, "<h3>example.com</h3>");
     assertStringIncludes(html, 'href="/styles.css"');
     assertStringIncludes(html, 'src="/reader.js"');
@@ -65,6 +69,49 @@ Deno.test("reader renders feeds and escapes feed content", async () => {
   } finally {
     await Deno.remove(directory, { recursive: true });
   }
+});
+
+Deno.test("reader requires HTTP Basic authentication when configured", async () => {
+  const handler = await app([], new FsStorage("unused"), {
+    username: "reader",
+    password: "pāssword",
+  });
+  const unauthorized = await handler.fetch(
+    new Request("http://localhost/"),
+    handlerInfo,
+  );
+  const authorized = await handler.fetch(
+    new Request("http://localhost/", {
+      headers: {
+        authorization: `bAsIc ${
+          btoa(
+            Array.from(
+              new TextEncoder().encode("reader:pāssword"),
+              (byte) => String.fromCharCode(byte),
+            ).join(""),
+          )
+        }`,
+      },
+    }),
+    handlerInfo,
+  );
+  const credentials = await authorized.text();
+  const wrongPassword = await handler.fetch(
+    new Request("http://localhost/", {
+      headers: { authorization: `Basic ${btoa("reader:wrong")}` },
+    }),
+    handlerInfo,
+  );
+
+  assertEquals(unauthorized.status, 401);
+  assertEquals(
+    unauthorized.headers.get("www-authenticate"),
+    'Basic realm="Stewpot Reader", charset="UTF-8"',
+  );
+  assertEquals(authorized.status, 200);
+  assertEquals(authorized.headers.get("cache-control"), "no-store");
+  assertStringIncludes(credentials, "<title>");
+  assertEquals(wrongPassword.status, 401);
 });
 
 Deno.test("reader serves its icon and returns 404 for unknown paths", async () => {
