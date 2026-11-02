@@ -42,7 +42,7 @@ import { compareVersions, createUpgradeArgs } from "./upgrade.ts";
 export type { CLIDeps, Command, Input, Options, ParsedArguments };
 export type { Configuration, Storage };
 export type { FsStorageConfig, KvStorageConfig } from "../core/config.ts";
-export { FsStorage, KvStorage };
+export type { FsStorage, KvStorage };
 
 /**
  * This module contains code related to feeds CLI
