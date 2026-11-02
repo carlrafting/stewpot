@@ -3,7 +3,6 @@ import { join } from "@std/path/join";
 import { stub } from "@std/testing/mock";
 import { FsStorage } from "./storage.ts";
 import type { FeedData } from "./main.ts";
-import denoConfig from "../deno.json" with { type: "json" };
 import app from "./reader.ts";
 import denoConfig from "../deno.json" with { type: "json" };
 
