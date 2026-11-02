@@ -303,6 +303,7 @@ html {
   header-toolbar {
     display: flex;
     gap: var(--gap-half);
+    align-items: baseline;
   }
   footer {
     container-name: footer;
