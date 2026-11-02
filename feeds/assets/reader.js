@@ -56,6 +56,7 @@ class ToggleTheme extends mixin(HTMLElement) {
 	static #rootElement = document.querySelector(":root");
 	static #templateElement = document.querySelector("#toggle-theme-template");
 	static #storeKey = "theme";
+	static #themes = ["auto", "light", "dark"];
 
 	connectedCallback() {
 		this.append(
@@ -66,30 +67,19 @@ class ToggleTheme extends mixin(HTMLElement) {
 	}
 
 	get value() {
-		const theme = this.#store;
-		if (theme) {
-			return theme;
-		}
-		return ToggleTheme.#rootElement.dataset.theme;
+		return localStorage.getItem(ToggleTheme.#storeKey) ||
+			ToggleTheme.#rootElement.dataset.theme;
 	}
 
 	set value(theme) {
 		ToggleTheme.#rootElement.dataset.theme = theme;
-		this.#store = theme;
+		localStorage.setItem(ToggleTheme.#storeKey, theme);
 	}
 
-	toggleTheme(currentValue) {
-		switch (currentValue) {
-			case "auto":
-				this.value = "light";
-				return;
-			case "light":
-				this.value = "dark";
-				return;
-			case "dark":
-				this.value = "auto";
-				return;
-		}
+	toggleTheme() {
+		const themes = ToggleTheme.#themes;
+		const nextIndex = (themes.indexOf(this.value) + 1) % themes.length;
+		this.value = themes[nextIndex];
 	}
 
 	updateButton() {
@@ -99,19 +89,8 @@ class ToggleTheme extends mixin(HTMLElement) {
 
 	submitHandler(event) {
 		event.preventDefault();
-		const currentValue = this.value;
-		this.toggleTheme(currentValue);
+		this.toggleTheme();
 		this.updateButton();
-	}
-
-	get #store() {
-		return localStorage.getItem(ToggleTheme.#storeKey);
-	}
-
-	set #store(value = null) {
-		if (value) {
-			localStorage.setItem(ToggleTheme.#storeKey, value);
-		}
 	}
 }
 
