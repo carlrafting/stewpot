@@ -1,9 +1,14 @@
 import { assertEquals, assertStringIncludes } from "@std/assert";
 import { join } from "@std/path/join";
+import { stub } from "@std/testing/mock";
 import { FsStorage } from "./storage.ts";
 import type { FeedData } from "./main.ts";
 import app from "./reader.ts";
 import denoConfig from "../deno.json" with { type: "json" };
+
+const rssFixture = await Deno.readTextFile(
+  new URL("../fixtures/rss.xml", import.meta.url),
+);
 
 const handlerInfo: Deno.ServeHandlerInfo = {
   remoteAddr: {
@@ -138,6 +143,46 @@ Deno.test("reader renders feeds without cached item files", async () => {
     const html = await response.text();
     assertEquals(response.status, 200);
     assertStringIncludes(html, "<h3>example.com</h3>");
+  } finally {
+    await Deno.remove(directory, { recursive: true });
+  }
+});
+
+Deno.test("reader fetch-all route persists feed metadata and items", async () => {
+  const feed: FeedData = {
+    id: "feed-to-fetch",
+    url: "https://example.com/rss.xml",
+    format: "unknown",
+  };
+  const directory = await Deno.makeTempDir();
+  try {
+    const store = new FsStorage(join(directory, "feeds.json"));
+    await store.saveFeeds([feed]);
+    const handler = await app([feed], store);
+    using _ = stub(
+      globalThis,
+      "fetch",
+      () =>
+        Promise.resolve(
+          new Response(rssFixture, {
+            headers: {
+              "content-type": "application/rss+xml",
+              etag: '"updated"',
+            },
+          }),
+        ),
+    );
+
+    const response = await handler.fetch(
+      new Request("http://localhost/fetch-all", { method: "POST" }),
+      handlerInfo,
+    );
+
+    assertEquals(response.status, 204);
+    assertEquals((await store.loadItems(feed.id)).length > 0, true);
+    const savedFeeds = await store.loadFeeds();
+    assertEquals(savedFeeds[0].format, "rss");
+    assertEquals(savedFeeds[0].etag, '"updated"');
   } finally {
     await Deno.remove(directory, { recursive: true });
   }

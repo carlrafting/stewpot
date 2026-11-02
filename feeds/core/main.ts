@@ -11,6 +11,7 @@ import {
   parseRdfFeed,
   parseRssFeed,
 } from "feedsmith";
+import type { Storage } from "./storage.ts";
 export { defineConfig } from "./config.ts";
 
 /**
@@ -472,6 +473,38 @@ export async function fetchAndParseFeed(
       error,
     );
     return;
+  }
+}
+
+/**
+ * Fetches every subscribed feed in order and persists the parsed items.
+ * Feed metadata in `feeds` is refreshed for each successfully fetched feed;
+ * callers are responsible for persisting that array.
+ */
+export async function fetchAllFeeds(
+  feeds: FeedData[],
+  store: Pick<Storage, "saveItems">,
+): Promise<void> {
+  for (const feed of feeds) {
+    const result = await fetchAndParseFeed(feed);
+    if (!result) continue;
+
+    const items = mapToFeedItems(
+      result.parsed,
+      result.body,
+      result.metadata,
+      result.url,
+    );
+    const feedIndex = feeds.findIndex((entry) => entry.id === feed.id);
+    if (feedIndex === -1) {
+      throw new Error(`feed not found: ${feed.id}`);
+    }
+    feeds[feedIndex] = { ...feed, ...result.metadata };
+    await store.saveItems(feed.id, items, feeds);
+    console.log(
+      colors.green("ok"),
+      `saved feed items for ${result.url.hostname}`,
+    );
   }
 }
 
