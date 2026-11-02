@@ -12,6 +12,7 @@ import {
   discoverFeed,
   type FeedData,
   type FeedItem,
+  fetchAllFeeds as fetchAllFeedSources,
   type FetchedFeed,
   fetchFeedItemsFromURL,
   fetchFeedMetadata,
@@ -478,21 +479,6 @@ async function fetchSingleFeed(
   return results;
 }
 
-async function fetchAllFeeds(
-  feeds: FeedData[],
-  store: FsStorage | KvStorage,
-): Promise<void> {
-  for (const feed of feeds) {
-    const results = await tryFetchAndParse(feed);
-    if (!results) continue;
-    await processFetchAndParseResult(feed, results, store, feeds);
-    console.log(
-      colors.green("ok"),
-      `saved feed items for ${results.url.hostname}`,
-    );
-  }
-}
-
 const fetch: Command = {
   name: "fetch",
   description: "fetch updated feed sources and items",
@@ -523,7 +509,7 @@ saved to the configured storage.`,
     }
 
     if (!input) {
-      await fetchAllFeeds(feeds, store);
+      await fetchAllFeedSources(feeds, store);
       await store.saveFeeds(feeds);
       console.log(
         colors.cyan("info"),

@@ -2,6 +2,7 @@ import { assertEquals } from "@std/assert/equals";
 import {
   discoverFeed,
   type FeedData,
+  fetchAllFeeds,
   fetchAndParseFeed,
   mapToFeedItems,
   parseInputToURL,
@@ -117,4 +118,46 @@ Deno.test("fetchAndParseFeed detects RDF and preserves the subscribed feed ID", 
   assertEquals(result?.parsed.format, "rdf");
   assertEquals(result?.metadata.format, "rdf");
   assertEquals(result?.metadata.id, baseFeed.id);
+});
+
+Deno.test("fetchAllFeeds saves items and refreshes metadata sequentially", async () => {
+  const feeds: FeedData[] = [
+    { ...baseFeed },
+    { ...baseFeed, id: "another-feed", url: "https://example.org/rss.xml" },
+  ];
+  const saved: { id: string; items: ReturnType<typeof mapToFeedItems> }[] = [];
+  const requests: string[] = [];
+  let activeRequests = 0;
+  let maxActiveRequests = 0;
+  using _ = stub(globalThis, "fetch", async (input) => {
+    requests.push(String(input));
+    activeRequests++;
+    maxActiveRequests = Math.max(maxActiveRequests, activeRequests);
+    await new Promise((resolve) => setTimeout(resolve, 1));
+    activeRequests--;
+    return new Response(rssFixture, {
+      headers: {
+        "content-type": "application/rss+xml",
+        etag: '"updated"',
+      },
+    });
+  });
+
+  await fetchAllFeeds(feeds, {
+    async saveItems(id, items) {
+      saved.push({ id, items });
+    },
+  });
+
+  assertEquals(requests.length, 4);
+  assertEquals(maxActiveRequests, 1);
+  assertEquals(saved.length, 2);
+  assertEquals(saved[0].id, baseFeed.id);
+  assertEquals(saved[0].items.length > 0, true);
+  assertEquals(saved[1].id, "another-feed");
+  assertEquals(feeds[0].id, baseFeed.id);
+  assertEquals(feeds[0].format, "rss");
+  assertEquals(feeds[0].etag, '"updated"');
+  assertEquals(typeof feeds[0].fetch_timestamp, "string");
+  assertEquals(feeds[1].format, "rss");
 });

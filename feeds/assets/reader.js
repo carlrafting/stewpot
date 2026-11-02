@@ -135,3 +135,26 @@ class FetchItems extends mixin(HTMLElement) {
 customElements.define("toggle-theme", ToggleTheme);
 customElements.define("toggle-details", ToggleDetails);
 customElements.define("fetch-items", FetchItems);
+
+const fetchAllButton = document.querySelector('[name="fetch-all"]');
+const fetchAllStatus = document.querySelector("#fetch-all-status");
+
+fetchAllButton?.addEventListener("click", async () => {
+  if (!(fetchAllButton instanceof HTMLButtonElement)) return;
+
+  fetchAllButton.disabled = true;
+  fetchAllStatus.textContent = "Fetching feeds…";
+
+  try {
+    const response = await fetch("/fetch-all", { method: "POST" });
+    if (!response.ok) {
+      throw new Error(await response.text() || response.statusText);
+    }
+    window.location.reload();
+  } catch (error) {
+    fetchAllStatus.textContent = `Unable to fetch feeds: ${
+      error instanceof Error ? error.message : String(error)
+    }`;
+    fetchAllButton.disabled = false;
+  }
+});

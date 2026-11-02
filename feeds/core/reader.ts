@@ -2,7 +2,7 @@ import vento from "ventojs/mod.js";
 import { UrlLoader } from "ventojs/loaders/url.js";
 import type { FsStorage, KvStorage } from "./storage.ts";
 import denoConfig from "../deno.json" with { type: "json" };
-import type { FeedData } from "./main.ts";
+import { type FeedData, fetchAllFeeds } from "./main.ts";
 
 const htmlContentType = {
   "content-type": "text/html; charset=utf-8",
@@ -43,6 +43,24 @@ export async function app(
   return {
     async fetch(request: Request): Promise<Response> {
       const url = new URL(request.url);
+
+      if (url.pathname === "/fetch-all") {
+        if (request.method !== "POST") {
+          return new Response("Method Not Allowed", {
+            status: 405,
+            headers: { allow: "POST" },
+          });
+        }
+
+        try {
+          await fetchAllFeeds(feeds, store);
+          await store.saveFeeds(feeds);
+          return new Response(null, { status: 204 });
+        } catch (error) {
+          console.error("failed to fetch all feeds", error);
+          return new Response("Failed to fetch feeds", { status: 500 });
+        }
+      }
 
       if (request.headers.get("upgrade") === "websocket") {
         const ws = Deno.upgradeWebSocket(request);
