@@ -577,10 +577,12 @@ const reader: Command = {
   feeds reader [--hostname <hostname>] [--port <port>]
 
 Options:
-  --hostname  Hostname for the HTTP server (default: localhost).
+  --hostname  Hostname for the HTTP server (default: 127.0.0.1).
   --port      Port for the HTTP server (default: 8000).
 
-The hostname and port can also be set in the feeds configuration file.`,
+The hostname and port can also be set in the feeds configuration file.
+Non-loopback hostnames require READER_USERNAME and READER_PASSWORD environment
+variables for HTTP Basic authentication.`,
   async run(
     _input: Input,
     options: Options,

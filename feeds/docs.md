@@ -9,6 +9,14 @@ system service, you can access the web interface anytime you want, without
 having to execute the `reader` command everytime you want to be able to
 read/consume feeds you have subscribed to.
 
+The reader binds to `127.0.0.1` by default. To bind to a non-loopback hostname,
+set `READER_USERNAME` and `READER_PASSWORD` environment variables; the reader
+then requires HTTP Basic authentication on every route. Use a long, unique
+password and serve non-loopback access only through HTTPS, such as via a reverse
+proxy. The generic `HOSTNAME` environment variable does not configure the
+reader's bind address; use `--hostname` or the `reader.hostname` config setting
+instead.
+
 # Run CLI reader as system service with caddy web server (WSL/Linux)
 
 Instructions for installing caddy, are
@@ -52,6 +60,11 @@ After=network.target
 [Service]
 User=linux # user account
 Environment="PATH=/home/linux/.deno/bin:$PATH"
+#
+# For an explicit non-loopback bind, store credentials in a root-readable
+# environment file and set READER_USERNAME and READER_PASSWORD there.
+#
+# EnvironmentFile=/etc/stewpot/feeds-reader.env
 #
 # if deno is installed in the user home directory (`~/.deno/bin`).
 #
