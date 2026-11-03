@@ -43,7 +43,7 @@ const defaultOptions: Options = {
 /** create app instance */
 export async function app(
   _options?: Options,
-): Promise<Deno.ServeDefaultExport> {
+): Promise<Deno.ServeDefaultExport & { close(): void }> {
   const options = {
     ...defaultOptions,
     ..._options,
@@ -53,7 +53,7 @@ export async function app(
   KvRepository.connections = connections;
   const render = createTemplateRender({
     includes: new FileLoader(
-      new URL("templates", import.meta.url).pathname,
+      fromFileUrl(new URL("templates", import.meta.url)),
     ),
   });
   const staticPathPattern = new URLPattern({ pathname: "/assets/*" });
@@ -123,7 +123,10 @@ export async function app(
 
       return response;
     },
-  } satisfies Deno.ServeDefaultExport;
+    close() {
+      for (const connection of connections.values()) connection.close();
+    },
+  } satisfies Deno.ServeDefaultExport & { close(): void };
 }
 
 if (import.meta.main) {

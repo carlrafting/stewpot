@@ -9,3 +9,135 @@ menu {
   padding: 0;
   list-style: none;
 }
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.document-form,
+.add-block-form,
+.block-card {
+  margin-block: 1.25rem;
+}
+
+.document-form .field,
+.block-card fieldset {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.document-form .field {
+  grid-template-columns: minmax(8rem, auto) minmax(12rem, 1fr);
+  align-items: center;
+  max-width: 42rem;
+}
+
+.inline-field {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.block-list {
+  display: grid;
+  gap: 1rem;
+}
+
+.block-card {
+  border: 1px solid #b8c0cc;
+  border-radius: 0.5rem;
+  padding: 1rem;
+}
+
+.block-card.is-dragging {
+  opacity: 0.45;
+}
+
+.block-toolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-block-end: 1rem;
+}
+
+.block-toolbar form {
+  margin: 0;
+}
+
+.drag-handle {
+  cursor: grab;
+  font-weight: 600;
+  padding: 0.35rem 0.6rem;
+  border: 1px dashed #687386;
+  border-radius: 0.25rem;
+}
+
+.drag-handle:active {
+  cursor: grabbing;
+}
+
+.danger {
+  color: #8b1e1e;
+}
+
+.block-card textarea {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.block-card input[type="text"],
+.block-card input[type="url"],
+.block-card input[type="number"] {
+  max-width: 42rem;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.block-preview {
+  margin-block-start: 1rem;
+  padding: 0.75rem;
+  border-inline-start: 3px solid #687386;
+  background: #f5f7fa;
+  overflow-wrap: anywhere;
+}
+
+.block-preview > :first-child {
+  margin-block-start: 0;
+}
+
+.block-preview > :last-child {
+  margin-block-end: 0;
+}
+
+.block-preview img {
+  max-width: 100%;
+  height: auto;
+}
+
+.block-preview pre {
+  overflow-x: auto;
+  white-space: pre-wrap;
+}
+
+.editor-status:empty {
+  display: none;
+}
+
+.notice {
+  padding: 0.65rem;
+  background: #edf7ee;
+  border-inline-start: 3px solid #347a3c;
+}
