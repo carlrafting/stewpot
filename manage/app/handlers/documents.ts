@@ -126,7 +126,7 @@ export default [
       const description = "Add and edit content blocks for document";
       const connection = getConnection(connections, "kv");
       const id = params?.id;
-      if (!id) throw new Error("No id path segment provided in URL!");
+      if (!id) return text("Document ID is required.", { status: 400 });
       if (!connection) {
         throw new Error("No connection with provided key found!");
       }
@@ -139,7 +139,10 @@ export default [
         blockValues.push(entry.value);
       }
       const blocks = sortBlocks(blockValues);
-      const entry = await connection?.get<Document>(["documents", id]);
+      const entry = await connection.get<Document>(["documents", id]);
+      if (!entry.value || entry.value.id !== id) {
+        return text("Document not found.", { status: 404 });
+      }
       const document = entry?.value;
       const blockAdded = await flash.get("success");
       const page = await render("documents/edit.vto");
@@ -157,6 +160,48 @@ export default [
     },
   },
   {
+    name: "update_document",
+    method: "POST",
+    pattern: new URLPattern({ pathname: "/document/:id/update/" }),
+    async handler({ params, url, connections, request, flash }) {
+      const id = params.id;
+      if (!id) return text("Document ID is required.", { status: 400 });
+      const kv = getConnection(connections, "kv");
+      if (!kv) throw new Error("No connection with provided key found!");
+
+      const key = ["documents", id];
+      const entry = await kv.get<Document>(key);
+      if (!entry.value || entry.value.id !== id) {
+        return text("Document not found.", { status: 404 });
+      }
+
+      const formData = await request.formData();
+      const titleValue = formData.get("title");
+      if (typeof titleValue !== "string" || !titleValue.trim()) {
+        return text("A document title is required.", { status: 400 });
+      }
+
+      const document: Document = {
+        ...entry.value,
+        title: titleValue.trim(),
+        draft: formData.has("draft"),
+        updated: Temporal.Now.plainDateTimeISO().toLocaleString(),
+      };
+      const commit = await kv.atomic().check(entry).set(key, document).commit();
+      if (!commit.ok) {
+        return text(
+          "Document changed while it was being saved. Please retry.",
+          {
+            status: 409,
+          },
+        );
+      }
+
+      flash.set("success", "Document saved.");
+      return Response.redirect(new URL(`/document/${id}/edit/`, url));
+    },
+  },
+  {
     name: "new_block",
     method: "POST",
     pattern: new URLPattern({ pathname: "/document/:id/blocks/new/" }),
@@ -171,7 +216,7 @@ export default [
         return badRequest("Unknown block type.", request);
       }
       const document = await kv.get<Document>(["documents", id]);
-      if (!document.value) {
+      if (!document.value || document.value.id !== id) {
         return text("Document not found.", { status: 404 });
       }
       const existingEntries: Deno.KvEntry<Block>[] = [];
@@ -195,34 +240,6 @@ export default [
         throw new Error("There was an error while adding a block.");
       }
       flash.set("success", "created new block");
-      return Response.redirect(new URL(`/document/${id}/edit/`, url));
-    },
-  },
-  {
-    name: "update_document",
-    method: "POST",
-    pattern: new URLPattern({ pathname: "/document/:id/update/" }),
-    async handler({ params, url, connections, request }) {
-      const id = params.id;
-      if (!id) throw new Error("No document id found in URL params");
-      const kv = getConnection(connections, "kv");
-      if (!kv) throw new Error("No connection with provided key found!");
-      const key = ["documents", id];
-      const entry = await kv.get<Document>(key);
-      if (!entry.value) return text("Document not found.", { status: 404 });
-      const formData = await request.formData();
-      const title = formData.get("title");
-      if (typeof title !== "string" || !title.trim()) {
-        return badRequest("Document title is required.", request);
-      }
-      const document = {
-        ...entry.value,
-        title: title.trim(),
-        draft: formData.has("draft"),
-        updated: Temporal.Now.plainDateTimeISO().toLocaleString(),
-      };
-      const result = await kv.atomic().check(entry).set(key, document).commit();
-      if (!result.ok) throw new Error("Document changed while saving.");
       return Response.redirect(new URL(`/document/${id}/edit/`, url));
     },
   },

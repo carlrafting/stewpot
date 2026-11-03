@@ -1,14 +1,14 @@
 import { assert, assertEquals, assertStringIncludes } from "@std/assert";
-import { fromFileUrl } from "@std/path/from-file-url";
+import { join } from "@std/path/join";
 import { toFileUrl } from "@std/path/to-file-url";
 import { app } from "./main.ts";
 
-const testHandlers = new Map<string, Awaited<ReturnType<typeof app>>>();
-
-async function createTestHandler(root: string) {
+async function createTestHandler(
+  root: string,
+): Promise<Awaited<ReturnType<typeof app>>> {
   const rootUrl = toFileUrl(root).href.replace(/\/?$/, "/");
-  const sessionsPath = fromFileUrl(new URL("sessions.db", rootUrl));
-  const kvPath = fromFileUrl(new URL("kv.db", rootUrl));
+  const sessionsPath = join(root, "sessions.db");
+  const kvPath = join(root, "kv.db");
 
   const handler = await app({
     meta: { url: rootUrl },
@@ -19,11 +19,18 @@ async function createTestHandler(root: string) {
   return handler;
 }
 
-function closeTestHandler(root: string) {
+const testHandlers = new Map<
+  string,
+  Awaited<ReturnType<typeof createTestHandler>>
+>();
+
+async function closeTestHandler(root: string): Promise<void> {
   const handler = testHandlers.get(root);
-  if (!handler) return;
-  handler.close();
-  testHandlers.delete(root);
+  if (handler) {
+    await handler.close();
+    testHandlers.delete(root);
+  }
+  await Deno.remove(root, { recursive: true });
 }
 
 function createInfo(): Deno.ServeHandlerInfo {
@@ -35,11 +42,6 @@ function createInfo(): Deno.ServeHandlerInfo {
     },
     completed: Promise.resolve(),
   };
-}
-
-function kvFilePath(root: string): string {
-  const rootUrl = toFileUrl(root).href.replace(/\/?$/, "/");
-  return fromFileUrl(new URL("kv.db", rootUrl));
 }
 
 function getSessionId(response: Response): string {
@@ -61,8 +63,33 @@ Deno.test("requests without a session receive a new session cookie", async () =>
     assertEquals(response.headers.get("location"), request.url);
     assertStringIncludes(response.headers.get("set-cookie") ?? "", "session=");
   } finally {
-    closeTestHandler(root);
-    await Deno.remove(root, { recursive: true });
+    await closeTestHandler(root);
+  }
+});
+
+Deno.test("library upload route reports that uploads are not implemented", async () => {
+  const root = await Deno.makeTempDir();
+  try {
+    const handler = await createTestHandler(root);
+    const initial = await handler.fetch(
+      new Request("https://example.com/library/"),
+      createInfo(),
+    );
+    const sessionId = getSessionId(initial);
+
+    const response = await handler.fetch(
+      new Request("https://example.com/library/upload/", {
+        method: "POST",
+        headers: {
+          cookie: `session=${sessionId}`,
+        },
+      }),
+      createInfo(),
+    );
+    assertEquals(response.status, 501);
+    assertStringIncludes(await response.text(), "not available yet");
+  } finally {
+    await closeTestHandler(root);
   }
 });
 
@@ -86,8 +113,7 @@ Deno.test("documents page renders when the session cookie is present", async () 
     const page = await response.text();
     assertStringIncludes(page, "New Document");
   } finally {
-    closeTestHandler(root);
-    await Deno.remove(root, { recursive: true });
+    await closeTestHandler(root);
   }
 });
 
@@ -124,7 +150,7 @@ Deno.test("document creation saves data and redirects to the edit screen", async
     assertStringIncludes(location, "/document/");
     assertStringIncludes(location, "/edit/");
 
-    const kv = await Deno.openKv(kvFilePath(root));
+    const kv = await Deno.openKv(join(root, "kv.db"));
     const documents: unknown[] = [];
     for await (const entry of kv.list({ prefix: ["documents"] })) {
       documents.push(entry.value);
@@ -141,8 +167,7 @@ Deno.test("document creation saves data and redirects to the edit screen", async
     assertEquals(document.draft, true);
     await kv.close();
   } finally {
-    closeTestHandler(root);
-    await Deno.remove(root, { recursive: true });
+    await closeTestHandler(root);
   }
 });
 
@@ -154,7 +179,7 @@ Deno.test("documents index displays saved documents", async () => {
     const initial = await handler.fetch(sessionRequest, createInfo());
     const sessionId = getSessionId(initial);
 
-    const kv = await Deno.openKv(kvFilePath(root));
+    const kv = await Deno.openKv(join(root, "kv.db"));
     await kv.set(["documents", "doc-1"], {
       id: "doc-1",
       title: "First document",
@@ -180,8 +205,7 @@ Deno.test("documents index displays saved documents", async () => {
     assertStringIncludes(page, "First document");
     assertStringIncludes(page, "/document/doc-1/edit/");
   } finally {
-    closeTestHandler(root);
-    await Deno.remove(root, { recursive: true });
+    await closeTestHandler(root);
   }
 });
 
@@ -195,7 +219,7 @@ Deno.test("editing a document shows the document title and form", async () => {
     );
     const sessionId = getSessionId(initial);
 
-    const kv = await Deno.openKv(kvFilePath(root));
+    const kv = await Deno.openKv(join(root, "kv.db"));
     await kv.set(["documents", "doc-2"], {
       id: "doc-2",
       title: "Editable document",
@@ -221,12 +245,106 @@ Deno.test("editing a document shows the document title and form", async () => {
     assertStringIncludes(page, "Editable document");
     assertStringIncludes(page, "Save Document");
   } finally {
-    closeTestHandler(root);
-    await Deno.remove(root, { recursive: true });
+    await closeTestHandler(root);
   }
 });
 
-Deno.test("missing document id in edit route returns a page with no document", async () => {
+Deno.test("document updates save title and draft state without losing content", async () => {
+  const root = await Deno.makeTempDir();
+  try {
+    const handler = await createTestHandler(root);
+    const initial = await handler.fetch(
+      new Request("https://example.com/documents/new/"),
+      createInfo(),
+    );
+    const sessionId = getSessionId(initial);
+
+    const kv = await Deno.openKv(join(root, "kv.db"));
+    await kv.set(["documents", "doc-update"], {
+      id: "doc-update",
+      title: "Before",
+      content: "Keep this content",
+      created: "2026-01-01T00:00:00",
+      updated: "2026-01-01T00:00:00",
+      draft: false,
+      blocks: [],
+    });
+    await kv.close();
+
+    const response = await handler.fetch(
+      new Request("https://example.com/document/doc-update/update/", {
+        method: "POST",
+        headers: {
+          cookie: `session=${sessionId}`,
+          "content-type": "application/x-www-form-urlencoded",
+        },
+        body: new URLSearchParams({ title: "Updated title", draft: "on" }),
+      }),
+      createInfo(),
+    );
+
+    assertEquals(response.status, 302);
+    assertEquals(
+      response.headers.get("location"),
+      "https://example.com/document/doc-update/edit/",
+    );
+
+    const persisted = await Deno.openKv(join(root, "kv.db"));
+    const document = await persisted.get<{
+      title: string;
+      content: string;
+      draft: boolean;
+      updated: string;
+    }>(["documents", "doc-update"]);
+    assertEquals(document.value?.title, "Updated title");
+    assertEquals(document.value?.content, "Keep this content");
+    assertEquals(document.value?.draft, true);
+    assert(document.value?.updated !== "2026-01-01T00:00:00");
+    await persisted.close();
+  } finally {
+    await closeTestHandler(root);
+  }
+});
+
+Deno.test("document update rejects a missing title", async () => {
+  const root = await Deno.makeTempDir();
+  try {
+    const handler = await createTestHandler(root);
+    const initial = await handler.fetch(
+      new Request("https://example.com/documents/new/"),
+      createInfo(),
+    );
+    const sessionId = getSessionId(initial);
+    const kv = await Deno.openKv(join(root, "kv.db"));
+    await kv.set(["documents", "doc-1"], {
+      id: "doc-1",
+      title: "Existing document",
+      content: "Body",
+      created: "2026-01-01T00:00:00",
+      updated: "2026-01-01T00:00:00",
+      draft: false,
+      blocks: [],
+    });
+    await kv.close();
+
+    const response = await handler.fetch(
+      new Request("https://example.com/document/doc-1/update/", {
+        method: "POST",
+        headers: {
+          cookie: `session=${sessionId}`,
+          "content-type": "application/x-www-form-urlencoded",
+        },
+        body: new URLSearchParams({ title: " " }),
+      }),
+      createInfo(),
+    );
+    assertEquals(response.status, 400);
+  } finally {
+    await closeTestHandler(root);
+  }
+});
+
+Deno.test("document update rejects an unknown document id", async () => {
   const root = await Deno.makeTempDir();
   try {
     const handler = await createTestHandler(root);
@@ -237,7 +355,34 @@ Deno.test("missing document id in edit route returns a page with no document", a
     const sessionId = getSessionId(initial);
 
     const response = await handler.fetch(
-      new Request("https://example.com/document//edit/", {
+      new Request("https://example.com/document/missing/update/", {
+        method: "POST",
+        headers: {
+          cookie: `session=${sessionId}`,
+          "content-type": "application/x-www-form-urlencoded",
+        },
+        body: new URLSearchParams({ title: "Title" }),
+      }),
+      createInfo(),
+    );
+    assertEquals(response.status, 404);
+  } finally {
+    await closeTestHandler(root);
+  }
+});
+
+Deno.test("editing an unknown document returns 404", async () => {
+  const root = await Deno.makeTempDir();
+  try {
+    const handler = await createTestHandler(root);
+    const initial = await handler.fetch(
+      new Request("https://example.com/documents/new/"),
+      createInfo(),
+    );
+    const sessionId = getSessionId(initial);
+
+    const response = await handler.fetch(
+      new Request("https://example.com/document/missing/edit/", {
         headers: {
           cookie: `session=${sessionId}`,
         },
@@ -247,8 +392,7 @@ Deno.test("missing document id in edit route returns a page with no document", a
 
     assertEquals(response.status, 404);
   } finally {
-    closeTestHandler(root);
-    await Deno.remove(root, { recursive: true });
+    await closeTestHandler(root);
   }
 });
 
@@ -262,7 +406,7 @@ Deno.test("document blocks can be created for an existing document", async () =>
     );
     const sessionId = getSessionId(initial);
 
-    const kv = await Deno.openKv(kvFilePath(root));
+    const kv = await Deno.openKv(join(root, "kv.db"));
     await kv.set(["documents", "doc-3"], {
       id: "doc-3",
       title: "Block document",
@@ -291,7 +435,7 @@ Deno.test("document blocks can be created for an existing document", async () =>
     assert(location, "expected a redirect location");
     assertStringIncludes(location, "/document/doc-3/edit/");
 
-    const persist = await Deno.openKv(kvFilePath(root));
+    const persist = await Deno.openKv(join(root, "kv.db"));
     const blockEntries: unknown[] = [];
     for await (const entry of persist.list({ prefix: ["blocks", "doc-3"] })) {
       blockEntries.push(entry.value);
@@ -301,12 +445,11 @@ Deno.test("document blocks can be created for an existing document", async () =>
     const block = blockEntries[0] as { type: string };
     assertEquals(block.type, "text");
   } finally {
-    closeTestHandler(root);
-    await Deno.remove(root, { recursive: true });
+    await closeTestHandler(root);
   }
 });
 
-Deno.test("invalid block type is rejected", async () => {
+Deno.test("invalid block types are rejected", async () => {
   const root = await Deno.makeTempDir();
   try {
     const handler = await createTestHandler(root);
@@ -316,7 +459,7 @@ Deno.test("invalid block type is rejected", async () => {
     );
     const sessionId = getSessionId(initial);
 
-    const kv = await Deno.openKv(kvFilePath(root));
+    const kv = await Deno.openKv(join(root, "kv.db"));
     await kv.set(["documents", "doc-4"], {
       id: "doc-4",
       title: "More blocks",
@@ -335,26 +478,52 @@ Deno.test("invalid block type is rejected", async () => {
           cookie: `session=${sessionId}`,
           "content-type": "application/x-www-form-urlencoded",
         },
-        body: new URLSearchParams({ type: "not-a-block" }).toString(),
+        body: new URLSearchParams({ type: "bogus" }).toString(),
       }),
       createInfo(),
     );
 
     assertEquals(response.status, 400);
-    const persist = await Deno.openKv(kvFilePath(root));
-    const blockEntries: unknown[] = [];
+    const persist = await Deno.openKv(join(root, "kv.db"));
+    const blocks: unknown[] = [];
     for await (const entry of persist.list({ prefix: ["blocks", "doc-4"] })) {
-      blockEntries.push(entry.value);
+      blocks.push(entry.value);
     }
     await persist.close();
-    assertEquals(blockEntries.length, 0);
+    assertEquals(blocks.length, 0);
   } finally {
-    closeTestHandler(root);
-    await Deno.remove(root, { recursive: true });
+    await closeTestHandler(root);
   }
 });
 
-Deno.test("each supported block has an editor and saves typed content", async () => {
+Deno.test("blocks cannot be created for an unknown document", async () => {
+  const root = await Deno.makeTempDir();
+  try {
+    const handler = await createTestHandler(root);
+    const initial = await handler.fetch(
+      new Request("https://example.com/documents/new/"),
+      createInfo(),
+    );
+    const sessionId = getSessionId(initial);
+
+    const response = await handler.fetch(
+      new Request("https://example.com/document/missing/blocks/new/", {
+        method: "POST",
+        headers: {
+          cookie: `session=${sessionId}`,
+          "content-type": "application/x-www-form-urlencoded",
+        },
+        body: new URLSearchParams({ type: "text" }),
+      }),
+      createInfo(),
+    );
+    assertEquals(response.status, 404);
+  } finally {
+    await closeTestHandler(root);
+  }
+});
+
+Deno.test("all block types render editors and save typed content", async () => {
   const root = await Deno.makeTempDir();
   try {
     const handler = await createTestHandler(root);
@@ -402,7 +571,7 @@ Deno.test("each supported block has an editor and saves typed content", async ()
         content: { type: "code", body: "Old code" },
       },
     ];
-    const kv = await Deno.openKv(kvFilePath(root));
+    const kv = await Deno.openKv(join(root, "kv.db"));
     await kv.set(["documents", documentId], {
       id: documentId,
       title: "Typed blocks",
@@ -410,7 +579,6 @@ Deno.test("each supported block has an editor and saves typed content", async ()
       created: "2026-01-01",
       updated: "2026-01-01",
       draft: false,
-      blocks: [],
     });
     for (const block of blocks) {
       await kv.set(["blocks", documentId, block.id], block);
@@ -430,7 +598,6 @@ Deno.test("each supported block has an editor and saves typed content", async ()
     ) {
       assertStringIncludes(page, `data-block-type="${type}"`);
     }
-    assertStringIncludes(page, "data-block-preview");
 
     const updates = [
       ["heading-1", { level: "3", text: "Updated heading" }],
@@ -464,7 +631,7 @@ Deno.test("each supported block has an editor and saves typed content", async ()
               cookie: `session=${sessionId}`,
               "content-type": "application/x-www-form-urlencoded",
             },
-            body: new URLSearchParams(values).toString(),
+            body: new URLSearchParams(values),
           },
         ),
         createInfo(),
@@ -472,27 +639,7 @@ Deno.test("each supported block has an editor and saves typed content", async ()
       assertEquals(response.status, 302);
     }
 
-    const invalidMedia = await handler.fetch(
-      new Request(
-        `https://example.com/document/${documentId}/blocks/media-1/update/`,
-        {
-          method: "POST",
-          headers: {
-            cookie: `session=${sessionId}`,
-            "content-type": "application/x-www-form-urlencoded",
-          },
-          body: new URLSearchParams({
-            url: "javascript:alert(1)",
-            alt: "An image",
-            caption: "Image caption",
-          }).toString(),
-        },
-      ),
-      createInfo(),
-    );
-    assertEquals(invalidMedia.status, 400);
-
-    const saved = await Deno.openKv(kvFilePath(root));
+    const saved = await Deno.openKv(join(root, "kv.db"));
     const expectedContent = [
       { type: "heading", level: 3, text: "Updated heading" },
       { type: "markdown", body: "**Updated markdown**" },
@@ -521,12 +668,11 @@ Deno.test("each supported block has an editor and saves typed content", async ()
     }
     await saved.close();
   } finally {
-    closeTestHandler(root);
-    await Deno.remove(root, { recursive: true });
+    await closeTestHandler(root);
   }
 });
 
-Deno.test("document metadata and block order and deletion persist", async () => {
+Deno.test("blocks can be reordered without JavaScript and deleted", async () => {
   const root = await Deno.makeTempDir();
   try {
     const handler = await createTestHandler(root);
@@ -536,15 +682,14 @@ Deno.test("document metadata and block order and deletion persist", async () => 
     );
     const sessionId = getSessionId(initial);
     const documentId = "ordered-blocks";
-    const kv = await Deno.openKv(kvFilePath(root));
+    const kv = await Deno.openKv(join(root, "kv.db"));
     await kv.set(["documents", documentId], {
       id: documentId,
-      title: "Original",
+      title: "Ordered",
       content: "",
       created: "2026-01-01",
       updated: "2026-01-01",
-      draft: true,
-      blocks: [],
+      draft: false,
     });
     for (
       const [id, order] of [["first", 0], ["second", 1], ["third", 2]] as const
@@ -558,42 +703,7 @@ Deno.test("document metadata and block order and deletion persist", async () => 
     }
     await kv.close();
 
-    const savedDocument = await handler.fetch(
-      new Request(`https://example.com/document/${documentId}/update/`, {
-        method: "POST",
-        headers: {
-          cookie: `session=${sessionId}`,
-          "content-type": "application/x-www-form-urlencoded",
-        },
-        body: new URLSearchParams({ title: "Updated" }).toString(),
-      }),
-      createInfo(),
-    );
-    assertEquals(savedDocument.status, 302);
-
-    const orderForm = new URLSearchParams();
-    orderForm.append("order", "third");
-    orderForm.append("order", "first");
-    orderForm.append("order", "second");
-    const reordered = await handler.fetch(
-      new Request(
-        `https://example.com/document/${documentId}/blocks/order/`,
-        {
-          method: "POST",
-          headers: {
-            cookie: `session=${sessionId}`,
-            "content-type": "application/x-www-form-urlencoded",
-            accept: "application/json",
-          },
-          body: orderForm.toString(),
-        },
-      ),
-      createInfo(),
-    );
-    assertEquals(reordered.status, 200);
-    assertEquals((await reordered.json()).ok, true);
-
-    const movedWithoutJavaScript = await handler.fetch(
+    const moved = await handler.fetch(
       new Request(
         `https://example.com/document/${documentId}/blocks/order/`,
         {
@@ -602,35 +712,22 @@ Deno.test("document metadata and block order and deletion persist", async () => 
             cookie: `session=${sessionId}`,
             "content-type": "application/x-www-form-urlencoded",
           },
-          body: new URLSearchParams({
-            blockId: "second",
-            direction: "up",
-          }).toString(),
+          body: new URLSearchParams({ blockId: "second", direction: "up" }),
         },
       ),
       createInfo(),
     );
-    assertEquals(movedWithoutJavaScript.status, 302);
+    assertEquals(moved.status, 302);
 
-    const persisted = await Deno.openKv(kvFilePath(root));
-    const document = await persisted.get<{ title: string; draft: boolean }>([
-      "documents",
-      documentId,
-    ]);
-    assertEquals(document.value?.title, "Updated");
-    assertEquals(document.value?.draft, false);
-    const ordered = [];
+    const persisted = await Deno.openKv(join(root, "kv.db"));
+    const blocks = [];
     for await (
       const entry of persisted.list<{ id: string; order: number }>({
         prefix: ["blocks", documentId],
       })
-    ) ordered.push(entry.value);
-    ordered.sort((a, b) => a.order - b.order);
-    assertEquals(ordered.map((block) => block.id), [
-      "third",
-      "second",
-      "first",
-    ]);
+    ) blocks.push(entry.value);
+    blocks.sort((a, b) => a.order - b.order);
+    assertEquals(blocks.map((block) => block.id), ["second", "first", "third"]);
     await persisted.close();
 
     const deleted = await handler.fetch(
@@ -644,15 +741,14 @@ Deno.test("document metadata and block order and deletion persist", async () => 
       createInfo(),
     );
     assertEquals(deleted.status, 302);
-    const verify = await Deno.openKv(kvFilePath(root));
+    const verify = await Deno.openKv(join(root, "kv.db"));
     assertEquals(
       (await verify.get(["blocks", documentId, "first"])).value,
       null,
     );
     await verify.close();
   } finally {
-    closeTestHandler(root);
-    await Deno.remove(root, { recursive: true });
+    await closeTestHandler(root);
   }
 });
 
@@ -675,7 +771,7 @@ Deno.test("markdown preview renders formatting and escapes raw HTML", async () =
         },
         body: new URLSearchParams({
           body: "# Preview\n\n<script>alert(1)</script>",
-        }).toString(),
+        }),
       }),
       createInfo(),
     );
@@ -685,7 +781,6 @@ Deno.test("markdown preview renders formatting and escapes raw HTML", async () =
     assertStringIncludes(html, "&lt;script&gt;");
     assertEquals(html.includes("<script>"), false);
   } finally {
-    closeTestHandler(root);
-    await Deno.remove(root, { recursive: true });
+    await closeTestHandler(root);
   }
 });

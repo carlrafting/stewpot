@@ -40,10 +40,14 @@ const defaultOptions: Options = {
   },
 };
 
+export interface ManageApp extends Deno.ServeDefaultExport {
+  close(): Promise<void>;
+}
+
 /** create app instance */
 export async function app(
   _options?: Options,
-): Promise<Deno.ServeDefaultExport & { close(): void }> {
+): Promise<ManageApp> {
   const options = {
     ...defaultOptions,
     ..._options,
@@ -123,10 +127,12 @@ export async function app(
 
       return response;
     },
-    close() {
-      for (const connection of connections.values()) connection.close();
+    async close() {
+      await Promise.all(
+        [...connections.values()].map((connection) => connection.close()),
+      );
     },
-  } satisfies Deno.ServeDefaultExport & { close(): void };
+  } satisfies ManageApp;
 }
 
 if (import.meta.main) {

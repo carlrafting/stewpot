@@ -48,3 +48,13 @@ and reordered with the move buttons; drag-and-drop and live previews are added
 when JavaScript is available. The forms and move buttons continue to work
 without JavaScript. Markdown preview renders raw HTML as text rather than
 executing it.
+
+## Data safety
+
+The application does not currently create or verify backups automatically. Until
+automated backup and recovery are available, stop the server before making a
+backup or restoring data. Copy both KV database files together; by default these
+are `database/sessions.db` and `database/kv.db` in the server's working
+directory. If you configured custom paths, use those paths instead. Store
+backups somewhere protected and verify that the application starts and the
+expected documents are present after a restore.
