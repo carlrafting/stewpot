@@ -598,6 +598,7 @@ Deno.test("all block types render editors and save typed content", async () => {
     ) {
       assertStringIncludes(page, `data-block-type="${type}"`);
     }
+    assertStringIncludes(page, 'class="drag-handle" draggable="true"');
 
     const updates = [
       ["heading-1", { level: "3", text: "Updated heading" }],
