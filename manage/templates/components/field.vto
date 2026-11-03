@@ -1,0 +1,7 @@
+<div class="field">
+  <label for="{{ id }}">{{ label }}</label>
+  <input id="{{ id }}" type="{{ type }}" name="{{ name }}" value="{{ value }}" {{ if required }}required{{ /if }} {{ if placeholder }}placeholder="{{ placeholder }}"{{ /if }} {{ if hint }}aria-describedby="{{ id }}-hint"{{ /if }}>
+  {{ if hint }}
+  <small id="{{ id }}-hint">{{ hint }}</small>
+  {{ /if }}
+</div>

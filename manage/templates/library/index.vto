@@ -1,7 +1,7 @@
 {{ layout "layouts/page.vto" }}
 
 {{ if await success }}
-<div class="success">{{ success }}</div>
+{{ include "components/notice.vto" { text: success, variant: "notice--success", role: "status" } }}
 {{ /if }}
 
 <a href="./new/">Create new library source</a>

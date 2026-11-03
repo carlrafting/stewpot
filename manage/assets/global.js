@@ -18,7 +18,12 @@ function renderSimplePreview(form, preview) {
   preview.replaceChildren();
 
   if (type === "heading") {
-    const heading = document.createElement(`h${values.get("level")}`);
+    const requestedLevel = Number(values.get("level"));
+    const level = Number.isInteger(requestedLevel) &&
+        requestedLevel >= 1 && requestedLevel <= 6
+      ? requestedLevel
+      : 2;
+    const heading = document.createElement(`h${level}`);
     heading.textContent = values.get("text") || "Heading preview";
     preview.append(heading);
   } else if (type === "text") {
@@ -61,59 +66,80 @@ function renderSimplePreview(form, preview) {
   }
 }
 
-function setupPreviews() {
-  for (const form of document.querySelectorAll("[data-block-editor]")) {
-    const card = form.closest(".block-card");
-    const preview = card?.querySelector("[data-block-preview]");
-    if (!preview) continue;
+function setupPreviews(root) {
+  const form = root.querySelector("[data-block-editor]");
+  const preview = root.querySelector("[data-block-preview]");
+  if (!form || !preview) return;
+  const markdownPreviewUrl = root.getAttribute("preview-url") || previewUrl;
 
-    let timer;
-    let controller;
-    const update = async () => {
-      if (form.dataset.blockType !== "markdown") {
-        renderSimplePreview(form, preview);
-        return;
-      }
+  const listeners = new AbortController();
+  let timer;
+  let controller;
+  const update = async () => {
+    if (form.dataset.blockType !== "markdown") {
+      renderSimplePreview(form, preview);
+      root.dispatchEvent(
+        new CustomEvent("manage:block-preview-updated", {
+          bubbles: true,
+          detail: { blockType: form.dataset.blockType },
+        }),
+      );
+      return;
+    }
 
-      controller?.abort();
-      controller = new AbortController();
-      const body = new URLSearchParams({
-        body: new FormData(form).get("body") || "",
-      });
-      try {
-        const response = await fetch(previewUrl, {
-          method: "POST",
-          body,
-          headers: { Accept: "application/json" },
-          signal: controller.signal,
-        });
-        if (!response.ok) {
-          throw new Error(`Preview request failed: ${response.status}`);
-        }
-        const result = await response.json();
-        // The server renderer disables raw HTML before returning this markup.
-        preview.innerHTML = result.html;
-      } catch (error) {
-        if (error.name === "AbortError") return;
-        preview.textContent = "Markdown preview is unavailable.";
-        console.error("Markdown preview failed", error);
-      }
-    };
-
-    form.addEventListener("input", () => {
-      clearTimeout(timer);
-      timer = setTimeout(update, 180);
+    controller?.abort();
+    controller = new AbortController();
+    const body = new URLSearchParams({
+      body: new FormData(form).get("body") || "",
     });
-    form.addEventListener("change", update);
-    void update();
-  }
+    try {
+      const response = await fetch(markdownPreviewUrl, {
+        method: "POST",
+        body,
+        headers: { Accept: "application/json" },
+        signal: controller.signal,
+      });
+      if (!response.ok) {
+        throw new Error(`Preview request failed: ${response.status}`);
+      }
+      const result = await response.json();
+      // The server renderer disables raw HTML before returning this markup.
+      preview.innerHTML = result.html;
+      root.dispatchEvent(
+        new CustomEvent("manage:block-preview-updated", {
+          bubbles: true,
+          detail: { blockType: form.dataset.blockType },
+        }),
+      );
+    } catch (error) {
+      if (error.name === "AbortError") return;
+      preview.textContent = "Markdown preview is unavailable.";
+      console.error("Markdown preview failed", error);
+    }
+  };
+
+  form.addEventListener("input", () => {
+    clearTimeout(timer);
+    timer = setTimeout(update, 180);
+  }, { signal: listeners.signal });
+  form.addEventListener("change", update, { signal: listeners.signal });
+  void update();
+
+  return () => {
+    listeners.abort();
+    controller?.abort();
+    clearTimeout(timer);
+  };
 }
 
-function setupBlockOrdering() {
-  const list = document.querySelector("[data-block-list]");
-  const outline = document.querySelector("[data-block-outline]");
+function setupBlockOrdering(root) {
+  const list = root.querySelector("[data-block-list]");
+  const outline = root.querySelector("[data-block-outline]");
   if (!list || !outline) return;
-  const status = document.querySelector("[data-editor-status]");
+  const status = root.querySelector("[data-editor-status]");
+  const listeners = new AbortController();
+  const signal = listeners.signal;
+  let saveController;
   let draggedItem;
   let initialOrder;
   let isSaving = false;
@@ -147,7 +173,8 @@ function setupBlockOrdering() {
     item.addEventListener("dragstart", (event) => {
       if (
         !(event.target instanceof Element) ||
-        !event.target.closest(".outline-drag-handle")
+        !event.target.closest(".outline-drag-handle") ||
+        !event.dataTransfer
       ) {
         event.preventDefault();
         return;
@@ -158,7 +185,7 @@ function setupBlockOrdering() {
       item.classList.add("is-dragging");
       event.dataTransfer.effectAllowed = "move";
       event.dataTransfer.setData("text/plain", item.dataset.outlineId);
-    });
+    }, { signal });
     item.addEventListener("dragend", () => {
       item.classList.remove("is-dragging");
       if (draggedItem && !dropHandled && !isSaving) {
@@ -166,21 +193,21 @@ function setupBlockOrdering() {
         draggedItem = undefined;
         initialOrder = undefined;
       }
-    });
+    }, { signal });
     item.addEventListener("dragover", (event) => {
       if (!draggedItem || draggedItem === item) return;
       event.preventDefault();
       const bounds = item.getBoundingClientRect();
       const insertAfter = event.clientY > bounds.top + bounds.height / 2;
       outline.insertBefore(draggedItem, insertAfter ? item.nextSibling : item);
-    });
+    }, { signal });
   }
 
   outline.addEventListener("dragover", (event) => {
     if (!draggedItem) return;
     event.preventDefault();
-    event.dataTransfer.dropEffect = "move";
-  });
+    if (event.dataTransfer) event.dataTransfer.dropEffect = "move";
+  }, { signal });
 
   outline.addEventListener("drop", async (event) => {
     if (!draggedItem) return;
@@ -190,19 +217,34 @@ function setupBlockOrdering() {
     for (const item of outline.querySelectorAll("[data-outline-id]")) {
       formData.append("order", item.dataset.outlineId);
     }
-    const endpoint = list.querySelector(".move-block-form")?.action;
+    const endpoint = root.getAttribute("order-url") ||
+      list.querySelector(".move-block-form")?.action;
     try {
+      if (!endpoint) throw new Error("Block ordering endpoint is missing.");
       isSaving = true;
+      saveController = new AbortController();
       const response = await fetch(endpoint, {
         method: "POST",
         body: formData,
         headers: { Accept: "application/json" },
+        signal: saveController.signal,
       });
       if (!response.ok) throw new Error(`Ordering failed: ${response.status}`);
       syncBlockCards();
       updateMoveButtons();
+      root.dispatchEvent(
+        new CustomEvent("manage:block-order-saved", {
+          bubbles: true,
+          detail: {
+            order: [...outline.querySelectorAll("[data-outline-id]")].map(
+              (item) => item.dataset.outlineId,
+            ),
+          },
+        }),
+      );
       if (status) status.textContent = "Block order saved.";
     } catch (error) {
+      if (error.name === "AbortError") return;
       restoreOrder();
       if (status) {
         status.textContent =
@@ -214,8 +256,73 @@ function setupBlockOrdering() {
       draggedItem = undefined;
       initialOrder = undefined;
     }
-  });
+  }, { signal });
+
+  return () => {
+    listeners.abort();
+    saveController?.abort();
+  };
 }
 
-setupPreviews();
-setupBlockOrdering();
+class ManageBlockPreview extends HTMLElement {
+  #cleanup;
+  #observer;
+
+  connectedCallback() {
+    this.#initialize();
+    if (!this.#cleanup) {
+      this.#observer = new MutationObserver(() => this.#initialize());
+      this.#observer.observe(this, { childList: true, subtree: true });
+    }
+  }
+
+  disconnectedCallback() {
+    this.#observer?.disconnect();
+    this.#observer = undefined;
+    this.#cleanup?.();
+    this.#cleanup = undefined;
+  }
+
+  #initialize() {
+    this.#cleanup = setupPreviews(this);
+    if (this.#cleanup) {
+      this.#observer?.disconnect();
+      this.#observer = undefined;
+    }
+  }
+}
+
+class ManageBlockOrdering extends HTMLElement {
+  #cleanup;
+  #observer;
+
+  connectedCallback() {
+    this.#initialize();
+    if (!this.#cleanup) {
+      this.#observer = new MutationObserver(() => this.#initialize());
+      this.#observer.observe(this, { childList: true, subtree: true });
+    }
+  }
+
+  disconnectedCallback() {
+    this.#observer?.disconnect();
+    this.#observer = undefined;
+    this.#cleanup?.();
+    this.#cleanup = undefined;
+  }
+
+  #initialize() {
+    this.#cleanup = setupBlockOrdering(this);
+    if (this.#cleanup) {
+      this.#observer?.disconnect();
+      this.#observer = undefined;
+    }
+  }
+}
+
+if (!customElements.get("manage-block-preview")) {
+  customElements.define("manage-block-preview", ManageBlockPreview);
+}
+if (!customElements.get("manage-block-ordering")) {
+  customElements.define("manage-block-ordering", ManageBlockOrdering);
+}
