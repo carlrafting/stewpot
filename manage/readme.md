@@ -39,3 +39,13 @@ await createServer(handler, options);
 ```
 
 Then starting the server with `deno -RWN main.ts`.
+
+## Data safety
+
+The application does not currently create or verify backups automatically. Until
+automated backup and recovery are available, stop the server before making a
+backup or restoring data. Copy both KV database files together; by default these
+are `database/sessions.db` and `database/kv.db` in the server's working
+directory. If you configured custom paths, use those paths instead. Store
+backups somewhere protected and verify that the application starts and the
+expected documents are present after a restore.

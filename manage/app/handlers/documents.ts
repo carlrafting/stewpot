@@ -1,4 +1,4 @@
-import { html } from "../../http/response.ts";
+import { html, text } from "../../http/response.ts";
 import { getConnection } from "../../kv/connections.ts";
 import { KvRepository } from "../../kv/repository.ts";
 import type { Route, RouteContext } from "../../http/routes.ts";
@@ -85,7 +85,7 @@ export default [
       const connection = getConnection(connections, "kv");
       const kv = new KvRepository("kv");
       const id = params?.id;
-      if (!id) throw new Error("No id path segment provided in URL!");
+      if (!id) return text("Document ID is required.", { status: 400 });
       const blockTypes: Data.BlockType[] = [
         "file",
         "heading",
@@ -97,9 +97,10 @@ export default [
       const blocks = (await kv.getAllByPrefix<Data.Block>(["blocks", id]))
         .map((entry) => entry.value);
       const entry = await connection?.get<Data.Document>(["documents", id]);
-      const document: Data.Document | undefined = {
-        ...entry?.value,
-      } as Data.Document;
+      if (!entry?.value || entry.value.id !== id) {
+        return text("Document not found.", { status: 404 });
+      }
+      const document = entry?.value;
       const blockAdded = await flash.get("success");
       const page = await render("documents/edit.vto");
       const body = await page({
@@ -116,6 +117,48 @@ export default [
     },
   },
   {
+    name: "update_document",
+    method: "POST",
+    pattern: new URLPattern({ pathname: "/document/:id/update/" }),
+    async handler({ params, url, connections, request, flash }) {
+      const id = params.id;
+      if (!id) return text("Document ID is required.", { status: 400 });
+      const kv = getConnection(connections, "kv");
+      if (!kv) throw new Error("No connection with provided key found!");
+
+      const key = ["documents", id];
+      const entry = await kv.get<Data.Document>(key);
+      if (!entry.value || entry.value.id !== id) {
+        return text("Document not found.", { status: 404 });
+      }
+
+      const formData = await request.formData();
+      const titleValue = formData.get("title");
+      if (typeof titleValue !== "string" || !titleValue.trim()) {
+        return text("A document title is required.", { status: 400 });
+      }
+
+      const document: Data.Document = {
+        ...entry.value,
+        title: titleValue.trim(),
+        draft: formData.has("draft"),
+        updated: Temporal.Now.plainDateTimeISO().toLocaleString(),
+      };
+      const commit = await kv.atomic().check(entry).set(key, document).commit();
+      if (!commit.ok) {
+        return text(
+          "Document changed while it was being saved. Please retry.",
+          {
+            status: 409,
+          },
+        );
+      }
+
+      flash.set("success", "Document saved.");
+      return Response.redirect(new URL(`/document/${id}/edit/`, url));
+    },
+  },
+  {
     name: "new_block",
     method: "POST",
     pattern: new URLPattern({ pathname: "/document/:id/blocks/new/" }),
@@ -125,7 +168,17 @@ export default [
       const kv = getConnection(connections, "kv");
       if (!kv) throw new Error("No connection with provided key found!");
       const formData = await request.formData();
-      const type = formData.get("type") as Data.BlockType;
+      const type = formData.get("type");
+      if (
+        type !== "file" && type !== "heading" && type !== "markdown" &&
+        type !== "media" && type !== "text" && type !== "code"
+      ) {
+        return text("Invalid block type.", { status: 400 });
+      }
+      const document = await kv.get<Data.Document>(["documents", id]);
+      if (!document.value || document.value.id !== id) {
+        return text("Document not found.", { status: 404 });
+      }
       const blockId = crypto.randomUUID();
       const block = {
         id: blockId,
@@ -134,7 +187,7 @@ export default [
         layout: "default",
         content: defaultContent(type),
       };
-      await kv?.set(["blocks", id, blockId], block);
+      await kv.set(["blocks", id, blockId], block);
       flash.set("success", "created new block");
       return Response.redirect(new URL(`/document/${id}/edit/`, url));
     },
