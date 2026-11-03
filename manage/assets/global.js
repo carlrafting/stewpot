@@ -117,9 +117,11 @@ function setupBlockOrdering() {
   let initialOrder;
 
   for (const card of list.querySelectorAll("[data-block-id]")) {
-    card.draggable = true;
     card.addEventListener("dragstart", (event) => {
-      if (!event.target.closest(".drag-handle")) {
+      if (
+        !(event.target instanceof Element) ||
+        !event.target.closest(".drag-handle")
+      ) {
         event.preventDefault();
         return;
       }

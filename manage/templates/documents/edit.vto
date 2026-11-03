@@ -34,7 +34,7 @@
   {{ for block of blocks }}
   <article class="block-card" data-block-id="{{ block.id }}">
     <div class="block-toolbar">
-      <span class="drag-handle" aria-hidden="true">Move</span>
+      <span class="drag-handle" draggable="true" aria-hidden="true">Move</span>
       <form action="/document/{{ document.id }}/blocks/order/" method="post" class="move-block-form">
         <input type="hidden" name="blockId" value="{{ block.id }}">
         <button name="direction" value="up" aria-label="Move {{ block.type }} block up" {{ if block.order === 0 }}disabled{{ /if }}>Move up</button>
