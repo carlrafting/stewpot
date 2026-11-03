@@ -30,24 +30,37 @@
 </form>
 
 <p class="editor-status" role="status" aria-live="polite" data-editor-status></p>
-<section class="block-list" aria-label="Document blocks" data-block-list>
-  {{ for block of blocks }}
-  <article class="block-card" data-block-id="{{ block.id }}">
-    <div class="block-toolbar">
-      <span class="drag-handle" draggable="true" aria-hidden="true">Move</span>
-      <form action="/document/{{ document.id }}/blocks/order/" method="post" class="move-block-form">
-        <input type="hidden" name="blockId" value="{{ block.id }}">
-        <button name="direction" value="up" aria-label="Move {{ block.type }} block up" {{ if block.order === 0 }}disabled{{ /if }}>Move up</button>
-        <button name="direction" value="down" aria-label="Move {{ block.type }} block down" {{ if block.order === blocks.length - 1 }}disabled{{ /if }}>Move down</button>
-      </form>
-      <form action="/document/{{ document.id }}/blocks/{{ block.id }}/delete/" method="post">
-        <button class="danger" aria-label="Delete {{ block.type }} block">Delete block</button>
-      </form>
-    </div>
-    {{ include `blocks/${block.type}.vto` { block, document } }}
-  </article>
-  {{ /for }}
-</section>
+<div class="editor-layout">
+  <nav class="block-outline" aria-label="Block outline">
+    <h2>Block outline</h2>
+    <p>Drag an item to reorder blocks, or use the move buttons.</p>
+    <ol data-block-outline>
+      {{ for block of blocks }}
+      <li data-outline-id="{{ block.id }}">
+        <button type="button" class="outline-drag-handle" draggable="true" aria-label="Drag to reorder {{ block.type }} block">Drag</button>
+        <a href="#block-{{ block.id }}">{{ block.type }} block</a>
+      </li>
+      {{ /for }}
+    </ol>
+  </nav>
+  <section class="block-list" aria-label="Document blocks" data-block-list>
+    {{ for block of blocks }}
+    <article class="block-card" id="block-{{ block.id }}" data-block-id="{{ block.id }}">
+      <div class="block-toolbar">
+        <form action="/document/{{ document.id }}/blocks/order/" method="post" class="move-block-form">
+          <input type="hidden" name="blockId" value="{{ block.id }}">
+          <button name="direction" value="up" aria-label="Move {{ block.type }} block up" {{ if block.order === 0 }}disabled{{ /if }}>Move up</button>
+          <button name="direction" value="down" aria-label="Move {{ block.type }} block down" {{ if block.order === blocks.length - 1 }}disabled{{ /if }}>Move down</button>
+        </form>
+        <form action="/document/{{ document.id }}/blocks/{{ block.id }}/delete/" method="post">
+          <button class="danger" aria-label="Delete {{ block.type }} block">Delete block</button>
+        </form>
+      </div>
+      {{ include `blocks/${block.type}.vto` { block, document } }}
+    </article>
+    {{ /for }}
+  </section>
+</div>
 {{ else }}
 <p>There's no document associated with this id.</p>
 {{ /if }}
