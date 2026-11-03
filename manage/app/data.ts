@@ -5,13 +5,16 @@ export interface Nav {
   href: string;
 }
 
-export type BlockType =
-  | "heading"
-  | "markdown"
-  | "text"
-  | "media"
-  | "file"
-  | "code";
+export const blockTypes = [
+  "heading",
+  "markdown",
+  "text",
+  "media",
+  "file",
+  "code",
+] as const;
+
+export type BlockType = typeof blockTypes[number];
 
 export type BlockContent =
   | { type: "heading"; level: 1 | 2 | 3 | 4 | 5 | 6; text: string }
@@ -28,6 +31,11 @@ export interface Block {
   content: BlockContent;
 }
 
+export function isBlockType(value: unknown): value is BlockType {
+  return typeof value === "string" &&
+    (blockTypes as readonly string[]).includes(value);
+}
+
 export function defaultContent(type: BlockType): BlockContent {
   switch (type) {
     case "heading":
@@ -37,7 +45,7 @@ export function defaultContent(type: BlockType): BlockContent {
     case "text":
       return { type, body: "" };
     case "media":
-      return { type, url: "", alt: "" };
+      return { type, url: "", alt: "", caption: "" };
     case "file":
       return { type, url: "", filename: "", size: 0 };
     case "code":
@@ -45,11 +53,66 @@ export function defaultContent(type: BlockType): BlockContent {
   }
 }
 
+function formString(formData: FormData, key: string): string | null {
+  const value = formData.get(key);
+  return typeof value === "string" ? value : null;
+}
+
+function validUrl(value: string): boolean {
+  if (!value) return true;
+  try {
+    const url = new URL(value);
+    return url.protocol === "http:" || url.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
+export function parseBlockContent(
+  type: BlockType,
+  formData: FormData,
+): BlockContent | null {
+  switch (type) {
+    case "heading": {
+      const level = formString(formData, "level");
+      const text = formString(formData, "text");
+      if (!level || !/^[1-6]$/.test(level) || text === null) return null;
+      return { type, level: Number(level) as 1 | 2 | 3 | 4 | 5 | 6, text };
+    }
+    case "markdown":
+    case "text":
+    case "code": {
+      const body = formString(formData, "body");
+      return body === null ? null : { type, body };
+    }
+    case "media": {
+      const url = formString(formData, "url");
+      const alt = formString(formData, "alt");
+      const caption = formString(formData, "caption");
+      if (
+        url === null || alt === null || caption === null || !validUrl(url)
+      ) return null;
+      return { type, url, alt, caption };
+    }
+    case "file": {
+      const url = formString(formData, "url");
+      const filename = formString(formData, "filename");
+      const size = formString(formData, "size");
+      if (
+        url === null || filename === null || size === null || !validUrl(url) ||
+        !/^\d+$/.test(size)
+      ) return null;
+      const sizeInBytes = Number(size);
+      if (!Number.isSafeInteger(sizeInBytes)) return null;
+      return { type, url, filename, size: sizeInBytes };
+    }
+  }
+}
+
 export interface Document {
   id: string;
   title: string;
   content: string;
-  blocks: Block[];
   created: string;
   updated: string;
   draft: boolean;

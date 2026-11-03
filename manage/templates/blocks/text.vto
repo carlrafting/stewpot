@@ -1,12 +1,11 @@
-<form method="POST" action="/block/{{ block.id }}/edit/">
+<form method="post" action="/document/{{ document.id }}/blocks/{{ block.id }}/update/" data-block-editor data-block-type="text">
   <fieldset>
-    <legend>{{ block.type }}</legend>
-    <input type="hidden" name="type" value="text">
-    <label for="text-{{ block.id }}">Text</label><br>
-    <textarea id="text-{{ block.id }}" name="body">
-    {{ block.body }}
-    </textarea>
-    <br>
+    <legend>Text block</legend>
+    <label for="body-{{ block.id }}">Text</label>
+    <textarea id="body-{{ block.id }}" name="body" rows="5">{{ block.content.body }}</textarea>
     <button>Save block</button>
   </fieldset>
 </form>
+<div class="block-preview" data-block-preview="text" aria-live="polite">
+  <p>Text preview</p>
+</div>

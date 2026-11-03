@@ -1,15 +1,15 @@
-<form method="POST" action="/block/{{ block.id }}/edit/">
-  <input type="hidden" name="type" value="file">
+<form method="post" action="/document/{{ document.id }}/blocks/{{ block.id }}/update/" data-block-editor data-block-type="file">
   <fieldset>
-    <legend>{{ block.type }}</legend>
-    <div class="field">
-      <label for="url-{{ block.id }}">URL</label><br>
-      <input type="url" name="url" id="url-{{ block.id }}" value="{{ block.url }}">
-    </div>
-    <div class="field">
-      <label for="filename-{{ block.id }}">Filename</label><br>
-      <input type="text" name="filename-{{ block.id }}" id="filename-{{ block.id }}">
-    </div>
+    <legend>File block</legend>
+    <label for="url-{{ block.id }}">URL</label>
+    <input type="url" name="url" id="url-{{ block.id }}" value="{{ block.content.url }}">
+    <label for="filename-{{ block.id }}">Filename</label>
+    <input type="text" name="filename" id="filename-{{ block.id }}" value="{{ block.content.filename }}">
+    <label for="size-{{ block.id }}">Size in bytes</label>
+    <input type="number" min="0" step="1" name="size" id="size-{{ block.id }}" value="{{ block.content.size }}">
     <button>Save block</button>
   </fieldset>
 </form>
+<div class="block-preview" data-block-preview="file" aria-live="polite">
+  <p>File preview</p>
+</div>

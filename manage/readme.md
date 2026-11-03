@@ -40,6 +40,15 @@ await createServer(handler, options);
 
 Then starting the server with `deno -RWN main.ts`.
 
+## Document block editor
+
+Open **Documents** to create and edit documents. Documents support heading,
+Markdown, text, media, file, and code blocks. Each block can be edited, deleted,
+and reordered with the move buttons; drag-and-drop and live previews are added
+when JavaScript is available. The forms and move buttons continue to work
+without JavaScript. Markdown preview renders raw HTML as text rather than
+executing it.
+
 ## Data safety
 
 The application does not currently create or verify backups automatically. Until

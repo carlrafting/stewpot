@@ -522,3 +522,265 @@ Deno.test("blocks cannot be created for an unknown document", async () => {
     await closeTestHandler(root);
   }
 });
+
+Deno.test("all block types render editors and save typed content", async () => {
+  const root = await Deno.makeTempDir();
+  try {
+    const handler = await createTestHandler(root);
+    const initial = await handler.fetch(
+      new Request("https://example.com/documents/new/"),
+      createInfo(),
+    );
+    const sessionId = getSessionId(initial);
+    const documentId = "typed-blocks";
+    const blocks = [
+      {
+        id: "heading-1",
+        type: "heading",
+        order: 0,
+        content: { type: "heading", level: 2, text: "Old heading" },
+      },
+      {
+        id: "markdown-1",
+        type: "markdown",
+        order: 1,
+        content: { type: "markdown", body: "Old markdown" },
+      },
+      {
+        id: "text-1",
+        type: "text",
+        order: 2,
+        content: { type: "text", body: "Old text" },
+      },
+      {
+        id: "media-1",
+        type: "media",
+        order: 3,
+        content: { type: "media", url: "", alt: "", caption: "" },
+      },
+      {
+        id: "file-1",
+        type: "file",
+        order: 4,
+        content: { type: "file", url: "", filename: "", size: 0 },
+      },
+      {
+        id: "code-1",
+        type: "code",
+        order: 5,
+        content: { type: "code", body: "Old code" },
+      },
+    ];
+    const kv = await Deno.openKv(join(root, "kv.db"));
+    await kv.set(["documents", documentId], {
+      id: documentId,
+      title: "Typed blocks",
+      content: "",
+      created: "2026-01-01",
+      updated: "2026-01-01",
+      draft: false,
+    });
+    for (const block of blocks) {
+      await kv.set(["blocks", documentId, block.id], block);
+    }
+    await kv.close();
+
+    const editor = await handler.fetch(
+      new Request(`https://example.com/document/${documentId}/edit/`, {
+        headers: { cookie: `session=${sessionId}` },
+      }),
+      createInfo(),
+    );
+    assertEquals(editor.status, 200);
+    const page = await editor.text();
+    for (
+      const type of ["heading", "markdown", "text", "media", "file", "code"]
+    ) {
+      assertStringIncludes(page, `data-block-type="${type}"`);
+    }
+
+    const updates = [
+      ["heading-1", { level: "3", text: "Updated heading" }],
+      ["markdown-1", { body: "**Updated markdown**" }],
+      ["text-1", { body: "Updated text" }],
+      [
+        "media-1",
+        {
+          url: "https://example.com/image.png",
+          alt: "An image",
+          caption: "Image caption",
+        },
+      ],
+      [
+        "file-1",
+        {
+          url: "https://example.com/file.pdf",
+          filename: "file.pdf",
+          size: "42",
+        },
+      ],
+      ["code-1", { body: "const answer = 42;" }],
+    ] as const;
+    for (const [blockId, values] of updates) {
+      const response = await handler.fetch(
+        new Request(
+          `https://example.com/document/${documentId}/blocks/${blockId}/update/`,
+          {
+            method: "POST",
+            headers: {
+              cookie: `session=${sessionId}`,
+              "content-type": "application/x-www-form-urlencoded",
+            },
+            body: new URLSearchParams(values),
+          },
+        ),
+        createInfo(),
+      );
+      assertEquals(response.status, 302);
+    }
+
+    const saved = await Deno.openKv(join(root, "kv.db"));
+    const expectedContent = [
+      { type: "heading", level: 3, text: "Updated heading" },
+      { type: "markdown", body: "**Updated markdown**" },
+      { type: "text", body: "Updated text" },
+      {
+        type: "media",
+        url: "https://example.com/image.png",
+        alt: "An image",
+        caption: "Image caption",
+      },
+      {
+        type: "file",
+        url: "https://example.com/file.pdf",
+        filename: "file.pdf",
+        size: 42,
+      },
+      { type: "code", body: "const answer = 42;" },
+    ];
+    for (let index = 0; index < blocks.length; index++) {
+      const block = await saved.get<{ content: unknown }>([
+        "blocks",
+        documentId,
+        blocks[index].id,
+      ]);
+      assertEquals(block.value?.content, expectedContent[index]);
+    }
+    await saved.close();
+  } finally {
+    await closeTestHandler(root);
+  }
+});
+
+Deno.test("blocks can be reordered without JavaScript and deleted", async () => {
+  const root = await Deno.makeTempDir();
+  try {
+    const handler = await createTestHandler(root);
+    const initial = await handler.fetch(
+      new Request("https://example.com/documents/new/"),
+      createInfo(),
+    );
+    const sessionId = getSessionId(initial);
+    const documentId = "ordered-blocks";
+    const kv = await Deno.openKv(join(root, "kv.db"));
+    await kv.set(["documents", documentId], {
+      id: documentId,
+      title: "Ordered",
+      content: "",
+      created: "2026-01-01",
+      updated: "2026-01-01",
+      draft: false,
+    });
+    for (
+      const [id, order] of [["first", 0], ["second", 1], ["third", 2]] as const
+    ) {
+      await kv.set(["blocks", documentId, id], {
+        id,
+        type: "text",
+        order,
+        content: { type: "text", body: id },
+      });
+    }
+    await kv.close();
+
+    const moved = await handler.fetch(
+      new Request(
+        `https://example.com/document/${documentId}/blocks/order/`,
+        {
+          method: "POST",
+          headers: {
+            cookie: `session=${sessionId}`,
+            "content-type": "application/x-www-form-urlencoded",
+          },
+          body: new URLSearchParams({ blockId: "second", direction: "up" }),
+        },
+      ),
+      createInfo(),
+    );
+    assertEquals(moved.status, 302);
+
+    const persisted = await Deno.openKv(join(root, "kv.db"));
+    const blocks = [];
+    for await (
+      const entry of persisted.list<{ id: string; order: number }>({
+        prefix: ["blocks", documentId],
+      })
+    ) blocks.push(entry.value);
+    blocks.sort((a, b) => a.order - b.order);
+    assertEquals(blocks.map((block) => block.id), ["second", "first", "third"]);
+    await persisted.close();
+
+    const deleted = await handler.fetch(
+      new Request(
+        `https://example.com/document/${documentId}/blocks/first/delete/`,
+        {
+          method: "POST",
+          headers: { cookie: `session=${sessionId}` },
+        },
+      ),
+      createInfo(),
+    );
+    assertEquals(deleted.status, 302);
+    const verify = await Deno.openKv(join(root, "kv.db"));
+    assertEquals(
+      (await verify.get(["blocks", documentId, "first"])).value,
+      null,
+    );
+    await verify.close();
+  } finally {
+    await closeTestHandler(root);
+  }
+});
+
+Deno.test("markdown preview renders formatting and escapes raw HTML", async () => {
+  const root = await Deno.makeTempDir();
+  try {
+    const handler = await createTestHandler(root);
+    const initial = await handler.fetch(
+      new Request("https://example.com/documents/new/"),
+      createInfo(),
+    );
+    const sessionId = getSessionId(initial);
+    const response = await handler.fetch(
+      new Request("https://example.com/document/blocks/markdown-preview/", {
+        method: "POST",
+        headers: {
+          cookie: `session=${sessionId}`,
+          "content-type": "application/x-www-form-urlencoded",
+          accept: "application/json",
+        },
+        body: new URLSearchParams({
+          body: "# Preview\n\n<script>alert(1)</script>",
+        }),
+      }),
+      createInfo(),
+    );
+    assertEquals(response.status, 200);
+    const { html } = await response.json();
+    assertStringIncludes(html, "<h1>Preview</h1>");
+    assertStringIncludes(html, "&lt;script&gt;");
+    assertEquals(html.includes("<script>"), false);
+  } finally {
+    await closeTestHandler(root);
+  }
+});
