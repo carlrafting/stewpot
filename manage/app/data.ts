@@ -28,7 +28,7 @@ export interface Block {
   content: BlockContent;
 }
 
-export function defaultContent(type: BlockType): BlockContent | undefined {
+export function defaultContent(type: BlockType): BlockContent {
   switch (type) {
     case "heading":
       return { type, level: 2, text: "" };
@@ -40,6 +40,8 @@ export function defaultContent(type: BlockType): BlockContent | undefined {
       return { type, url: "", alt: "" };
     case "file":
       return { type, url: "", filename: "", size: 0 };
+    case "code":
+      return { type, body: "" };
   }
 }
 

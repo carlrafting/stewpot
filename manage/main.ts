@@ -40,10 +40,14 @@ const defaultOptions: Options = {
   },
 };
 
+export interface ManageApp extends Deno.ServeDefaultExport {
+  close(): Promise<void>;
+}
+
 /** create app instance */
 export async function app(
   _options?: Options,
-): Promise<Deno.ServeDefaultExport> {
+): Promise<ManageApp> {
   const options = {
     ...defaultOptions,
     ..._options,
@@ -53,7 +57,7 @@ export async function app(
   KvRepository.connections = connections;
   const render = createTemplateRender({
     includes: new FileLoader(
-      new URL("templates", import.meta.url).pathname,
+      fromFileUrl(new URL("templates", import.meta.url)),
     ),
   });
   const staticPathPattern = new URLPattern({ pathname: "/assets/*" });
@@ -123,7 +127,12 @@ export async function app(
 
       return response;
     },
-  } satisfies Deno.ServeDefaultExport;
+    async close() {
+      await Promise.all(
+        [...connections.values()].map((connection) => connection.close()),
+      );
+    },
+  } satisfies ManageApp;
 }
 
 if (import.meta.main) {

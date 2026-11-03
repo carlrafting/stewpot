@@ -16,7 +16,7 @@
  * @param options options for http server
  */
 export async function createServer(
-  instance: Deno.ServeDefaultExport,
+  instance: Deno.ServeDefaultExport & { close?: () => Promise<void> },
   options: Deno.ServeTcpOptions = {},
 ) {
   const abortController = new AbortController();
@@ -40,7 +40,11 @@ export async function createServer(
     console.log("[SIGNINT] server shut down...");
     abortController.abort();
   });
-  await server.finished;
-  server.shutdown();
+  try {
+    await server.finished;
+  } finally {
+    server.shutdown();
+    await instance.close?.();
+  }
   console.log("server shutdown finished!");
 }
