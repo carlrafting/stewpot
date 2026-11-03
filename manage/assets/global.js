@@ -176,6 +176,12 @@ function setupBlockOrdering() {
     });
   }
 
+  outline.addEventListener("dragover", (event) => {
+    if (!draggedItem) return;
+    event.preventDefault();
+    event.dataTransfer.dropEffect = "move";
+  });
+
   outline.addEventListener("drop", async (event) => {
     if (!draggedItem) return;
     event.preventDefault();
