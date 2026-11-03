@@ -111,71 +111,101 @@ function setupPreviews() {
 
 function setupBlockOrdering() {
   const list = document.querySelector("[data-block-list]");
-  if (!list) return;
+  const outline = document.querySelector("[data-block-outline]");
+  if (!list || !outline) return;
   const status = document.querySelector("[data-editor-status]");
-  let draggedCard;
+  let draggedItem;
   let initialOrder;
+  let isSaving = false;
+  let dropHandled = false;
 
-  for (const card of list.querySelectorAll("[data-block-id]")) {
-    card.addEventListener("dragstart", (event) => {
+  const restoreOrder = () => {
+    if (!initialOrder) return;
+    for (const item of initialOrder) outline.append(item);
+  };
+  const syncBlockCards = () => {
+    for (const item of outline.querySelectorAll("[data-outline-id]")) {
+      const card = [...list.querySelectorAll("[data-block-id]")].find(
+        (candidate) => candidate.dataset.blockId === item.dataset.outlineId,
+      );
+      if (card) list.append(card);
+    }
+  };
+  const updateMoveButtons = () => {
+    const cards = [...list.querySelectorAll("[data-block-id]")];
+    for (const [index, card] of cards.entries()) {
+      const up = card.querySelector('button[name="direction"][value="up"]');
+      const down = card.querySelector(
+        'button[name="direction"][value="down"]',
+      );
+      if (up) up.disabled = index === 0;
+      if (down) down.disabled = index === cards.length - 1;
+    }
+  };
+
+  for (const item of outline.querySelectorAll("[data-outline-id]")) {
+    item.addEventListener("dragstart", (event) => {
       if (
         !(event.target instanceof Element) ||
-        !event.target.closest(".drag-handle")
+        !event.target.closest(".outline-drag-handle")
       ) {
         event.preventDefault();
         return;
       }
-      draggedCard = card;
-      initialOrder = [...list.children];
-      card.classList.add("is-dragging");
+      draggedItem = item;
+      initialOrder = [...outline.children];
+      dropHandled = false;
+      item.classList.add("is-dragging");
       event.dataTransfer.effectAllowed = "move";
-      event.dataTransfer.setData("text/plain", card.dataset.blockId);
+      event.dataTransfer.setData("text/plain", item.dataset.outlineId);
     });
-    card.addEventListener("dragend", () => {
-      card.classList.remove("is-dragging");
+    item.addEventListener("dragend", () => {
+      item.classList.remove("is-dragging");
+      if (draggedItem && !dropHandled && !isSaving) {
+        restoreOrder();
+        draggedItem = undefined;
+        initialOrder = undefined;
+      }
     });
-    card.addEventListener("dragover", (event) => {
-      if (!draggedCard || draggedCard === card) return;
+    item.addEventListener("dragover", (event) => {
+      if (!draggedItem || draggedItem === item) return;
       event.preventDefault();
-      const bounds = card.getBoundingClientRect();
+      const bounds = item.getBoundingClientRect();
       const insertAfter = event.clientY > bounds.top + bounds.height / 2;
-      list.insertBefore(draggedCard, insertAfter ? card.nextSibling : card);
+      outline.insertBefore(draggedItem, insertAfter ? item.nextSibling : item);
     });
   }
 
-  list.addEventListener("drop", async (event) => {
-    if (!draggedCard) return;
+  outline.addEventListener("drop", async (event) => {
+    if (!draggedItem) return;
     event.preventDefault();
+    dropHandled = true;
     const formData = new FormData();
-    for (const card of list.querySelectorAll("[data-block-id]")) {
-      formData.append("order", card.dataset.blockId);
+    for (const item of outline.querySelectorAll("[data-outline-id]")) {
+      formData.append("order", item.dataset.outlineId);
     }
     const endpoint = list.querySelector(".move-block-form")?.action;
     try {
+      isSaving = true;
       const response = await fetch(endpoint, {
         method: "POST",
         body: formData,
         headers: { Accept: "application/json" },
       });
       if (!response.ok) throw new Error(`Ordering failed: ${response.status}`);
+      syncBlockCards();
+      updateMoveButtons();
       if (status) status.textContent = "Block order saved.";
-      for (const [index, card] of [...list.children].entries()) {
-        const up = card.querySelector('button[name="direction"][value="up"]');
-        const down = card.querySelector(
-          'button[name="direction"][value="down"]',
-        );
-        if (up) up.disabled = index === 0;
-        if (down) down.disabled = index === list.children.length - 1;
-      }
     } catch (error) {
-      for (const card of initialOrder) list.append(card);
+      restoreOrder();
       if (status) {
         status.textContent =
           "Could not save block order. The original order was restored.";
       }
       console.error("Block ordering failed", error);
     } finally {
-      draggedCard = undefined;
+      isSaving = false;
+      draggedItem = undefined;
       initialOrder = undefined;
     }
   });
