@@ -597,9 +597,9 @@ Deno.test("all block types render editors and save typed content", async () => {
     );
     assertEquals(editor.status, 200);
     const page = await editor.text();
-    assertStringIncludes(page, "<manage-block-ordering>");
+    assertStringIncludes(page, "<block-ordering>");
     assertEquals(
-      page.match(/<manage-block-preview>/g)?.length,
+      page.match(/<block-preview>/g)?.length,
       blocks.length,
     );
     for (
@@ -608,8 +608,8 @@ Deno.test("all block types render editors and save typed content", async () => {
       assertStringIncludes(page, `data-block-type="${type}"`);
     }
     assertStringIncludes(page, "data-block-outline");
-    assertStringIncludes(page, "<manage-block-ordering>");
-    assertStringIncludes(page, "<manage-block-preview>");
+    assertStringIncludes(page, "<block-ordering>");
+    assertStringIncludes(page, "<block-preview>");
     assertStringIncludes(
       page,
       'class="outline-drag-handle" draggable="true"',

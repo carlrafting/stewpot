@@ -25,6 +25,7 @@ html {
   font-size: 1rem;
   line-height: 1.5;
   color: var(--color-text);
+  background: var(--color-surface);
 }
 
 menu {
@@ -62,13 +63,7 @@ textarea:focus-visible {
   gap: var(--space-2);
 }
 
-.field input,
-.field select,
-.field textarea {
-  font: inherit;
-}
-
-.field small {
+small {
   color: var(--color-muted);
 }
 
@@ -146,7 +141,7 @@ textarea:focus-visible {
 
 .outline-drag-handle {
   margin-inline-end: var(--space-1);
-  padding: 0.15rem var(--space-2);
+  padding: var(--space-1) var(--space-2);
   border: 1px dashed var(--color-muted);
   border-radius: var(--radius-sm);
   cursor: grab;
@@ -235,8 +230,8 @@ textarea:focus-visible {
   border-inline-start: 3px solid var(--color-success-border);
 }
 
-manage-block-preview,
-manage-block-ordering {
+block-preview,
+block-ordering {
   display: block;
 }
 

@@ -320,9 +320,9 @@ class ManageBlockOrdering extends HTMLElement {
   }
 }
 
-if (!customElements.get("manage-block-preview")) {
-  customElements.define("manage-block-preview", ManageBlockPreview);
+if (!customElements.get("block-preview")) {
+  customElements.define("block-preview", ManageBlockPreview);
 }
-if (!customElements.get("manage-block-ordering")) {
-  customElements.define("manage-block-ordering", ManageBlockOrdering);
+if (!customElements.get("block-ordering")) {
+  customElements.define("block-ordering", ManageBlockOrdering);
 }

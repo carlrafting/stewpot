@@ -65,14 +65,14 @@ The field partial accepts `id`, `name`, `label`, and `type`, plus optional
 and an optional styling `variant`. The `.card` class, form-field styles, and
 design tokens live in `assets/global.css`.
 
-`<manage-block-preview>` enhances a block editor form marked `data-block-editor`
+`<block-preview>` enhances a block editor form marked `data-block-editor`
 with a sibling `[data-block-preview]`. Its optional `preview-url` attribute
 overrides the Markdown preview endpoint. It dispatches the bubbling
 `manage:block-preview-updated` event with `detail.blockType`. Markdown preview
 is rendered by the server; other previews use DOM text and validated HTTP(S)
 URLs.
 
-`<manage-block-ordering>` enhances the existing `[data-block-outline]` and
+`<block-ordering>` enhances the existing `[data-block-outline]` and
 `[data-block-list]` markup. Its optional `order-url` attribute overrides the
 order form endpoint. After saving a drag-and-drop reorder, it dispatches the
 bubbling `manage:block-order-saved` event with `detail.order`, the ordered block
