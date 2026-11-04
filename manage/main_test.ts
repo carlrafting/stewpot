@@ -112,6 +112,8 @@ Deno.test("documents page renders when the session cookie is present", async () 
     assertEquals(response.status, 200);
     const page = await response.text();
     assertStringIncludes(page, "New Document");
+    assertStringIncludes(page, '<label for="title">Title</label>');
+    assertStringIncludes(page, 'name="title"');
   } finally {
     await closeTestHandler(root);
   }
@@ -244,6 +246,8 @@ Deno.test("editing a document shows the document title and form", async () => {
     const page = await response.text();
     assertStringIncludes(page, "Editable document");
     assertStringIncludes(page, "Save Document");
+    assertStringIncludes(page, 'value="Editable document"');
+    assertStringIncludes(page, 'id="title" type="text" name="title"');
   } finally {
     await closeTestHandler(root);
   }
@@ -593,12 +597,19 @@ Deno.test("all block types render editors and save typed content", async () => {
     );
     assertEquals(editor.status, 200);
     const page = await editor.text();
+    assertStringIncludes(page, "<block-ordering>");
+    assertEquals(
+      page.match(/<block-preview>/g)?.length,
+      blocks.length,
+    );
     for (
       const type of ["heading", "markdown", "text", "media", "file", "code"]
     ) {
       assertStringIncludes(page, `data-block-type="${type}"`);
     }
     assertStringIncludes(page, "data-block-outline");
+    assertStringIncludes(page, "<block-ordering>");
+    assertStringIncludes(page, "<block-preview>");
     assertStringIncludes(
       page,
       'class="outline-drag-handle" draggable="true"',

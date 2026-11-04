@@ -2,12 +2,11 @@
 
 {{ if document }}
 {{ if blockAdded }}
-<p class="notice" role="status">{{ blockAdded }}</p>
+{{ include "components/notice.vto" { text: blockAdded, variant: "notice--success", role: "status" } }}
 {{ /if }}
 <form action="/document/{{ document.id }}/update/" method="post" class="document-form">
+  {{ include "components/field.vto" { id: "title", name: "title", label: "Title", type: "text", required: true, value: document.title } }}
   <div class="field">
-    <label for="title">Title</label>
-    <input id="title" type="text" name="title" required value="{{ document.title }}">
     <label class="inline-field" for="draft">
       <input id="draft" type="checkbox" name="draft" {{ if document.draft }}checked{{ /if }}>
       Draft
@@ -29,6 +28,7 @@
   </fieldset>
 </form>
 
+<block-ordering>
 <p class="editor-status" role="status" aria-live="polite" data-editor-status></p>
 <div class="editor-layout">
   <nav class="block-outline" aria-label="Block outline">
@@ -45,7 +45,7 @@
   </nav>
   <section class="block-list" aria-label="Document blocks" data-block-list>
     {{ for block of blocks }}
-    <article class="block-card" id="block-{{ block.id }}" data-block-id="{{ block.id }}">
+    <article class="card block-card" id="block-{{ block.id }}" data-block-id="{{ block.id }}">
       <div class="block-toolbar">
         <form action="/document/{{ document.id }}/blocks/order/" method="post" class="move-block-form">
           <input type="hidden" name="blockId" value="{{ block.id }}">
@@ -61,6 +61,7 @@
     {{ /for }}
   </section>
 </div>
+</block-ordering>
 {{ else }}
 <p>There's no document associated with this id.</p>
 {{ /if }}

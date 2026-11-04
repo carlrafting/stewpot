@@ -1,8 +1,31 @@
+:root {
+  color-scheme: light;
+  --color-text: #1f2937;
+  --color-muted: #687386;
+  --color-border: #b8c0cc;
+  --color-surface: #fff;
+  --color-surface-muted: #f5f7fa;
+  --color-success-surface: #edf7ee;
+  --color-success-border: #347a3c;
+  --color-danger: #8b1e1e;
+  --color-focus: #1457d9;
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --radius-sm: 0.25rem;
+  --radius-md: 0.5rem;
+}
+
 html {
   font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
     Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
   font-size: 1rem;
   line-height: 1.5;
+  color: var(--color-text);
+  background: var(--color-surface);
 }
 
 menu {
@@ -26,16 +49,34 @@ button:disabled {
   opacity: 0.55;
 }
 
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+.field {
+  display: grid;
+  gap: var(--space-2);
+}
+
+small {
+  color: var(--color-muted);
+}
+
 .document-form,
 .add-block-form,
 .block-card {
-  margin-block: 1.25rem;
+  margin-block: var(--space-5);
 }
 
 .document-form .field,
 .block-card fieldset {
   display: grid;
-  gap: 0.5rem;
+  gap: var(--space-2);
 }
 
 .document-form .field {
@@ -47,13 +88,13 @@ button:disabled {
 .inline-field {
   display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
+  gap: var(--space-1);
 }
 
 .editor-layout {
   display: grid;
   grid-template-columns: minmax(13rem, 0.3fr) minmax(0, 1fr);
-  gap: 1.5rem;
+  gap: var(--space-6);
   align-items: start;
 }
 
@@ -62,10 +103,10 @@ button:disabled {
   top: 1rem;
   max-height: calc(100vh - 2rem);
   overflow-y: auto;
-  padding: 1rem;
-  border: 1px solid #b8c0cc;
-  border-radius: 0.5rem;
-  background: #f5f7fa;
+  padding: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-muted);
 }
 
 .block-outline h2 {
@@ -80,14 +121,14 @@ button:disabled {
 
 .block-outline ol {
   display: grid;
-  gap: 0.35rem;
+  gap: var(--space-1);
   margin: 0;
   padding-inline-start: 1.5rem;
 }
 
 .block-outline li {
-  padding: 0.2rem;
-  border-radius: 0.25rem;
+  padding: var(--space-1);
+  border-radius: var(--radius-sm);
 }
 
 .block-outline li.is-dragging {
@@ -99,10 +140,10 @@ button:disabled {
 }
 
 .outline-drag-handle {
-  margin-inline-end: 0.35rem;
-  padding: 0.15rem 0.4rem;
-  border: 1px dashed #687386;
-  border-radius: 0.25rem;
+  margin-inline-end: var(--space-1);
+  padding: var(--space-1) var(--space-2);
+  border: 1px dashed var(--color-muted);
+  border-radius: var(--radius-sm);
   cursor: grab;
 }
 
@@ -112,22 +153,24 @@ button:disabled {
 
 .block-list {
   display: grid;
-  gap: 1rem;
+  gap: var(--space-4);
   min-width: 0;
 }
 
+.card,
 .block-card {
-  border: 1px solid #b8c0cc;
-  border-radius: 0.5rem;
-  padding: 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  background: var(--color-surface);
 }
 
 .block-toolbar {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 0.5rem;
-  margin-block-end: 1rem;
+  gap: var(--space-2);
+  margin-block-end: var(--space-4);
 }
 
 .block-toolbar form {
@@ -135,7 +178,7 @@ button:disabled {
 }
 
 .danger {
-  color: #8b1e1e;
+  color: var(--color-danger);
 }
 
 .block-card textarea {
@@ -152,10 +195,10 @@ button:disabled {
 }
 
 .block-preview {
-  margin-block-start: 1rem;
-  padding: 0.75rem;
-  border-inline-start: 3px solid #687386;
-  background: #f5f7fa;
+  margin-block-start: var(--space-4);
+  padding: var(--space-3);
+  border-inline-start: 3px solid var(--color-muted);
+  background: var(--color-surface-muted);
   overflow-wrap: anywhere;
 }
 
@@ -182,9 +225,14 @@ button:disabled {
 }
 
 .notice {
-  padding: 0.65rem;
-  background: #edf7ee;
-  border-inline-start: 3px solid #347a3c;
+  padding: var(--space-2);
+  background: var(--color-success-surface);
+  border-inline-start: 3px solid var(--color-success-border);
+}
+
+block-preview,
+block-ordering {
+  display: block;
 }
 
 @media (max-width: 52rem) {
