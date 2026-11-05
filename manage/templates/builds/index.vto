@@ -1,0 +1,72 @@
+{{ layout "layouts/page.vto" }}
+
+{{ if error }}
+<p role="alert">{{ error }}</p>
+{{ /if }}
+
+{{ if !workspaceRoot }}
+<p>Build inspection is not configured. Set <code>builds.workspaceRoot</code> when creating the Manage app and grant Deno read access to that directory.</p>
+{{ else }}
+<p>Workspace root: <code>{{ workspaceRoot }}</code></p>
+<p>Current directory: <code>{{ currentPath || "." }}</code></p>
+{{ if parentHref }}
+<p><a href="{{ parentHref }}">Up one directory</a></p>
+{{ /if }}
+<h2>Choose a site directory</h2>
+<form action="/builds/create/" method="post">
+  <input type="hidden" name="path" value="{{ currentPath }}">
+  <label for="root-name">Site name</label>
+  <input id="root-name" name="name" value="{{ currentName }}">
+  <label for="root-adapter">Static-site generator</label>
+  <select id="root-adapter" name="adapter">
+    {{ for adapter of adapters }}
+    <option value="{{ adapter.id }}">{{ adapter.name }}</option>
+    {{ /for }}
+  </select>
+  <label for="root-output">Output directory to inspect</label>
+  <input id="root-output" name="outputDirectory" value="_site">
+  <button type="submit">Configure current directory</button>
+</form>
+{{ if directories.length }}
+<ul>
+  {{ for directory of directories }}
+  <li>
+    <a href="{{ directory.href }}">{{ directory.name }}</a>
+    <form action="/builds/create/" method="post">
+      <input type="hidden" name="path" value="{{ directory.path }}">
+      <label>Static-site generator
+        <select name="adapter">
+          {{ for adapter of adapters }}
+          <option value="{{ adapter.id }}">{{ adapter.name }}</option>
+          {{ /for }}
+        </select>
+      </label>
+      <label>Site name
+        <input name="name" value="{{ directory.name }}">
+      </label>
+      <label>Output directory
+        <input name="outputDirectory" value="_site">
+      </label>
+      <button type="submit">Configure site</button>
+    </form>
+  </li>
+  {{ /for }}
+</ul>
+{{ else }}
+<p>No subdirectories found.</p>
+{{ /if }}
+{{ if directoriesTruncated }}
+<p>Showing only the first 100 subdirectories. Narrow the current directory to see more.</p>
+{{ /if }}
+{{ /if }}
+
+{{ if sites }}
+<h2>Configured sites</h2>
+<ul>
+  {{ for site of sites }}
+  <li><a href="/build/{{ site.id }}/">{{ site.name }}</a> — {{ site.adapter }} ({{ site.path || "." }})</li>
+  {{ /for }}
+</ul>
+{{ /if }}
+
+{{ /layout }}

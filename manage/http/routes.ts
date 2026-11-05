@@ -18,6 +18,7 @@ export interface RouteContext {
   i18n: I18n;
   flash: FlashMethods;
   params: RouteParams;
+  buildWorkspaceRoot?: string;
 }
 
 export interface Route {

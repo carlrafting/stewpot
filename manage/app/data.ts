@@ -1,4 +1,5 @@
 import type { Session } from "../session/kv.ts";
+import type { BuildAdapterId } from "../build/adapter.ts";
 
 export interface Nav {
   text: string;
@@ -150,4 +151,14 @@ export interface LibraryImport {
   url: URL;
   type: "local" | "remote";
   targetSource: string;
+}
+
+export interface BuildSite {
+  id: string;
+  name: string;
+  path: string;
+  adapter: BuildAdapterId;
+  outputDirectory: string;
+  created: string;
+  updated: string;
 }

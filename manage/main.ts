@@ -27,6 +27,11 @@ export interface Options {
     /** path to main kv db */
     path?: string;
   };
+  /** build inspection configuration */
+  builds?: {
+    /** server-side root directory in which build sites can be selected */
+    workspaceRoot?: string;
+  };
 }
 
 /** default app config options */
@@ -38,6 +43,7 @@ const defaultOptions: Options = {
   kv: {
     path: "database/kv.db",
   },
+  builds: {},
 };
 
 export interface ManageApp extends Deno.ServeDefaultExport {
@@ -51,6 +57,10 @@ export async function app(
   const options = {
     ...defaultOptions,
     ..._options,
+    builds: {
+      ...defaultOptions.builds,
+      ..._options?.builds,
+    },
   };
   const connections = await createConnections(options);
   // console.log(connections);
@@ -105,6 +115,7 @@ export async function app(
         i18n,
         flash,
         params,
+        buildWorkspaceRoot: options.builds.workspaceRoot,
       };
 
       if (staticPathPattern.test(url)) {

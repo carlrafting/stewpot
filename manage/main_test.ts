@@ -1,11 +1,14 @@
 import { assert, assertEquals, assertStringIncludes } from "@std/assert";
 import { join } from "@std/path/join";
 import { toFileUrl } from "@std/path/to-file-url";
-import { app } from "./main.ts";
+import { app, type ManageApp } from "./main.ts";
+
+const testHandlers = new Map<string, ManageApp>();
 
 async function createTestHandler(
   root: string,
-): Promise<Awaited<ReturnType<typeof app>>> {
+  workspaceRoot?: string,
+): Promise<ManageApp> {
   const rootUrl = toFileUrl(root).href.replace(/\/?$/, "/");
   const sessionsPath = join(root, "sessions.db");
   const kvPath = join(root, "kv.db");
@@ -14,15 +17,11 @@ async function createTestHandler(
     meta: { url: rootUrl },
     sessions: { path: sessionsPath },
     kv: { path: kvPath },
+    builds: { workspaceRoot },
   });
   testHandlers.set(root, handler);
   return handler;
 }
-
-const testHandlers = new Map<
-  string,
-  Awaited<ReturnType<typeof createTestHandler>>
->();
 
 async function closeTestHandler(root: string): Promise<void> {
   const handler = testHandlers.get(root);
@@ -67,7 +66,7 @@ Deno.test("requests without a session receive a new session cookie", async () =>
   }
 });
 
-Deno.test("library upload route reports that uploads are not implemented", async () => {
+Deno.test("unimplemented library upload route is not registered", async () => {
   const root = await Deno.makeTempDir();
   try {
     const handler = await createTestHandler(root);
@@ -86,8 +85,7 @@ Deno.test("library upload route reports that uploads are not implemented", async
       }),
       createInfo(),
     );
-    assertEquals(response.status, 501);
-    assertStringIncludes(await response.text(), "not available yet");
+    assertEquals(response.status, 404);
   } finally {
     await closeTestHandler(root);
   }
@@ -798,6 +796,90 @@ Deno.test("markdown preview renders formatting and escapes raw HTML", async () =
     assertStringIncludes(html, "<h1>Preview</h1>");
     assertStringIncludes(html, "&lt;script&gt;");
     assertEquals(html.includes("<script>"), false);
+  } finally {
+    await closeTestHandler(root);
+  }
+});
+
+Deno.test("builds can be configured and inspected within the workspace root", async () => {
+  const root = await Deno.makeTempDir();
+  try {
+    const workspaceRoot = join(root, "sites");
+    const sitePath = join(workspaceRoot, "portfolio");
+    await Deno.mkdir(sitePath, { recursive: true });
+    await Deno.writeTextFile(
+      join(sitePath, "_config.ts"),
+      'import lume from "lume/mod.ts";\nexport default lume();\n',
+    );
+    await Deno.mkdir(join(sitePath, "_site"));
+    await Deno.writeTextFile(join(sitePath, "_site", "index.html"), "built");
+
+    const handler = await createTestHandler(root, workspaceRoot);
+    const initial = await handler.fetch(
+      new Request("https://example.com/builds/"),
+      createInfo(),
+    );
+    const sessionId = getSessionId(initial);
+    const cookie = `session=${sessionId}`;
+
+    const index = await handler.fetch(
+      new Request("https://example.com/builds/", {
+        headers: { cookie },
+      }),
+      createInfo(),
+    );
+    assertEquals(index.status, 200);
+    assertStringIncludes(await index.text(), "portfolio");
+
+    const create = await handler.fetch(
+      new Request("https://example.com/builds/create/", {
+        method: "POST",
+        headers: {
+          cookie,
+          "content-type": "application/x-www-form-urlencoded",
+        },
+        body: new URLSearchParams({
+          path: "portfolio",
+          name: "Portfolio",
+          adapter: "lume",
+          outputDirectory: "_site",
+        }).toString(),
+      }),
+      createInfo(),
+    );
+    assertEquals(create.status, 302);
+    const location = create.headers.get("location");
+    assert(location);
+
+    const detail = await handler.fetch(
+      new Request(location, { headers: { cookie } }),
+      createInfo(),
+    );
+    assertEquals(detail.status, 200);
+    const detailPage = await detail.text();
+    assertStringIncludes(detailPage, "Portfolio");
+    assertStringIncludes(detailPage, "Supported project detected: yes");
+    assertStringIncludes(detailPage, "Lume import reference found: yes");
+    assertStringIncludes(detailPage, "index.html");
+
+    const traversal = await handler.fetch(
+      new Request("https://example.com/builds/create/", {
+        method: "POST",
+        headers: {
+          cookie,
+          "content-type": "application/x-www-form-urlencoded",
+        },
+        body: new URLSearchParams({
+          path: "../outside",
+          name: "Outside",
+          adapter: "lume",
+          outputDirectory: "_site",
+        }).toString(),
+      }),
+      createInfo(),
+    );
+    assertEquals(traversal.status, 400);
+    assertStringIncludes(await traversal.text(), "cannot leave the workspace");
   } finally {
     await closeTestHandler(root);
   }

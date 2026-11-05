@@ -1,0 +1,53 @@
+{{ layout "layouts/page.vto" }}
+
+{{ if error }}
+<p role="alert">{{ error }}</p>
+{{ /if }}
+
+<p>Site directory: <code>{{ site.path || "." }}</code></p>
+<p>Adapter: {{ if selectedAdapter }}{{ selectedAdapter.name }}{{ else }}{{ site.adapter }}{{ /if }}</p>
+<p>Manage only reads the project and output directory. It does not execute build code or publish files.</p>
+
+<form action="/build/{{ site.id }}/update/" method="post">
+  <label for="adapter">Static-site generator</label>
+  <select id="adapter" name="adapter">
+    {{ for adapter of adapters }}
+    <option value="{{ adapter.id }}" {{ if adapter.id === site.adapter }}selected{{ /if }}>{{ adapter.name }}</option>
+    {{ /for }}
+  </select>
+  <label for="output-directory">Output directory to inspect (relative to site directory)</label>
+  <input id="output-directory" name="outputDirectory" value="{{ site.outputDirectory }}">
+  <button type="submit">Save inspection settings</button>
+</form>
+
+{{ if inspection }}
+<h2>Project inspection</h2>
+<p>Supported project detected: {{ if inspection.projectDetected }}yes{{ else }}no{{ /if }}</p>
+<p>Config file(s): {{ if inspection.configFiles.length }}{{ inspection.configFiles.join(", ") }}{{ else }}none detected{{ /if }}</p>
+{{ for check of inspection.checks }}
+<p>{{ check.label }}: {{ check.value }}</p>
+{{ /for }}
+<p>Configured output directory: <code>{{ inspection.outputDirectory }}</code></p>
+<p>Output path exists: {{ if inspection.outputExists }}yes{{ else }}no{{ /if }}</p>
+{{ if inspection.outputExists && !inspection.outputIsDirectory }}
+<p role="alert">The configured output path is not a directory.</p>
+{{ /if }}
+<p>Output directory exists: {{ if inspection.outputIsDirectory }}yes{{ else }}no{{ /if }}</p>
+{{ if inspection.outputIsDirectory }}
+  {{ if inspection.outputEntries.length }}
+  <ul>
+    {{ for entry of inspection.outputEntries }}
+    <li>{{ if entry.isDirectory }}Directory{{ else }}File{{ /if }}: {{ entry.name }}</li>
+    {{ /for }}
+  </ul>
+  {{ else }}
+  <p>The output directory is empty.</p>
+  {{ /if }}
+  {{ if inspection.outputEntriesTruncated }}
+  <p>Showing only the first 50 entries.</p>
+  {{ /if }}
+{{ /if }}
+<p>Inspection checks known Lume config filenames and references without evaluating project code. The output path is a Manage setting and may differ from the destination in the Lume config.</p>
+{{ /if }}
+
+{{ /layout }}

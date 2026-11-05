@@ -26,6 +26,27 @@ deno serve -RW main.ts
 deno serve: Listening on http://0.0.0.0:8000/
 ```
 
+### Inspecting static-site builds
+
+Manage can configure and inspect a Lume site without running its code or
+publishing its output. Set a server-side workspace root when creating the app:
+
+```ts
+const app = await createApp({
+  meta: import.meta,
+  sessions: { path: "database/sessions.db" },
+  kv: { path: "database/kv.db" },
+  builds: { workspaceRoot: "./sites" },
+});
+```
+
+The path is resolved from the server's working directory. Grant the Deno process
+read permission for the configured workspace (for example,
+`--allow-read=./sites`). The Builds page only lets users select directories
+under that root; it detects known Lume configuration files and inspects a
+configured output directory without evaluating project code. Build execution and
+publishing are not supported.
+
 It's also possible to use `createServer()` API for running the manage app.
 
 ```ts
