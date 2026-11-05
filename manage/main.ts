@@ -6,27 +6,30 @@ import { createServer } from "./http/server.ts";
 import { createConnections, getConnection } from "./kv/connections.ts";
 import { KvRepository } from "./kv/repository.ts";
 import { matchRoutes, type RouteContext } from "./http/routes.ts";
-import { dirname, fromFileUrl } from "@std/path";
+import { dirname, fromFileUrl, resolve } from "@std/path";
 import { routes } from "./app/routes.ts";
 import { createSessionManager } from "./session/manager.ts";
 import { createFlash } from "./flash/message.ts";
 import { I18n } from "./i18n/locale.ts";
 import { createTemplateRender } from "./vento/templates.ts";
+import type { BuildAdapter } from "./build/adapter.ts";
 
 /** app options interface */
 export interface Options {
   /** Import meta from the entrypoint, used to resolve paths */
   meta: Pick<ImportMeta, "url">;
   /** session config options */
-  sessions: {
+  sessions?: {
     /** path to session kv db */
     path?: string;
   };
   /** main kv db config options */
-  kv: {
+  kv?: {
     /** path to main kv db */
     path?: string;
   };
+  /** optional static site build adapter */
+  build?: BuildAdapter;
 }
 
 /** default app config options */
@@ -40,7 +43,9 @@ const defaultOptions: Options = {
   },
 };
 
+/** App handler returned by {@link app}. */
 export interface ManageApp extends Deno.ServeDefaultExport {
+  /** Close the app's KV connections. */
   close(): Promise<void>;
 }
 
@@ -51,6 +56,8 @@ export async function app(
   const options = {
     ...defaultOptions,
     ..._options,
+    sessions: { ...defaultOptions.sessions, ..._options?.sessions },
+    kv: { ...defaultOptions.kv, ..._options?.kv },
   };
   const connections = await createConnections(options);
   // console.log(connections);
@@ -105,6 +112,8 @@ export async function app(
         i18n,
         flash,
         params,
+        projectRoot: resolve(fromFileUrl(new URL(".", options.meta.url))),
+        buildAdapter: options.build,
       };
 
       if (staticPathPattern.test(url)) {
@@ -144,3 +153,5 @@ if (import.meta.main) {
 
 export default app;
 export { createServer };
+export { lumeBuildAdapter } from "./build/adapter.ts";
+export type { BuildAdapter, BuildContext } from "./build/adapter.ts";

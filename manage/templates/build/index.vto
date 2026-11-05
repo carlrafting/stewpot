@@ -1,0 +1,14 @@
+{{ layout "layouts/page.vto" }}
+
+{{ if adapterName }}
+<p>Builder: <strong>{{ adapterName }}</strong></p>
+<form action="/build/run/" method="post" data-build-form>
+  <button type="submit">Build site</button>
+  <label for="build-log">Build output</label>
+  <textarea id="build-log" class="build-log" data-build-log rows="16" readonly></textarea>
+</form>
+{{ else }}
+<p>No build adapter is configured for this project.</p>
+{{ /if }}
+
+{{ /layout }}
