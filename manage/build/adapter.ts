@@ -8,6 +8,7 @@ export interface BuildInspection {
   outputDirectory: string;
   outputExists: boolean;
   outputIsDirectory: boolean;
+  previewAvailable: boolean;
   outputEntries: { name: string; isDirectory: boolean }[];
   outputEntriesTruncated: boolean;
 }

@@ -5,25 +5,20 @@
 {{ /if }}
 
 <p>Site directory: <code>{{ site.path || "." }}</code></p>
-<p>Adapter: {{ if selectedAdapter }}{{ selectedAdapter.name }}{{ else }}{{ site.adapter }}{{ /if }}</p>
-<p>Manage only reads the project and output directory. It does not execute build code or publish files.</p>
+<p>Generator: {{ if selectedAdapter }}{{ selectedAdapter.name }}{{ else }}{{ site.adapter }}{{ /if }}</p>
+<p>Manage inspects existing output; run your usual build command to generate or refresh it. Project code is not executed by Manage.</p>
 
 <form action="/build/{{ site.id }}/update/" method="post">
-  <label for="adapter">Static-site generator</label>
-  <select id="adapter" name="adapter">
-    {{ for adapter of adapters }}
-    <option value="{{ adapter.id }}" {{ if adapter.id === site.adapter }}selected{{ /if }}>{{ adapter.name }}</option>
-    {{ /for }}
-  </select>
-  <label for="output-directory">Output directory to inspect (relative to site directory)</label>
-  <input id="output-directory" name="outputDirectory" value="{{ site.outputDirectory }}">
-  <button type="submit">Save inspection settings</button>
+  <label for="output-directory">Existing generated output folder (relative to site directory)</label>
+  <input id="output-directory" name="outputDirectory" required value="{{ site.outputDirectory }}">
+  <button type="submit">Inspect this output folder</button>
 </form>
 
 {{ if inspection }}
 <h2>Project inspection</h2>
 <p>Supported project detected: {{ if inspection.projectDetected }}yes{{ else }}no{{ /if }}</p>
 <p>Config file(s): {{ if inspection.configFiles.length }}{{ inspection.configFiles.join(", ") }}{{ else }}none detected{{ /if }}</p>
+<p>Lume detection checks for <code>_config.ts</code>, <code>_config.js</code>, <code>_config.mjs</code>, or <code>_config.tsx</code> with a literal import containing <code>lume</code>; other config patterns may not be detected.</p>
 {{ for check of inspection.checks }}
 <p>{{ check.label }}: {{ check.value }}</p>
 {{ /for }}
@@ -34,6 +29,12 @@
 {{ /if }}
 <p>Output directory exists: {{ if inspection.outputIsDirectory }}yes{{ else }}no{{ /if }}</p>
 {{ if inspection.outputIsDirectory }}
+  {{ if inspection.previewAvailable }}
+  <p><a href="/build/{{ site.id }}/preview/" target="_blank" rel="noopener">Preview generated site (scripts disabled)</a></p>
+  <iframe title="Generated site preview" src="/build/{{ site.id }}/preview/" sandbox="allow-same-origin" referrerpolicy="no-referrer" loading="lazy" style="width: 100%; min-height: 32rem"></iframe>
+  {{ else }}
+  <p>No <code>index.html</code> is present to preview.</p>
+  {{ /if }}
   {{ if inspection.outputEntries.length }}
   <ul>
     {{ for entry of inspection.outputEntries }}
@@ -46,8 +47,10 @@
   {{ if inspection.outputEntriesTruncated }}
   <p>Showing only the first 50 entries.</p>
   {{ /if }}
+{{ else }}
+<p>That generated output folder does not exist yet. Run your usual site build command, then inspect again.</p>
 {{ /if }}
-<p>Inspection checks known Lume config filenames and references without evaluating project code. The output path is a Manage setting and may differ from the destination in the Lume config.</p>
+<p>Manage does not evaluate the Lume config to infer the output location. The folder above is the generated output location you supplied.</p>
 {{ /if }}
 
 {{ /layout }}

@@ -14,6 +14,9 @@ function isWithinRoot(root: string, path: string): boolean {
 }
 
 function pathSegments(path: string): string[] {
+  if (path.includes("\0")) {
+    throw new BuildWorkspaceError("Directory paths cannot contain null bytes.");
+  }
   if (isAbsolute(path)) {
     throw new BuildWorkspaceError("Choose a directory inside the workspace.");
   }

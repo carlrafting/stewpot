@@ -34,10 +34,15 @@ export const lumeAdapter: BuildAdapter = {
     const outputEntries: { name: string; isDirectory: boolean }[] = [];
     let outputEntriesTruncated = false;
     let outputIsDirectory = false;
+    let previewAvailable = false;
     if (output.exists) {
       const info = await Deno.stat(output.path);
       if (info.isDirectory) {
         outputIsDirectory = true;
+        const index = await resolveWorkspacePath(output.path, "index.html");
+        if (index.exists) {
+          previewAvailable = (await Deno.stat(index.path)).isFile;
+        }
         for await (const entry of Deno.readDir(output.path)) {
           if (outputEntries.length === outputEntryLimit) {
             outputEntriesTruncated = true;
@@ -63,6 +68,7 @@ export const lumeAdapter: BuildAdapter = {
       outputDirectory,
       outputExists: output.exists,
       outputIsDirectory,
+      previewAvailable,
       outputEntries,
       outputEntriesTruncated,
     };

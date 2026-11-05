@@ -28,8 +28,9 @@ deno serve: Listening on http://0.0.0.0:8000/
 
 ### Inspecting static-site builds
 
-Manage can configure and inspect a Lume site without running its code or
-publishing its output. Set a server-side workspace root when creating the app:
+Manage can inspect an existing Lume site and preview its generated output
+without running its code or publishing files. Set a server-side workspace root
+when creating the app:
 
 ```ts
 const app = await createApp({
@@ -43,9 +44,14 @@ const app = await createApp({
 The path is resolved from the server's working directory. Grant the Deno process
 read permission for the configured workspace (for example,
 `--allow-read=./sites`). The Builds page only lets users select directories
-under that root; it detects known Lume configuration files and inspects a
-configured output directory without evaluating project code. Build execution and
-publishing are not supported.
+under that root. For a selected project, enter the existing generated output
+folder (such as `_site` or `dist`) to inspect its files and preview
+`index.html`. Lume detection checks `_config.ts`, `_config.js`, `_config.mjs`,
+or `_config.tsx` for literal imports containing `lume`; other config patterns
+may not be detected. The preview disables scripts, forms, and external resource
+requests. Manage does not infer the output directory from Lume config, evaluate
+project code, execute builds, or publish output. Generating a site can execute
+arbitrary project code, so use your usual toolchain first.
 
 It's also possible to use `createServer()` API for running the manage app.
 
@@ -86,9 +92,9 @@ The field partial accepts `id`, `name`, `label`, and `type`, plus optional
 and an optional styling `variant`. The `.card` class, form-field styles, and
 design tokens live in `assets/global.css`.
 
-`<block-preview>` enhances a block editor form marked `data-block-editor`
-with a sibling `[data-block-preview]`. Its optional `preview-url` attribute
-overrides the Markdown preview endpoint. It dispatches the bubbling
+`<block-preview>` enhances a block editor form marked `data-block-editor` with a
+sibling `[data-block-preview]`. Its optional `preview-url` attribute overrides
+the Markdown preview endpoint. It dispatches the bubbling
 `manage:block-preview-updated` event with `detail.blockType`. Markdown preview
 is rendered by the server; other previews use DOM text and validated HTTP(S)
 URLs.

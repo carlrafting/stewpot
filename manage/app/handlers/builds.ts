@@ -50,7 +50,6 @@ async function renderIndex(
   const kv = getKv(context);
   const sites = await getSites(kv);
   const workspaceRoot = context.buildWorkspaceRoot;
-  const adapters = buildAdapters.map(({ id, name }) => ({ id, name }));
   let currentPath = "";
   let currentName = "Site";
   let directories: { name: string; path: string; href: string }[] = [];
@@ -101,7 +100,6 @@ async function renderIndex(
     directoriesTruncated,
     parentHref,
     sites,
-    adapters,
     error,
   });
   return html(body, { headers: context.headers, status });
@@ -157,7 +155,6 @@ async function renderSite(
     url: context.url,
     nav,
     site,
-    adapters: buildAdapters.map(({ id, name }) => ({ id, name })),
     selectedAdapter,
     inspection,
     error,
@@ -168,6 +165,79 @@ async function renderSite(
 function formString(form: FormData, key: string): string {
   const value = form.get(key);
   return typeof value === "string" ? value.trim() : "";
+}
+
+function getPreviewContentType(path: string): string {
+  const extension = path.split(".").pop()?.toLowerCase();
+  const contentTypes: Record<string, string> = {
+    css: "text/css; charset=utf-8",
+    gif: "image/gif",
+    html: "text/html; charset=utf-8",
+    ico: "image/x-icon",
+    jpeg: "image/jpeg",
+    jpg: "image/jpeg",
+    js: "text/javascript; charset=utf-8",
+    json: "application/json; charset=utf-8",
+    png: "image/png",
+    svg: "image/svg+xml",
+    txt: "text/plain; charset=utf-8",
+    webp: "image/webp",
+    woff: "font/woff",
+    woff2: "font/woff2",
+    xml: "application/xml; charset=utf-8",
+  };
+  return contentTypes[extension ?? ""] ?? "application/octet-stream";
+}
+
+async function servePreviewFile(
+  context: RouteContext,
+  siteId: string | undefined,
+  relativePath: string,
+): Promise<Response> {
+  const site = await findSite(context, siteId);
+  if (!site) return new Response("Build site not found.", { status: 404 });
+
+  try {
+    if (!context.buildWorkspaceRoot) {
+      throw new BuildWorkspaceError(
+        "No build workspace is configured. Set builds.workspaceRoot when creating the Manage app.",
+      );
+    }
+    const root = await resolveWorkspaceRoot(context.buildWorkspaceRoot);
+    const selected = await resolveWorkspaceDirectory(root, site.path);
+    const output = await resolveWorkspaceDirectory(
+      selected.path,
+      site.outputDirectory,
+    );
+    const decodedPath = decodeURIComponent(relativePath);
+    const file = await resolveWorkspacePath(output.path, decodedPath);
+    if (!file.exists) {
+      return new Response("Preview file not found.", { status: 404 });
+    }
+    const info = await Deno.stat(file.path);
+    if (!info.isFile) {
+      return new Response("Preview file not found.", { status: 404 });
+    }
+
+    const headers = new Headers({
+      "content-type": getPreviewContentType(file.path),
+      "content-security-policy":
+        "sandbox allow-same-origin; default-src 'self' data:; img-src 'self' data:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; script-src 'none'; connect-src 'none'; frame-src 'none'; object-src 'none'; form-action 'none'; base-uri 'none'; frame-ancestors 'self'",
+      "x-content-type-options": "nosniff",
+      "referrer-policy": "no-referrer",
+    });
+    return new Response(await Deno.readFile(file.path), { headers });
+  } catch (error) {
+    if (error instanceof Deno.errors.NotFound) {
+      return new Response("Preview file not found.", { status: 404 });
+    }
+    if (error instanceof URIError) {
+      return new Response("Invalid preview path.", { status: 400 });
+    }
+    const message = getBuildErrorMessage(error, context.buildWorkspaceRoot);
+    const status = error instanceof BuildWorkspaceError ? 400 : 500;
+    return html(message, { status });
+  }
 }
 
 export default [
@@ -186,12 +256,19 @@ export default [
     async handler(context) {
       const form = await context.request.formData();
       const relativePath = formString(form, "path");
-      const outputDirectory = formString(form, "outputDirectory") || "_site";
+      const outputDirectory = formString(form, "outputDirectory");
       const selectedAdapter = findBuildAdapter(formString(form, "adapter"));
       if (!selectedAdapter) {
         return await renderIndex(
           context,
           "Select a supported build adapter.",
+          400,
+        );
+      }
+      if (!outputDirectory) {
+        return await renderIndex(
+          context,
+          "Enter the existing generated output folder to inspect.",
           400,
         );
       }
@@ -241,6 +318,28 @@ export default [
     },
   },
   {
+    name: "build_preview_index",
+    method: "GET",
+    pattern: new URLPattern({ pathname: "/build/:id/preview/" }),
+    async handler(context) {
+      return await servePreviewFile(context, context.params.id, "index.html");
+    },
+  },
+  {
+    name: "build_preview_asset",
+    method: "GET",
+    pattern: new URLPattern({
+      pathname: "/build/:id/preview/:asset*",
+    }),
+    async handler(context) {
+      return await servePreviewFile(
+        context,
+        context.params.id,
+        context.params.asset ?? "",
+      );
+    },
+  },
+  {
     name: "build_site_update",
     method: "POST",
     pattern: new URLPattern({ pathname: "/build/:id/update/" }),
@@ -248,13 +347,12 @@ export default [
       const site = await findSite(context, context.params.id);
       if (!site) return html("Build site not found.", { status: 404 });
       const form = await context.request.formData();
-      const outputDirectory = formString(form, "outputDirectory") || "_site";
-      const selectedAdapter = findBuildAdapter(formString(form, "adapter"));
-      if (!selectedAdapter) {
+      const outputDirectory = formString(form, "outputDirectory");
+      if (!outputDirectory) {
         return await renderSite(
           context,
           site,
-          "Select a supported build adapter.",
+          "Enter the generated output folder to inspect.",
           400,
         );
       }
@@ -269,7 +367,6 @@ export default [
         await resolveWorkspacePath(selected.path, outputDirectory);
         const updated: BuildSite = {
           ...site,
-          adapter: selectedAdapter.id,
           outputDirectory,
           updated: Temporal.Now.plainDateTimeISO().toString(),
         };

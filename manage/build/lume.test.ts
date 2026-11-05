@@ -26,10 +26,24 @@ Deno.test("Lume inspection identifies its config and lists output without runnin
     }]);
     assertEquals(inspection.outputExists, true);
     assertEquals(inspection.outputIsDirectory, true);
+    assertEquals(inspection.previewAvailable, true);
     assertEquals(inspection.outputEntries, [{
       name: "index.html",
       isDirectory: false,
     }]);
+  } finally {
+    await Deno.remove(root, { recursive: true });
+  }
+});
+
+Deno.test("Lume inspection reports when no preview entry point exists", async () => {
+  const root = await Deno.makeTempDir();
+  try {
+    await Deno.mkdir(join(root, "_site"));
+    const inspection = await lumeAdapter.inspect(root, "_site");
+
+    assertEquals(inspection.outputIsDirectory, true);
+    assertEquals(inspection.previewAvailable, false);
   } finally {
     await Deno.remove(root, { recursive: true });
   }

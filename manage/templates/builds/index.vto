@@ -12,20 +12,14 @@
 {{ if parentHref }}
 <p><a href="{{ parentHref }}">Up one directory</a></p>
 {{ /if }}
-<h2>Choose a site directory</h2>
+<h2>Inspect a site</h2>
 <form action="/builds/create/" method="post">
   <input type="hidden" name="path" value="{{ currentPath }}">
-  <label for="root-name">Site name</label>
-  <input id="root-name" name="name" value="{{ currentName }}">
-  <label for="root-adapter">Static-site generator</label>
-  <select id="root-adapter" name="adapter">
-    {{ for adapter of adapters }}
-    <option value="{{ adapter.id }}">{{ adapter.name }}</option>
-    {{ /for }}
-  </select>
-  <label for="root-output">Output directory to inspect</label>
-  <input id="root-output" name="outputDirectory" value="_site">
-  <button type="submit">Configure current directory</button>
+  <input type="hidden" name="name" value="{{ currentName }}">
+  <input type="hidden" name="adapter" value="lume">
+  <label for="root-output">Existing generated output folder (relative to this site, for example <code>_site</code> or <code>dist</code>)</label>
+  <input id="root-output" name="outputDirectory" required placeholder="_site or dist">
+  <button type="submit">Inspect current directory</button>
 </form>
 {{ if directories.length }}
 <ul>
@@ -34,20 +28,12 @@
     <a href="{{ directory.href }}">{{ directory.name }}</a>
     <form action="/builds/create/" method="post">
       <input type="hidden" name="path" value="{{ directory.path }}">
-      <label>Static-site generator
-        <select name="adapter">
-          {{ for adapter of adapters }}
-          <option value="{{ adapter.id }}">{{ adapter.name }}</option>
-          {{ /for }}
-        </select>
+      <input type="hidden" name="name" value="{{ directory.name }}">
+      <input type="hidden" name="adapter" value="lume">
+      <label>Existing generated output folder (relative to {{ directory.name }})
+        <input name="outputDirectory" required placeholder="_site or dist">
       </label>
-      <label>Site name
-        <input name="name" value="{{ directory.name }}">
-      </label>
-      <label>Output directory
-        <input name="outputDirectory" value="_site">
-      </label>
-      <button type="submit">Configure site</button>
+      <button type="submit">Inspect site</button>
     </form>
   </li>
   {{ /for }}
@@ -61,10 +47,10 @@
 {{ /if }}
 
 {{ if sites }}
-<h2>Configured sites</h2>
+<h2>Sites being inspected</h2>
 <ul>
   {{ for site of sites }}
-  <li><a href="/build/{{ site.id }}/">{{ site.name }}</a> — {{ site.adapter }} ({{ site.path || "." }})</li>
+  <li><a href="/build/{{ site.id }}/">{{ site.name }}</a> ({{ site.path || "." }})</li>
   {{ /for }}
 </ul>
 {{ /if }}

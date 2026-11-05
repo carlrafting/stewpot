@@ -812,7 +812,15 @@ Deno.test("builds can be configured and inspected within the workspace root", as
       'import lume from "lume/mod.ts";\nexport default lume();\n',
     );
     await Deno.mkdir(join(sitePath, "_site"));
-    await Deno.writeTextFile(join(sitePath, "_site", "index.html"), "built");
+    await Deno.writeTextFile(
+      join(sitePath, "_site", "index.html"),
+      "<h1>Built home</h1><script>window.previewScriptRan = true</script>",
+    );
+    await Deno.mkdir(join(sitePath, "_site", "assets"));
+    await Deno.writeTextFile(
+      join(sitePath, "_site", "assets", "site.css"),
+      "h1 { color: red }",
+    );
 
     const handler = await createTestHandler(root, workspaceRoot);
     const initial = await handler.fetch(
@@ -861,6 +869,36 @@ Deno.test("builds can be configured and inspected within the workspace root", as
     assertStringIncludes(detailPage, "Supported project detected: yes");
     assertStringIncludes(detailPage, "Lume import reference found: yes");
     assertStringIncludes(detailPage, "index.html");
+    assertStringIncludes(
+      detailPage,
+      "Preview generated site (scripts disabled)",
+    );
+    assertStringIncludes(detailPage, "Existing generated output folder");
+
+    const preview = await handler.fetch(
+      new Request(`${location}preview/`, { headers: { cookie } }),
+      createInfo(),
+    );
+    assertEquals(preview.status, 200);
+    assertStringIncludes(
+      preview.headers.get("content-security-policy") ?? "",
+      "script-src 'none'",
+    );
+    assertStringIncludes(
+      preview.headers.get("content-security-policy") ?? "",
+      "sandbox",
+    );
+    assertStringIncludes(await preview.text(), "Built home");
+
+    const asset = await handler.fetch(
+      new Request(`${location}preview/assets/site.css`, {
+        headers: { cookie },
+      }),
+      createInfo(),
+    );
+    assertEquals(asset.status, 200);
+    assertEquals(asset.headers.get("content-type"), "text/css; charset=utf-8");
+    assertStringIncludes(await asset.text(), "color: red");
 
     const traversal = await handler.fetch(
       new Request("https://example.com/builds/create/", {
@@ -880,6 +918,36 @@ Deno.test("builds can be configured and inspected within the workspace root", as
     );
     assertEquals(traversal.status, 400);
     assertStringIncludes(await traversal.text(), "cannot leave the workspace");
+
+    const missingOutput = await handler.fetch(
+      new Request("https://example.com/builds/create/", {
+        method: "POST",
+        headers: {
+          cookie,
+          "content-type": "application/x-www-form-urlencoded",
+        },
+        body: new URLSearchParams({
+          path: "portfolio",
+          name: "Portfolio",
+          adapter: "lume",
+          outputDirectory: "",
+        }).toString(),
+      }),
+      createInfo(),
+    );
+    assertEquals(missingOutput.status, 400);
+    assertStringIncludes(
+      await missingOutput.text(),
+      "Enter the existing generated output folder",
+    );
+
+    const previewTraversal = await handler.fetch(
+      new Request(`${location}preview/%2e%2e%2fsessions.db`, {
+        headers: { cookie },
+      }),
+      createInfo(),
+    );
+    assertEquals(previewTraversal.status, 400);
   } finally {
     await closeTestHandler(root);
   }
