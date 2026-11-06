@@ -29,7 +29,7 @@ export default [
     method: "POST",
     pathname: "/build/run/",
     async handler(
-      { buildAdapter, projectRoot, request }: RouteContext,
+      { buildAdapter, projectRoot, responseCompleted }: RouteContext,
     ): Promise<Response> {
       if (!buildAdapter) {
         return text("No build adapter is configured.", { status: 503 });
@@ -44,7 +44,6 @@ export default [
       const encoder = new TextEncoder();
       const stripAnsi = createAnsiStripper();
       const abortController = new AbortController();
-      const onAbort = () => abortController.abort();
       const stream = new ReadableStream<Uint8Array>({
         async start(controller) {
           const output = (value: string) => {
@@ -70,7 +69,6 @@ export default [
             }
           } finally {
             activeBuilds.delete(projectRoot);
-            request.signal.removeEventListener("abort", onAbort);
             if (!abortController.signal.aborted) controller.close();
           }
         },
@@ -79,12 +77,7 @@ export default [
         },
       });
 
-      request.signal.addEventListener(
-        "abort",
-        onAbort,
-        { once: true },
-      );
-      if (request.signal.aborted) abortController.abort();
+      responseCompleted?.catch(() => abortController.abort());
       return new Response(stream, {
         headers: { "content-type": "text/plain; charset=utf-8" },
       });

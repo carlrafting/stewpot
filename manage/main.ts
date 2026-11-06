@@ -105,6 +105,7 @@ export async function app(
 
       const context: RouteContext = {
         request,
+        responseCompleted: info?.completed,
         headers,
         url,
         render,
