@@ -1,5 +1,6 @@
 import { html, text } from "../../http/response.ts";
 import type { Route, RouteContext } from "../../http/routes.ts";
+import { createAnsiStripper } from "../../build/ansi.ts";
 import nav from "../nav.ts";
 
 const activeBuilds = new Set<string>();
@@ -41,13 +42,15 @@ export default [
 
       activeBuilds.add(projectRoot);
       const encoder = new TextEncoder();
+      const stripAnsi = createAnsiStripper();
       const abortController = new AbortController();
       const onAbort = () => abortController.abort();
       const stream = new ReadableStream<Uint8Array>({
         async start(controller) {
           const output = (value: string) => {
             if (!abortController.signal.aborted) {
-              controller.enqueue(encoder.encode(value));
+              const plainText = stripAnsi(value);
+              if (plainText) controller.enqueue(encoder.encode(plainText));
             }
           };
           try {

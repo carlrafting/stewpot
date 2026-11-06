@@ -129,7 +129,8 @@ Deno.test("build page streams output from the configured adapter", async () => {
       name: "Test builder",
       async build({ projectRoot, write }) {
         assertEquals(projectRoot, root);
-        write("Generated index.html\n");
+        write("Generated \x1b[3");
+        write("2mindex.html\x1b[0m\n");
       },
     };
     const handler = await createTestHandler(root, adapter);
@@ -159,6 +160,7 @@ Deno.test("build page streams output from the configured adapter", async () => {
     assertStringIncludes(output, "Starting Test builder build...");
     assertStringIncludes(output, "Generated index.html");
     assertStringIncludes(output, "Build completed successfully.");
+    assertEquals(output.includes("\x1b"), false);
   } finally {
     await closeTestHandler(root);
   }
