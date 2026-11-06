@@ -2,9 +2,11 @@ import { assert, assertEquals, assertStringIncludes } from "@std/assert";
 import { join } from "@std/path/join";
 import { toFileUrl } from "@std/path/to-file-url";
 import { app } from "./main.ts";
+import type { BuildAdapter } from "./build/adapter.ts";
 
 async function createTestHandler(
   root: string,
+  build?: BuildAdapter,
 ): Promise<Awaited<ReturnType<typeof app>>> {
   const rootUrl = toFileUrl(root).href.replace(/\/?$/, "/");
   const sessionsPath = join(root, "sessions.db");
@@ -14,6 +16,7 @@ async function createTestHandler(
     meta: { url: rootUrl },
     sessions: { path: sessionsPath },
     kv: { path: kvPath },
+    build,
   });
   testHandlers.set(root, handler);
   return handler;
@@ -67,7 +70,7 @@ Deno.test("requests without a session receive a new session cookie", async () =>
   }
 });
 
-Deno.test("library upload route reports that uploads are not implemented", async () => {
+Deno.test("library upload route reports page not found", async () => {
   const root = await Deno.makeTempDir();
   try {
     const handler = await createTestHandler(root);
@@ -86,8 +89,8 @@ Deno.test("library upload route reports that uploads are not implemented", async
       }),
       createInfo(),
     );
-    assertEquals(response.status, 501);
-    assertStringIncludes(await response.text(), "not available yet");
+    assertEquals(response.status, 404);
+    assertStringIncludes(await response.text(), "Page was not found!");
   } finally {
     await closeTestHandler(root);
   }
@@ -114,6 +117,121 @@ Deno.test("documents page renders when the session cookie is present", async () 
     assertStringIncludes(page, "New Document");
     assertStringIncludes(page, '<label for="title">Title</label>');
     assertStringIncludes(page, 'name="title"');
+  } finally {
+    await closeTestHandler(root);
+  }
+});
+
+Deno.test("build page streams output from the configured adapter", async () => {
+  const root = await Deno.makeTempDir();
+  try {
+    const adapter: BuildAdapter = {
+      name: "Test builder",
+      async build({ projectRoot, write }) {
+        assertEquals(projectRoot, root);
+        write("Generated \x1b[3");
+        write("2mindex.html\x1b[0m\n");
+      },
+    };
+    const handler = await createTestHandler(root, adapter);
+    const initial = await handler.fetch(
+      new Request("https://example.com/build/"),
+      createInfo(),
+    );
+    const sessionId = getSessionId(initial);
+    const page = await handler.fetch(
+      new Request("https://example.com/build/", {
+        headers: { cookie: `session=${sessionId}` },
+      }),
+      createInfo(),
+    );
+    assertEquals(page.status, 200);
+    assertStringIncludes(await page.text(), "Test builder");
+
+    const response = await handler.fetch(
+      new Request("https://example.com/build/run/", {
+        method: "POST",
+        headers: { cookie: `session=${sessionId}` },
+      }),
+      createInfo(),
+    );
+    assertEquals(response.status, 200);
+    const output = await response.text();
+    assertStringIncludes(output, "Starting Test builder build...");
+    assertStringIncludes(output, "Generated index.html");
+    assertStringIncludes(output, "Build completed successfully.");
+    assertEquals(output.includes("\x1b"), false);
+  } finally {
+    await closeTestHandler(root);
+  }
+});
+
+Deno.test("build endpoint rejects overlapping builds for one project", async () => {
+  const root = await Deno.makeTempDir();
+  let releaseBuild = () => {};
+  try {
+    const adapter: BuildAdapter = {
+      name: "Test builder",
+      async build() {
+        await new Promise<void>((resolve) => {
+          releaseBuild = resolve;
+        });
+      },
+    };
+    const handler = await createTestHandler(root, adapter);
+    const initial = await handler.fetch(
+      new Request("https://example.com/build/"),
+      createInfo(),
+    );
+    const sessionId = getSessionId(initial);
+    const firstResponse = await handler.fetch(
+      new Request("https://example.com/build/run/", {
+        method: "POST",
+        headers: { cookie: `session=${sessionId}` },
+      }),
+      createInfo(),
+    );
+    const secondResponse = await handler.fetch(
+      new Request("https://example.com/build/run/", {
+        method: "POST",
+        headers: { cookie: `session=${sessionId}` },
+      }),
+      createInfo(),
+    );
+    assertEquals(secondResponse.status, 409);
+    assertStringIncludes(await secondResponse.text(), "already running");
+    releaseBuild();
+    assertStringIncludes(
+      await firstResponse.text(),
+      "Build completed successfully.",
+    );
+  } finally {
+    releaseBuild();
+    await closeTestHandler(root);
+  }
+});
+
+Deno.test("build endpoint reports when no adapter is configured", async () => {
+  const root = await Deno.makeTempDir();
+  try {
+    const handler = await createTestHandler(root);
+    const initial = await handler.fetch(
+      new Request("https://example.com/build/run/", { method: "POST" }),
+      createInfo(),
+    );
+    const sessionId = getSessionId(initial);
+    const response = await handler.fetch(
+      new Request("https://example.com/build/run/", {
+        method: "POST",
+        headers: { cookie: `session=${sessionId}` },
+      }),
+      createInfo(),
+    );
+    assertEquals(response.status, 503);
+    assertStringIncludes(
+      await response.text(),
+      "No build adapter is configured",
+    );
   } finally {
     await closeTestHandler(root);
   }
