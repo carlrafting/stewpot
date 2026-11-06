@@ -70,7 +70,7 @@ Deno.test("requests without a session receive a new session cookie", async () =>
   }
 });
 
-Deno.test("library upload route reports that uploads are not implemented", async () => {
+Deno.test("library upload route reports page not found", async () => {
   const root = await Deno.makeTempDir();
   try {
     const handler = await createTestHandler(root);
@@ -89,8 +89,8 @@ Deno.test("library upload route reports that uploads are not implemented", async
       }),
       createInfo(),
     );
-    assertEquals(response.status, 501);
-    assertStringIncludes(await response.text(), "not available yet");
+    assertEquals(response.status, 404);
+    assertStringIncludes(await response.text(), "Page was not found!");
   } finally {
     await closeTestHandler(root);
   }

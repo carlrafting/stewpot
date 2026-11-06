@@ -12,7 +12,7 @@ import { createSessionManager } from "./session/manager.ts";
 import { createFlash } from "./flash/message.ts";
 import { I18n } from "./i18n/locale.ts";
 import { createTemplateRender } from "./vento/templates.ts";
-import type { BuildAdapter } from "./build/adapter.ts";
+import { type BuildAdapter, lumeBuildAdapter } from "./build/adapter.ts";
 
 /** app options interface */
 export interface Options {
@@ -41,6 +41,7 @@ const defaultOptions: Options = {
   kv: {
     path: "database/kv.db",
   },
+  build: lumeBuildAdapter,
 };
 
 /** App handler returned by {@link app}. */
