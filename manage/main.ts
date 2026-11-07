@@ -33,15 +33,14 @@ export interface Options {
 }
 
 /** default app config options */
-const defaultOptions: Options = {
+export const defaultOptions: Options = {
   meta: import.meta,
   sessions: {
     path: "database/sessions.db",
   },
   kv: {
     path: "database/kv.db",
-  },
-  build: lumeBuildAdapter,
+  }
 };
 
 /** App handler returned by {@link app}. */
@@ -148,7 +147,10 @@ export async function app(
 
 if (import.meta.main) {
   {
-    const handler = await app();
+    const handler = await app({
+      ...defaultOptions,
+      build: lumeBuildAdapter,
+    });
     await createServer(handler);
   }
 }
