@@ -264,6 +264,42 @@ function setupBlockOrdering(root) {
   };
 }
 
+function setupBuildForm(form) {
+  const log = form.querySelector("[data-build-log]");
+  const button = form.querySelector('button[type="submit"]');
+  if (!log || !button) return;
+
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    button.disabled = true;
+    log.value = "";
+    try {
+      const response = await fetch(form.action, {
+        method: form.method,
+        body: new FormData(form),
+      });
+      const reader = response.body?.getReader();
+      if (!reader) throw new Error("Build output stream is unavailable.");
+      const decoder = new TextDecoder();
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        log.value += decoder.decode(value, { stream: true });
+        log.scrollTop = log.scrollHeight;
+      }
+      log.value += decoder.decode();
+      if (!response.ok) {
+        log.value ||= `Build request failed: ${response.status}`;
+      }
+    } catch (error) {
+      log.value += `\nBuild request failed: ${error.message}`;
+      console.error("Build request failed", error);
+    } finally {
+      button.disabled = false;
+    }
+  });
+}
+
 class ManageBlockPreview extends HTMLElement {
   #cleanup;
   #observer;
@@ -319,6 +355,8 @@ class ManageBlockOrdering extends HTMLElement {
     }
   }
 }
+
+document.querySelectorAll("[data-build-form]").forEach(setupBuildForm);
 
 if (!customElements.get("block-preview")) {
   customElements.define("block-preview", ManageBlockPreview);
