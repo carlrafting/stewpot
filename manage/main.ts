@@ -6,12 +6,13 @@ import { createServer } from "./http/server.ts";
 import { createConnections, getConnection } from "./kv/connections.ts";
 import { KvRepository } from "./kv/repository.ts";
 import { matchRoutes, type RouteContext } from "./http/routes.ts";
-import { dirname, fromFileUrl } from "@std/path";
+import { dirname, fromFileUrl, normalize } from "@std/path";
 import { routes } from "./app/routes.ts";
 import { createSessionManager } from "./session/manager.ts";
 import { createFlash } from "./flash/message.ts";
 import { I18n } from "./i18n/locale.ts";
 import { createTemplateRender } from "./vento/templates.ts";
+import type { BuildAdapter } from "./build/adapter.ts";
 
 /** app options interface */
 export interface Options {
@@ -27,6 +28,8 @@ export interface Options {
     /** path to main kv db */
     path?: string;
   };
+  /** optional project-specific builder for published documents */
+  buildAdapter?: BuildAdapter;
 }
 
 /** default app config options */
@@ -40,7 +43,9 @@ const defaultOptions: Options = {
   },
 };
 
+/** A running Manage application with an explicit KV cleanup lifecycle. */
 export interface ManageApp extends Deno.ServeDefaultExport {
+  /** Close the app's KV connections. */
   close(): Promise<void>;
 }
 
@@ -53,6 +58,16 @@ export async function app(
     ..._options,
   };
   const connections = await createConnections(options);
+  const metaUrl = new URL(options.meta.url);
+  const normalizedProjectRoot = normalize(
+    metaUrl.pathname.endsWith("/")
+      ? fromFileUrl(metaUrl)
+      : dirname(fromFileUrl(metaUrl)),
+  );
+  const projectRoot = normalizedProjectRoot === "/" ||
+      /^[A-Za-z]:[\\/]$/.test(normalizedProjectRoot)
+    ? normalizedProjectRoot
+    : normalizedProjectRoot.replace(/[\\/]+$/, "");
   // console.log(connections);
   KvRepository.connections = connections;
   const render = createTemplateRender({
@@ -105,6 +120,8 @@ export async function app(
         i18n,
         flash,
         params,
+        projectRoot,
+        buildAdapter: options.buildAdapter,
       };
 
       if (staticPathPattern.test(url)) {
@@ -144,3 +161,11 @@ if (import.meta.main) {
 
 export default app;
 export { createServer };
+export {
+  collectDocumentBuildSnapshot,
+  writeDocumentPages,
+} from "./build/documents.ts";
+export type { PublishedDocumentPage } from "./build/documents.ts";
+export type { BuildAdapter, BuildContext } from "./build/adapter.ts";
+export type { Block, BlockContent, BlockType, Document } from "./app/data.ts";
+export { blockTypes } from "./app/data.ts";

@@ -3,6 +3,7 @@ import { html, notFound } from "./response.ts";
 import type { SessionManager } from "../session/manager.ts";
 import type { I18n } from "../i18n/locale.ts";
 import type { FlashMethods } from "../flash/message.ts";
+import type { BuildAdapter } from "../build/adapter.ts";
 
 export type RouteMethod = "GET" | "POST";
 
@@ -18,6 +19,8 @@ export interface RouteContext {
   i18n: I18n;
   flash: FlashMethods;
   params: RouteParams;
+  projectRoot: string;
+  buildAdapter?: BuildAdapter;
 }
 
 export interface Route {

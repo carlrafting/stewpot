@@ -186,6 +186,13 @@ small {
   box-sizing: border-box;
 }
 
+.build-log {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+}
+
 .block-card input[type="text"],
 .block-card input[type="url"],
 .block-card input[type="number"] {

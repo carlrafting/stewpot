@@ -1,0 +1,14 @@
+{{ layout "layouts/page.vto" }}
+
+{{ if adapterName }}
+<p>Build adapter: <strong>{{ adapterName }}</strong></p>
+<form action="/build/run/" method="post" data-build-form>
+  <button type="submit">Build published documents</button>
+  <label for="build-log">Build output</label>
+  <textarea id="build-log" class="build-log" data-build-log rows="16" readonly></textarea>
+</form>
+{{ else }}
+{{ include "components/notice.vto" { text: "No build adapter is configured.", variant: "notice", role: "status" } }}
+{{ /if }}
+
+{{ /layout }}

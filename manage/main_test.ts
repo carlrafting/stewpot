@@ -1,10 +1,12 @@
 import { assert, assertEquals, assertStringIncludes } from "@std/assert";
 import { join } from "@std/path/join";
 import { toFileUrl } from "@std/path/to-file-url";
+import type { BuildAdapter } from "./build/adapter.ts";
 import { app } from "./main.ts";
 
 async function createTestHandler(
   root: string,
+  buildAdapter?: BuildAdapter,
 ): Promise<Awaited<ReturnType<typeof app>>> {
   const rootUrl = toFileUrl(root).href.replace(/\/?$/, "/");
   const sessionsPath = join(root, "sessions.db");
@@ -14,6 +16,7 @@ async function createTestHandler(
     meta: { url: rootUrl },
     sessions: { path: sessionsPath },
     kv: { path: kvPath },
+    buildAdapter,
   });
   testHandlers.set(root, handler);
   return handler;
@@ -114,6 +117,7 @@ Deno.test("documents page renders when the session cookie is present", async () 
     assertStringIncludes(page, "New Document");
     assertStringIncludes(page, '<label for="title">Title</label>');
     assertStringIncludes(page, 'name="title"');
+    assertStringIncludes(page, '<label for="path">Public path</label>');
   } finally {
     await closeTestHandler(root);
   }
@@ -131,6 +135,7 @@ Deno.test("document creation saves data and redirects to the edit screen", async
     const form = new URLSearchParams({
       title: "Welcome post",
       content: "This is the body of the document.",
+      path: "/welcome/",
       draft: "true",
     });
 
@@ -161,13 +166,93 @@ Deno.test("document creation saves data and redirects to the edit screen", async
 
     const document = documents[0] as {
       title: string;
+      path: string;
       content: string;
       draft: boolean;
     };
     assertEquals(document.title, "Welcome post");
+    assertEquals(document.path, "/welcome/");
     assertEquals(document.content, "This is the body of the document.");
     assertEquals(document.draft, true);
     await kv.close();
+  } finally {
+    await closeTestHandler(root);
+  }
+});
+
+Deno.test("build endpoint passes published pages to the configured adapter", async () => {
+  const root = await Deno.makeTempDir();
+  let adapterPaths: string[] = [];
+  let stagedDirectory = "";
+  let adapterProjectRoot = "";
+  const buildAdapter: BuildAdapter = {
+    name: "test",
+    async build({ projectRoot, documents, documentsDirectory, write }) {
+      adapterProjectRoot = projectRoot;
+      stagedDirectory = documentsDirectory;
+      adapterPaths = documents.map((document) => document.path);
+      const generated = await Deno.readTextFile(
+        join(documentsDirectory, "welcome", "index.html"),
+      );
+      assertStringIncludes(generated, "<h1>Welcome</h1>");
+      write("Adapter output.\n");
+    },
+  };
+  try {
+    const handler = await createTestHandler(root, buildAdapter);
+    const initial = await handler.fetch(
+      new Request("https://example.com/build/"),
+      createInfo(),
+    );
+    const sessionId = getSessionId(initial);
+    const buildPage = await handler.fetch(
+      new Request("https://example.com/build/", {
+        headers: { cookie: `session=${sessionId}` },
+      }),
+      createInfo(),
+    );
+    assertEquals(buildPage.status, 200);
+    assertStringIncludes(await buildPage.text(), "Build published documents");
+    const kv = await Deno.openKv(join(root, "kv.db"));
+    await kv.set(["documents", "published"], {
+      id: "published",
+      title: "Welcome",
+      path: "/welcome/",
+      content: "",
+      created: "2026-01-01",
+      updated: "2026-01-01",
+      draft: false,
+    });
+    await kv.close();
+
+    const response = await handler.fetch(
+      new Request("https://example.com/build/run/", {
+        method: "POST",
+        headers: { cookie: `session=${sessionId}` },
+      }),
+      createInfo(),
+    );
+    assertEquals(response.status, 200);
+    const output = await response.text();
+    assertEquals(adapterProjectRoot, root);
+    assertEquals(adapterPaths, ["/welcome/"]);
+    assertStringIncludes(output, "Prepared 1 published page(s).");
+    assertStringIncludes(output, "Adapter output.");
+    assertStringIncludes(output, "Build completed successfully.");
+    assertEquals(
+      await Deno.stat(join(root, "welcome", "index.html")).then(
+        () => true,
+        () => false,
+      ),
+      false,
+    );
+    assertEquals(
+      await Deno.stat(stagedDirectory).then(
+        () => true,
+        () => false,
+      ),
+      false,
+    );
   } finally {
     await closeTestHandler(root);
   }
@@ -191,6 +276,7 @@ Deno.test("documents index displays saved documents", async () => {
       draft: false,
       blocks: [],
     });
+
     await kv.close();
 
     const response = await handler.fetch(
@@ -206,6 +292,45 @@ Deno.test("documents index displays saved documents", async () => {
     const page = await response.text();
     assertStringIncludes(page, "First document");
     assertStringIncludes(page, "/document/doc-1/edit/");
+  } finally {
+    await closeTestHandler(root);
+  }
+});
+
+Deno.test("document creation rejects a duplicate public path", async () => {
+  const root = await Deno.makeTempDir();
+  try {
+    const handler = await createTestHandler(root);
+    const initial = await handler.fetch(
+      new Request("https://example.com/documents/new/"),
+      createInfo(),
+    );
+    const sessionId = getSessionId(initial);
+    const headers = {
+      cookie: `session=${sessionId}`,
+      "content-type": "application/x-www-form-urlencoded",
+    };
+
+    const first = await handler.fetch(
+      new Request("https://example.com/documents/create/", {
+        method: "POST",
+        headers,
+        body: new URLSearchParams({ title: "First", path: "/same/" }),
+      }),
+      createInfo(),
+    );
+    assertEquals(first.status, 302);
+
+    const duplicate = await handler.fetch(
+      new Request("https://example.com/documents/create/", {
+        method: "POST",
+        headers,
+        body: new URLSearchParams({ title: "Second", path: "/same/" }),
+      }),
+      createInfo(),
+    );
+    assertEquals(duplicate.status, 409);
+    assertStringIncludes(await duplicate.text(), "already uses this path");
   } finally {
     await closeTestHandler(root);
   }
@@ -296,11 +421,13 @@ Deno.test("document updates save title and draft state without losing content", 
     const persisted = await Deno.openKv(join(root, "kv.db"));
     const document = await persisted.get<{
       title: string;
+      path: string;
       content: string;
       draft: boolean;
       updated: string;
     }>(["documents", "doc-update"]);
     assertEquals(document.value?.title, "Updated title");
+    assertEquals(document.value?.path, "/before/");
     assertEquals(document.value?.content, "Keep this content");
     assertEquals(document.value?.draft, true);
     assert(document.value?.updated !== "2026-01-01T00:00:00");

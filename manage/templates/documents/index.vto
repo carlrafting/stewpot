@@ -8,6 +8,7 @@
     {{ document.title }}
     {{ else }}
     <a href="/document/{{ document.id }}/edit/">{{ document.title }}</a>
+    <small>{{ document.path }}{{ if document.draft }} (draft){{ /if }}</small>
     {{ /if }}
   </li>
 {{ /for }}
