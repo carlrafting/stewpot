@@ -6,34 +6,34 @@ import { createServer } from "./http/server.ts";
 import { createConnections, getConnection } from "./kv/connections.ts";
 import { KvRepository } from "./kv/repository.ts";
 import { matchRoutes, type RouteContext } from "./http/routes.ts";
-import { dirname, fromFileUrl, normalize } from "@std/path";
+import { dirname, fromFileUrl, resolve } from "@std/path";
 import { routes } from "./app/routes.ts";
 import { createSessionManager } from "./session/manager.ts";
 import { createFlash } from "./flash/message.ts";
 import { I18n } from "./i18n/locale.ts";
 import { createTemplateRender } from "./vento/templates.ts";
-import type { BuildAdapter } from "./build/adapter.ts";
+import { type BuildAdapter, lumeBuildAdapter } from "./build/adapter.ts";
 
 /** app options interface */
 export interface Options {
   /** Import meta from the entrypoint, used to resolve paths */
   meta: Pick<ImportMeta, "url">;
   /** session config options */
-  sessions: {
+  sessions?: {
     /** path to session kv db */
     path?: string;
   };
   /** main kv db config options */
-  kv: {
+  kv?: {
     /** path to main kv db */
     path?: string;
   };
-  /** optional project-specific builder for published documents */
-  buildAdapter?: BuildAdapter;
+  /** optional static site build adapter */
+  build?: BuildAdapter;
 }
 
 /** default app config options */
-const defaultOptions: Options = {
+export const defaultOptions: Options = {
   meta: import.meta,
   sessions: {
     path: "database/sessions.db",
@@ -43,7 +43,7 @@ const defaultOptions: Options = {
   },
 };
 
-/** A running Manage application with an explicit KV cleanup lifecycle. */
+/** App handler returned by {@link app}. */
 export interface ManageApp extends Deno.ServeDefaultExport {
   /** Close the app's KV connections. */
   close(): Promise<void>;
@@ -56,18 +56,10 @@ export async function app(
   const options = {
     ...defaultOptions,
     ..._options,
+    sessions: { ...defaultOptions.sessions, ..._options?.sessions },
+    kv: { ...defaultOptions.kv, ..._options?.kv },
   };
   const connections = await createConnections(options);
-  const metaUrl = new URL(options.meta.url);
-  const normalizedProjectRoot = normalize(
-    metaUrl.pathname.endsWith("/")
-      ? fromFileUrl(metaUrl)
-      : dirname(fromFileUrl(metaUrl)),
-  );
-  const projectRoot = normalizedProjectRoot === "/" ||
-      /^[A-Za-z]:[\\/]$/.test(normalizedProjectRoot)
-    ? normalizedProjectRoot
-    : normalizedProjectRoot.replace(/[\\/]+$/, "");
   // console.log(connections);
   KvRepository.connections = connections;
   const render = createTemplateRender({
@@ -112,6 +104,7 @@ export async function app(
 
       const context: RouteContext = {
         request,
+        responseCompleted: info?.completed,
         headers,
         url,
         render,
@@ -120,8 +113,8 @@ export async function app(
         i18n,
         flash,
         params,
-        projectRoot,
-        buildAdapter: options.buildAdapter,
+        projectRoot: resolve(fromFileUrl(new URL(".", options.meta.url))),
+        buildAdapter: options.build,
       };
 
       if (staticPathPattern.test(url)) {
@@ -154,7 +147,10 @@ export async function app(
 
 if (import.meta.main) {
   {
-    const handler = await app();
+    const handler = await app({
+      ...defaultOptions,
+      build: lumeBuildAdapter,
+    });
     await createServer(handler);
   }
 }
@@ -169,3 +165,4 @@ export type { PublishedDocumentPage } from "./build/documents.ts";
 export type { BuildAdapter, BuildContext } from "./build/adapter.ts";
 export type { Block, BlockContent, BlockType, Document } from "./app/data.ts";
 export { blockTypes } from "./app/data.ts";
+export { lumeBuildAdapter } from "./build/adapter.ts";

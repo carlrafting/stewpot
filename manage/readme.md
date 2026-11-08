@@ -40,6 +40,44 @@ await createServer(handler, options);
 
 Then starting the server with `deno -RWN main.ts`.
 
+## Site builds
+
+Manage can run a configured build adapter from the **Build** page. The built-in
+Lume adapter runs `deno task lume` from the directory containing the app
+entrypoint passed in `meta`. Add a `lume` task to that project's `deno.json`,
+then opt in when creating the app:
+
+```ts
+import createApp, { lumeBuildAdapter } from "@stewpot/manage";
+const app = await createApp({ meta: import.meta, build: lumeBuildAdapter });
+export default app;
+```
+
+The server process must have permission to run Deno (for example,
+`--allow-run=deno`). Builds are never started automatically, and the page does
+not accept command text. Custom adapters implement the exported `BuildAdapter` interface and receive
+the project root, published document snapshot, a temporary directory
+containing static HTML pages, an abort signal, and a function for writing
+output. For example:
+
+```ts
+import type { BuildAdapter } from "@stewpot/manage";
+
+const adapter: BuildAdapter = {
+  name: "Custom builder",
+  async build({ projectRoot, documents, documentsDirectory, signal, write }) {
+    if (signal.aborted) return;
+    write(`Building ${documents.length} published pages from ${projectRoot}\n`);
+    // Invoke the project's trusted build logic and write its output here.
+    // Include documentsDirectory as an input to that build.
+  },
+};
+
+const app = await createApp({ meta: import.meta, build: adapter });
+```
+
+The interface and built-in adapter are exported from the package entrypoint.
+
 ## Document block editor
 
 Open **Documents** to create and edit documents. Documents support heading,
@@ -68,7 +106,7 @@ import createApp from "@stewpot/manage";
 
 const app = await createApp({
   meta: import.meta,
-  buildAdapter: {
+  build: {
     name: "My site builder",
     async build({ projectRoot, documents, documentsDirectory, signal, write }) {
       write(`Building ${documents.length} published page(s) from ${projectRoot}\n`);

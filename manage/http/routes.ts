@@ -11,6 +11,7 @@ export type RouteParams = Record<string, string | undefined>;
 
 export interface RouteContext {
   request: Request;
+  responseCompleted?: Promise<void>;
   url: URL;
   headers: Headers;
   render: (file: string) => Promise<TemplateRenderFunction>;
