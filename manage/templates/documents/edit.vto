@@ -6,6 +6,7 @@
 {{ /if }}
 <form action="/document/{{ document.id }}/update/" method="post" class="document-form">
   {{ include "components/field.vto" { id: "title", name: "title", label: "Title", type: "text", required: true, value: document.title } }}
+  {{ include "components/field.vto" { id: "path", name: "path", label: "Public path", type: "text", required: true, value: document.path, hint: "This path determines the page URL and build output location." } }}
   <div class="field">
     <label class="inline-field" for="draft">
       <input id="draft" type="checkbox" name="draft" {{ if document.draft }}checked{{ /if }}>

@@ -40,7 +40,7 @@ export const defaultOptions: Options = {
   },
   kv: {
     path: "database/kv.db",
-  }
+  },
 };
 
 /** App handler returned by {@link app}. */
@@ -157,5 +157,12 @@ if (import.meta.main) {
 
 export default app;
 export { createServer };
-export { lumeBuildAdapter } from "./build/adapter.ts";
+export {
+  collectDocumentBuildSnapshot,
+  writeDocumentPages,
+} from "./build/documents.ts";
+export type { PublishedDocumentPage } from "./build/documents.ts";
 export type { BuildAdapter, BuildContext } from "./build/adapter.ts";
+export type { Block, BlockContent, BlockType, Document } from "./app/data.ts";
+export { blockTypes } from "./app/data.ts";
+export { lumeBuildAdapter } from "./build/adapter.ts";

@@ -5,6 +5,7 @@ export interface Nav {
   href: string;
 }
 
+/** All block types supported by the document editor and renderer. */
 export const blockTypes = [
   "heading",
   "markdown",
@@ -14,8 +15,10 @@ export const blockTypes = [
   "code",
 ] as const;
 
+/** The supported document block types. */
 export type BlockType = typeof blockTypes[number];
 
+/** Typed content carried by a document block. */
 export type BlockContent =
   | { type: "heading"; level: 1 | 2 | 3 | 4 | 5 | 6; text: string }
   | { type: "markdown"; body: string }
@@ -24,12 +27,15 @@ export type BlockContent =
   | { type: "file"; url: string; filename: string; size: number }
   | { type: "code"; body: string };
 
-export interface Block {
-  id: string;
-  type: BlockType;
-  order: number;
-  content: BlockContent;
-}
+/** A typed, ordered content block belonging to a document. */
+export type Block = {
+  [Type in BlockType]: {
+    id: string;
+    type: Type;
+    order: number;
+    content: Extract<BlockContent, { type: Type }>;
+  };
+}[BlockType];
 
 export function isBlockType(value: unknown): value is BlockType {
   return typeof value === "string" &&
@@ -109,12 +115,21 @@ export function parseBlockContent(
   }
 }
 
+/** A Manage document and its publish metadata. */
 export interface Document {
+  /** Stable KV identifier. */
   id: string;
+  /** Display title and generated page heading. */
   title: string;
+  /** Canonical public route; legacy records may omit it. */
+  path?: string;
+  /** Legacy unstructured content retained for older documents. */
   content: string;
+  /** Creation timestamp. */
   created: string;
+  /** Last update timestamp. */
   updated: string;
+  /** Draft documents are excluded from static builds. */
   draft: boolean;
 }
 
@@ -136,6 +151,49 @@ export interface PageContext {
     documents?: Document[];
     sessions?: Session[];
   };
+}
+
+export function slugifyTitle(title: string, fallback = "document"): string {
+  const slug = title.normalize("NFKD")
+    .replace(/\p{Diacritic}/gu, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+  return slug || fallback;
+}
+
+export function normalizeDocumentPath(value: string): string | null {
+  if (
+    !value.startsWith("/") || value.startsWith("//") ||
+    value.includes("\\") || value.includes("?") || value.includes("#") ||
+    value.includes("%")
+  ) return null;
+  for (const character of value) {
+    const code = character.charCodeAt(0);
+    if (code <= 0x1f || code === 0x7f) return null;
+  }
+
+  const path = value === "/" ? "/" : `${value.replace(/\/+$/, "")}/`;
+  if (path === "/") return path;
+  const segments = path.slice(1, -1).split("/");
+  if (
+    segments.some((segment) =>
+      !segment || segment === "." || segment === ".." ||
+      !/^[\p{L}\p{N}._~-]+$/u.test(segment)
+    )
+  ) return null;
+  return path;
+}
+
+export function documentPath(
+  document: Pick<Document, "id" | "title" | "path">,
+) {
+  if (document.path === undefined || document.path === "") {
+    return `/${slugifyTitle(document.title, document.id)}/`;
+  }
+  const path = normalizeDocumentPath(document.path);
+  if (!path) throw new Error(`Document "${document.id}" has an invalid path.`);
+  return path;
 }
 
 export interface LibrarySource {

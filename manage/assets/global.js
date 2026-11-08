@@ -364,3 +364,41 @@ if (!customElements.get("block-preview")) {
 if (!customElements.get("block-ordering")) {
   customElements.define("block-ordering", ManageBlockOrdering);
 }
+
+document.querySelectorAll("[data-build-form]").forEach((form) => {
+  const log = form.querySelector("[data-build-log]");
+  const button = form.querySelector('button[type="submit"]');
+  if (!log || !button) return;
+
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    button.disabled = true;
+    log.value = "";
+    try {
+      const response = await fetch(form.action, {
+        method: form.method,
+        body: new FormData(form),
+      });
+      if (!response.ok) {
+        log.value = await response.text();
+        return;
+      }
+      const reader = response.body?.getReader();
+      if (!reader) throw new Error("Build output stream is unavailable.");
+      const decoder = new TextDecoder();
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        log.value += decoder.decode(value, { stream: true });
+        log.scrollTop = log.scrollHeight;
+      }
+      log.value += decoder.decode();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      log.value += `\nBuild request failed: ${message}`;
+      console.error("Build request failed", error);
+    } finally {
+      button.disabled = false;
+    }
+  });
+});
