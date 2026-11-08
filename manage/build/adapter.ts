@@ -20,7 +20,7 @@ export interface BuildAdapter {
 export const lumeBuildAdapter: BuildAdapter = {
   name: "Lume",
   async build({ projectRoot, signal, write }) {
-    const process = new Deno.Command("deno", {
+    const process = new Deno.Command(Deno.execPath(), {
       args: ["task", "lume"],
       cwd: projectRoot,
       stdout: "piped",
