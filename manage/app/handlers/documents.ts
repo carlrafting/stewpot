@@ -80,9 +80,13 @@ export default [
           prefix: ["documents"],
         })
       ) {
+        const title = typeof document.value.title === "string"
+          ? document.value.title
+          : "Untitled";
         data.documents.push({
           ...document.value,
-          path: documentPath(document.value),
+          title,
+          path: documentPath({ ...document.value, title }),
         });
       }
       const page = await render("documents/index.vto");

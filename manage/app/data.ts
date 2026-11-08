@@ -189,7 +189,8 @@ export function documentPath(
   document: Pick<Document, "id" | "title" | "path">,
 ) {
   if (document.path === undefined || document.path === "") {
-    return `/${slugifyTitle(document.title, document.id)}/`;
+    const title = typeof document.title === "string" ? document.title : "";
+    return `/${slugifyTitle(title, document.id)}/`;
   }
   const path = normalizeDocumentPath(document.path);
   if (!path) throw new Error(`Document "${document.id}" has an invalid path.`);
