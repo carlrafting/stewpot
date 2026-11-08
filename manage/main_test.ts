@@ -391,6 +391,13 @@ Deno.test("documents index displays saved documents", async () => {
       draft: false,
       blocks: [],
     });
+    await kv.set(["documents", "legacy-doc"], {
+      id: "legacy-doc",
+      content: "Legacy body",
+      created: "2026-01-01T00:00:00",
+      updated: "2026-01-01T00:00:00",
+      draft: false,
+    });
 
     await kv.close();
 
@@ -407,6 +414,8 @@ Deno.test("documents index displays saved documents", async () => {
     const page = await response.text();
     assertStringIncludes(page, "First document");
     assertStringIncludes(page, "/document/doc-1/edit/");
+    assertStringIncludes(page, "Untitled");
+    assertStringIncludes(page, "/legacy-doc/");
   } finally {
     await closeTestHandler(root);
   }
