@@ -1,4 +1,3 @@
-import MarkdownIt from "markdown-it";
 import { html, json, text } from "../../http/response.ts";
 import { getConnection } from "../../kv/connections.ts";
 import type { Route, RouteContext } from "../../http/routes.ts";
@@ -7,12 +6,14 @@ import {
   blockTypes,
   defaultContent,
   type Document,
+  documentPath,
   isBlockType,
+  normalizeDocumentPath,
   parseBlockContent,
+  slugifyTitle,
 } from "../data.ts";
+import { renderMarkdown } from "../rendering.ts";
 import nav from "../nav.ts";
-
-const markdown = new MarkdownIt({ html: false, linkify: false });
 
 function isJsonRequest(request: Request): boolean {
   return request.headers.get("accept")?.includes("application/json") ?? false;
@@ -32,6 +33,22 @@ function normalizeOrder(blocks: Block[]): Block[] {
   return blocks.map((block, order) => ({ ...block, order }));
 }
 
+async function findPathConflict(
+  kv: Deno.Kv,
+  path: string,
+  excludedId?: string,
+): Promise<Document | null> {
+  const normalizedPath = path.toLocaleLowerCase("en-US");
+  for await (const entry of kv.list<Document>({ prefix: ["documents"] })) {
+    const document = entry.value;
+    if (document.id === excludedId) continue;
+    if (documentPath(document).toLocaleLowerCase("en-US") === normalizedPath) {
+      return document;
+    }
+  }
+  return null;
+}
+
 export default [
   {
     name: "markdown_preview",
@@ -43,7 +60,7 @@ export default [
       if (typeof body !== "string") {
         return badRequest("Markdown content is required.", request);
       }
-      return json({ html: markdown.render(body) });
+      return json({ html: renderMarkdown(body) });
     },
   },
   {
@@ -63,7 +80,10 @@ export default [
           prefix: ["documents"],
         })
       ) {
-        data.documents.push(document.value);
+        data.documents.push({
+          ...document.value,
+          path: documentPath(document.value),
+        });
       }
       const page = await render("documents/index.vto");
       const body = await page({ title, description, url, nav, data });
@@ -92,7 +112,32 @@ export default [
       const id = crypto.randomUUID();
       const key = ["documents", id];
       const formData = await request.formData();
-      const title = formData?.get("title")?.valueOf().toString() ?? "Untitled";
+      const titleValue = formData.get("title");
+      const title = typeof titleValue === "string" && titleValue.trim()
+        ? titleValue.trim()
+        : "Untitled";
+      const pathValue = formData.get("path");
+      const requestedPath = typeof pathValue === "string" && pathValue.trim()
+        ? pathValue.trim()
+        : `/${slugifyTitle(title, id)}/`;
+      const path = normalizeDocumentPath(requestedPath);
+      if (!path) {
+        return text("Enter a valid path such as /about/.", { status: 400 });
+      }
+      const kv = getConnection(connections, "kv");
+      if (!kv) throw new Error("No connection with provided key found!");
+      if (await findPathConflict(kv, path)) {
+        return text("Another document already uses this path.", {
+          status: 409,
+        });
+      }
+      const pathKey = ["documentPaths", path.toLocaleLowerCase("en-US")];
+      const pathEntry = await kv.get<string>(pathKey);
+      if (pathEntry.value) {
+        return text("Another document already uses this path.", {
+          status: 409,
+        });
+      }
       const content = formData?.get("content")?.valueOf().toString() ?? "Empty";
       const draft = formData.has("draft");
       const created = Temporal.Now.plainDateTimeISO().toLocaleString();
@@ -100,19 +145,24 @@ export default [
       const data: Document = {
         id,
         title,
+        path,
         content,
         created,
         updated,
         draft,
       };
-      const kv = connections.get("kv");
-      const atomic = kv?.atomic();
-      const commit = await atomic?.check({ key, versionstamp: null }).set(
-        key,
-        data,
-      ).commit();
-      if (!commit?.ok) {
-        throw new Error("There was an error while creating the document!");
+      const commit = await kv.atomic()
+        .check({ key, versionstamp: null }, {
+          key: pathKey,
+          versionstamp: null,
+        })
+        .set(key, data)
+        .set(pathKey, id)
+        .commit();
+      if (!commit.ok) {
+        return text("Another document already uses this path.", {
+          status: 409,
+        });
       }
       return Response.redirect(new URL(`/document/${id}/edit/`, url));
     },
@@ -143,7 +193,10 @@ export default [
       if (!entry.value || entry.value.id !== id) {
         return text("Document not found.", { status: 404 });
       }
-      const document = entry?.value;
+      const document = {
+        ...entry.value,
+        path: documentPath(entry.value),
+      };
       const blockAdded = await flash.get("success");
       const page = await render("documents/edit.vto");
       const body = await page({
@@ -180,14 +233,58 @@ export default [
       if (typeof titleValue !== "string" || !titleValue.trim()) {
         return text("A document title is required.", { status: 400 });
       }
+      const pathValue = formData.get("path");
+      const path = pathValue === null
+        ? documentPath(entry.value)
+        : typeof pathValue === "string"
+        ? normalizeDocumentPath(pathValue.trim())
+        : null;
+      if (!path) {
+        return text("Enter a valid path such as /about/.", { status: 400 });
+      }
+      if (await findPathConflict(kv, path, id)) {
+        return text("Another document already uses this path.", {
+          status: 409,
+        });
+      }
+
+      const previousPath = documentPath(entry.value);
+      const pathKey = ["documentPaths", path.toLocaleLowerCase("en-US")];
+      const pathEntry = await kv.get<string>(pathKey);
+      if (pathEntry.value && pathEntry.value !== id) {
+        return text("Another document already uses this path.", {
+          status: 409,
+        });
+      }
 
       const document: Document = {
         ...entry.value,
         title: titleValue.trim(),
+        path,
         draft: formData.has("draft"),
         updated: Temporal.Now.plainDateTimeISO().toLocaleString(),
       };
-      const commit = await kv.atomic().check(entry).set(key, document).commit();
+      let operation = kv.atomic().check(entry);
+      if (pathEntry.value) {
+        operation = operation.check(pathEntry);
+      } else {
+        operation = operation.check({ key: pathKey, versionstamp: null });
+      }
+      if (!pathEntry.value) operation = operation.set(pathKey, id);
+
+      const previousPathKey = [
+        "documentPaths",
+        previousPath.toLocaleLowerCase("en-US"),
+      ];
+      if (previousPathKey[1] !== pathKey[1]) {
+        const previousPathEntry = await kv.get<string>(previousPathKey);
+        if (previousPathEntry.value === id) {
+          operation = operation.check(previousPathEntry).delete(
+            previousPathKey,
+          );
+        }
+      }
+      const commit = await operation.set(key, document).commit();
       if (!commit.ok) {
         return text(
           "Document changed while it was being saved. Please retry.",

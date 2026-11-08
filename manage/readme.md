@@ -55,19 +55,21 @@ export default app;
 
 The server process must have permission to run Deno (for example,
 `--allow-run=deno`). Builds are never started automatically, and the page does
-not accept command text. Custom adapters implement the exported `BuildAdapter`
-interface and receive the project root, an abort signal, and a function for
-writing output. For example:
+not accept command text. Custom adapters implement the exported `BuildAdapter` interface and receive
+the project root, published document snapshot, a temporary directory
+containing static HTML pages, an abort signal, and a function for writing
+output. For example:
 
 ```ts
 import type { BuildAdapter } from "@stewpot/manage";
 
 const adapter: BuildAdapter = {
   name: "Custom builder",
-  async build({ projectRoot, signal, write }) {
+  async build({ projectRoot, documents, documentsDirectory, signal, write }) {
     if (signal.aborted) return;
-    write(`Building ${projectRoot}\n`);
+    write(`Building ${documents.length} published pages from ${projectRoot}\n`);
     // Invoke the project's trusted build logic and write its output here.
+    // Include documentsDirectory as an input to that build.
   },
 };
 
@@ -84,6 +86,41 @@ deleted. Use the block outline to navigate and drag blocks into a new order, or
 use the move buttons. Drag-and-drop and live previews are added when JavaScript
 is available; the forms and move buttons continue to work without JavaScript.
 Markdown preview renders raw HTML as text rather than executing it.
+
+## Publishing documents
+
+Each document has a public path such as `/about/`. New documents default to
+drafts and receive a path suggestion from the title; the path remains unchanged
+when the title is edited. Only published documents are included in a build.
+Existing records without a path are treated as if their current title supplied
+the path until they are next saved.
+
+Configure a build adapter when creating the app to enable the **Build** page.
+The adapter receives a document snapshot and a temporary directory containing
+static HTML pages (`/` becomes `index.html`, `/about/` becomes
+`about/index.html`). It can incorporate that directory into the project's build
+without Manage writing generated pages into the project's source tree:
+
+```ts
+import createApp from "@stewpot/manage";
+
+const app = await createApp({
+  meta: import.meta,
+  build: {
+    name: "My site builder",
+    async build({ projectRoot, documents, documentsDirectory, signal, write }) {
+      write(`Building ${documents.length} published page(s) from ${projectRoot}\n`);
+      // Consume documentsDirectory in the project's build pipeline.
+    },
+  },
+});
+export default app;
+```
+
+Manage owns one document collection and one build configuration per app. A
+first-class Site model is deferred until an app needs multiple independent
+domains, themes, output targets, or document collections. Custom adapters
+should treat `documentsDirectory` as read-only input and honor the abort signal.
 
 ## Component library
 

@@ -1,5 +1,11 @@
 import { html, text } from "../../http/response.ts";
 import type { Route, RouteContext } from "../../http/routes.ts";
+import {
+  collectDocumentBuildSnapshot,
+  DocumentBuildError,
+  writeDocumentPages,
+} from "../../build/documents.ts";
+import type { PublishedDocumentPage } from "../../build/documents.ts";
 import { createAnsiStripper } from "../../build/ansi.ts";
 import nav from "../nav.ts";
 
@@ -29,7 +35,13 @@ export default [
     method: "POST",
     pathname: "/build/run/",
     async handler(
-      { buildAdapter, projectRoot, responseCompleted }: RouteContext,
+      {
+        buildAdapter,
+        projectRoot,
+        responseCompleted,
+        connections,
+        request,
+      }: RouteContext,
     ): Promise<Response> {
       if (!buildAdapter) {
         return text("No build adapter is configured.", { status: 503 });
@@ -39,11 +51,44 @@ export default [
           status: 409,
         });
       }
+      const kv = connections.get("kv");
+      if (!kv) throw new Error("No connection with provided key found!");
 
       activeBuilds.add(projectRoot);
+      let documentsDirectory: string | undefined;
+      let documents: PublishedDocumentPage[];
+      try {
+        documents = await collectDocumentBuildSnapshot(kv);
+        documentsDirectory = await Deno.makeTempDir({
+          prefix: "stewpot-documents-",
+        });
+        await writeDocumentPages(documents, documentsDirectory);
+      } catch (error) {
+        if (documentsDirectory) {
+          await Deno.remove(documentsDirectory, { recursive: true });
+        }
+        activeBuilds.delete(projectRoot);
+        if (!(error instanceof DocumentBuildError)) throw error;
+        const message = error instanceof Error ? error.message : String(error);
+        return text(`Unable to prepare published documents: ${message}`, {
+          status: 422,
+        });
+      }
+
+      if (!documentsDirectory) {
+        activeBuilds.delete(projectRoot);
+        throw new Error("Document build directory was not created.");
+      }
+      const abortController = new AbortController();
+      const abort = () => abortController.abort();
+      if (request.signal.aborted) {
+        abort();
+      } else {
+        request.signal.addEventListener("abort", abort, { once: true });
+      }
+      responseCompleted?.catch(abort);
       const encoder = new TextEncoder();
       const stripAnsi = createAnsiStripper();
-      const abortController = new AbortController();
       const stream = new ReadableStream<Uint8Array>({
         async start(controller) {
           const output = (value: string) => {
@@ -54,8 +99,11 @@ export default [
           };
           try {
             output(`Starting ${buildAdapter.name} build...\n`);
+            output(`Prepared ${documents.length} published page(s).\n`);
             await buildAdapter.build({
               projectRoot,
+              documents,
+              documentsDirectory,
               signal: abortController.signal,
               write: output,
             });
@@ -68,7 +116,9 @@ export default [
               output(`\nBuild failed: ${message}\n`);
             }
           } finally {
+            request.signal.removeEventListener("abort", abort);
             activeBuilds.delete(projectRoot);
+            await Deno.remove(documentsDirectory, { recursive: true });
             if (!abortController.signal.aborted) controller.close();
           }
         },
@@ -77,7 +127,6 @@ export default [
         },
       });
 
-      responseCompleted?.catch(() => abortController.abort());
       return new Response(stream, {
         headers: { "content-type": "text/plain; charset=utf-8" },
       });

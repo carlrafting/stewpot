@@ -8,7 +8,7 @@
   <textarea id="build-log" class="build-log" data-build-log rows="16" readonly></textarea>
 </form>
 {{ else }}
-<p>No build adapter is configured for this project.</p>
+{{ include "components/notice.vto" { text: "No build adapter is configured.", variant: "notice", role: "status" } }}
 {{ /if }}
 
 {{ /layout }}

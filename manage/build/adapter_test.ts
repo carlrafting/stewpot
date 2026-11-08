@@ -16,6 +16,8 @@ Deno.test("Lume adapter runs the configured project task and forwards output", a
     let output = "";
     await lumeBuildAdapter.build({
       projectRoot,
+      documents: [],
+      documentsDirectory: projectRoot,
       signal: new AbortController().signal,
       write(chunk) {
         output += chunk;
