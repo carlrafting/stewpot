@@ -76,6 +76,49 @@ Deno.test("reader renders feeds and escapes feed content", async () => {
   }
 });
 
+Deno.test("reader requires HTTP Basic authentication when configured", async () => {
+  const handler = await app([], new FsStorage("unused"), {
+    username: "reader",
+    password: "pāssword",
+  });
+  const unauthorized = await handler.fetch(
+    new Request("http://localhost/"),
+    handlerInfo,
+  );
+  const authorized = await handler.fetch(
+    new Request("http://localhost/", {
+      headers: {
+        authorization: `bAsIc ${
+          btoa(
+            Array.from(
+              new TextEncoder().encode("reader:pāssword"),
+              (byte) => String.fromCharCode(byte),
+            ).join(""),
+          )
+        }`,
+      },
+    }),
+    handlerInfo,
+  );
+  const credentials = await authorized.text();
+  const wrongPassword = await handler.fetch(
+    new Request("http://localhost/", {
+      headers: { authorization: `Basic ${btoa("reader:wrong")}` },
+    }),
+    handlerInfo,
+  );
+
+  assertEquals(unauthorized.status, 401);
+  assertEquals(
+    unauthorized.headers.get("www-authenticate"),
+    'Basic realm="Stewpot Reader", charset="UTF-8"',
+  );
+  assertEquals(authorized.status, 200);
+  assertEquals(authorized.headers.get("cache-control"), "no-store");
+  assertStringIncludes(credentials, "<title>");
+  assertEquals(wrongPassword.status, 401);
+});
+
 Deno.test("reader serves its icon and returns 404 for unknown paths", async () => {
   const handler = await app([], new FsStorage("unused"));
   const iconResponse = await handler.fetch(

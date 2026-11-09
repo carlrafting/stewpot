@@ -1,10 +1,10 @@
 {{ layout "layouts/page.vto" }}
 
 <form action="/documents/create/" method="post">
+  {{ include "components/field.vto" { id: "title", name: "title", label: "Title", type: "text", placeholder: "New Document Title..." } }}
+  {{ include "components/field.vto" { id: "path", name: "path", label: "Public path", type: "text", placeholder: "Optional; suggested from the title" } }}
   <div class="field">
-    <label for="title">Title</label><br>
-    <input id="title" type="text" name="title" size="40" placeholder="New Document Title...">
-    <input id="draft" type="checkbox" name="draft">
+    <input id="draft" type="checkbox" name="draft" checked>
     <label for="draft">Draft</label>
   </div>
   <div class="field">

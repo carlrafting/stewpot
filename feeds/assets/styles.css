@@ -28,51 +28,29 @@
     /* semantic colors */
     --color-overlay: color-mix(var(--color-bg) 90%, var(--color-text));
     --color-primary: var(--color-blue);
-    /*--color-links: oklch(from var(--color-primary) 80% 0.28 h);*/
-    --color-links: oklch(
-      from var(--color-primary)
-      var(--color-links-lightness)
-      0.28 h
+    --color-links: light-dark(
+      oklch(from var(--color-primary) 50% 0.28 h),
+      oklch(from var(--color-primary) 80% 0.28 h)
     );
   }
 }
 
 @layer theme {
   :root {
-    @media (prefers-color-scheme: dark) {
-      color-scheme: dark;
-      --color-text: var(--color-lightgray);
-      --color-bg: var(--color-gray);
-      --color-links-lightness: 80%;
-      --color-count-alpha: 60%;
-    }
-
-    @media (prefers-color-scheme: light) {
-      color-scheme: light;
-      --color-bg: var(--color-lightgray);
-      --color-text: var(--color-gray);
-      --color-links-lightness: 50%;
-      --color-count-alpha: 80%;
-    }
+    color-scheme: light dark;
+    --color-text: light-dark(var(--color-gray), var(--color-lightgray));
+    --color-bg: light-dark(var(--color-lightgray), var(--color-gray));
+    --color-muted-text: light-dark(
+      oklch(from var(--color-text) l c h / 80%),
+      oklch(from var(--color-text) l c h / 60%)
+    );
 
     &:where([data-theme="light"]) {
       color-scheme: light;
-      --color-bg: var(--color-lightgray);
-      --color-text: var(--color-gray);
-      --color-links-lightness: 50%;
-      --color-count-alpha: 80%;
     }
 
     &:where([data-theme="dark"]) {
       color-scheme: dark;
-      --color-text: var(--color-lightgray);
-      --color-bg: var(--color-gray);
-      --color-links-lightness: 80%;
-      --color-count-alpha: 60%;
-    }
-
-    &:where([data-theme="auto"]) {
-      color-scheme: light dark;
     }
   }
 }
@@ -167,18 +145,13 @@ html {
   }
 
   details {
-    --box-shadow-alpha: 25%;
-    --box-shadow-color: oklch(
-      from var(--color-black)
-      l c h / var(--box-shadow-alpha)
+    --box-shadow-color: light-dark(
+      oklch(from var(--color-black) l c h / 16%),
+      oklch(from var(--color-black) l c h / 25%)
     );
 
     transition: size 500ms ease-in;
     box-shadow: 0 2px 4px var(--box-shadow-color);
-
-    @media (prefers-color-scheme: light) {
-      --box-shadow-alpha: 16%;
-    }
 
     &[open] {
       --color-details: oklch(
@@ -280,7 +253,7 @@ html {
   .count,
   .format {
     font-size: 0.8rem;
-    color: oklch(from var(--color-text) l c h / var(--color-count-alpha, 50%));
+    color: var(--color-muted-text);
   }
 
   .format {
@@ -303,6 +276,7 @@ html {
   header-toolbar {
     display: flex;
     gap: var(--gap-half);
+    align-items: baseline;
   }
   footer {
     container-name: footer;

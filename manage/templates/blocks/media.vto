@@ -1,0 +1,17 @@
+<block-preview>
+<form method="post" action="/document/{{ document.id }}/blocks/{{ block.id }}/update/" data-block-editor data-block-type="media">
+  <fieldset>
+    <legend>Media block</legend>
+    <label for="url-{{ block.id }}">Image URL</label>
+    <input type="url" name="url" id="url-{{ block.id }}" value="{{ block.content.url }}">
+    <label for="alt-{{ block.id }}">Alternative text</label>
+    <input type="text" name="alt" id="alt-{{ block.id }}" value="{{ block.content.alt }}">
+    <label for="caption-{{ block.id }}">Caption</label>
+    <input type="text" name="caption" id="caption-{{ block.id }}" value="{{ block.content.caption }}">
+    <button>Save block</button>
+  </fieldset>
+</form>
+<div class="block-preview" data-block-preview="media" aria-live="polite">
+  <p>Media preview</p>
+</div>
+</block-preview>

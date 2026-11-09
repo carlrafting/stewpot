@@ -1,7 +1,7 @@
-<form method="POST" action="/block/{{ block.id }}/edit/">
+<block-preview>
+<form method="post" action="/document/{{ document.id }}/blocks/{{ block.id }}/update/" data-block-editor data-block-type="heading">
   <fieldset>
-    <legend>{{ block.type }}</legend>
-    <input type="hidden" name="type" value="heading">
+    <legend>Heading block</legend>
     <label for="level-{{ block.id }}">Level</label>
     <select id="level-{{ block.id }}" name="level">
       {{ for level of [1, 2, 3, 4, 5, 6] }}
@@ -9,7 +9,11 @@
       {{ /for }}
     </select>
     <label for="text-{{ block.id }}">Text</label>
-    <input id="text-{{ block.id }}" type="text" name="text" value="{{ block.content.text }}" />
+    <input id="text-{{ block.id }}" type="text" name="text" value="{{ block.content.text }}">
     <button>Save block</button>
   </fieldset>
 </form>
+<div class="block-preview" data-block-preview="heading" aria-live="polite">
+  <span>Heading preview</span>
+</div>
+</block-preview>

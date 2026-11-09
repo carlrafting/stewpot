@@ -1,13 +1,25 @@
 {{ layout "layouts/page.vto" }}
 
 {{ if document }}
-<form action="/document/{{ document.id }}/blocks/new/" method="post">
 {{ if blockAdded }}
-<div class="info">{{ blockAdded }}</div>
+{{ include "components/notice.vto" { text: blockAdded, variant: "notice--success", role: "status" } }}
 {{ /if }}
+<form action="/document/{{ document.id }}/update/" method="post" class="document-form">
+  {{ include "components/field.vto" { id: "title", name: "title", label: "Title", type: "text", required: true, value: document.title } }}
+  {{ include "components/field.vto" { id: "path", name: "path", label: "Public path", type: "text", required: true, value: document.path, hint: "This path determines the page URL and build output location." } }}
+  <div class="field">
+    <label class="inline-field" for="draft">
+      <input id="draft" type="checkbox" name="draft" {{ if document.draft }}checked{{ /if }}>
+      Draft
+    </label>
+  </div>
+  <button>Save Document</button>
+</form>
+
+<form action="/document/{{ document.id }}/blocks/new/" method="post" class="add-block-form">
   <fieldset>
     <legend>Add block</legend>
-    <label for="type">Type</label>
+    <label for="type">Block type</label>
     <select name="type" id="type">
       {{ for type of blockTypes }}
         <option value="{{ type }}">{{ type }}</option>
@@ -16,25 +28,41 @@
     <button>Add block</button>
   </fieldset>
 </form>
-<form action="/document/{{ document.id }}/update/" method="post">
-  <div class="field">
-    <label for="title">Title</label><br>
-    <input id="title" type="text" name="title" size="40" value="{{ document.title }}">
-    <input id="draft" type="checkbox" name="draft" {{ if document.draft }}checked{{ /if }}>
-    <label for="draft">Draft</label>
-  </div>
-  <div class="field">
-    <button>Save Document</button>
-  </div>
-</form>
-{{ if blocks }}
-  {{ for block of blocks }}
-    <div class="field">
-      {{ include `blocks/${block.type}.vto` { block } }}
-    </div>
-  {{ /for }}
-{{ /if }}
 
+<block-ordering>
+<p class="editor-status" role="status" aria-live="polite" data-editor-status></p>
+<div class="editor-layout">
+  <nav class="block-outline" aria-label="Block outline">
+    <h2>Block outline</h2>
+    <p>Drag an item to reorder blocks, or use the move buttons.</p>
+    <ol data-block-outline>
+      {{ for block of blocks }}
+      <li data-outline-id="{{ block.id }}">
+        <button type="button" class="outline-drag-handle" draggable="true" aria-label="Drag to reorder {{ block.type }} block">Drag</button>
+        <a href="#block-{{ block.id }}">{{ block.type }} block</a>
+      </li>
+      {{ /for }}
+    </ol>
+  </nav>
+  <section class="block-list" aria-label="Document blocks" data-block-list>
+    {{ for block of blocks }}
+    <article class="card block-card" id="block-{{ block.id }}" data-block-id="{{ block.id }}">
+      <div class="block-toolbar">
+        <form action="/document/{{ document.id }}/blocks/order/" method="post" class="move-block-form">
+          <input type="hidden" name="blockId" value="{{ block.id }}">
+          <button name="direction" value="up" aria-label="Move {{ block.type }} block up" {{ if block.order === 0 }}disabled{{ /if }}>Move up</button>
+          <button name="direction" value="down" aria-label="Move {{ block.type }} block down" {{ if block.order === blocks.length - 1 }}disabled{{ /if }}>Move down</button>
+        </form>
+        <form action="/document/{{ document.id }}/blocks/{{ block.id }}/delete/" method="post">
+          <button class="danger" aria-label="Delete {{ block.type }} block">Delete block</button>
+        </form>
+      </div>
+      {{ include `blocks/${block.type}.vto` { block, document } }}
+    </article>
+    {{ /for }}
+  </section>
+</div>
+</block-ordering>
 {{ else }}
 <p>There's no document associated with this id.</p>
 {{ /if }}

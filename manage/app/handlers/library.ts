@@ -1,4 +1,4 @@
-import { html } from "../../http/response.ts";
+import { html, text } from "../../http/response.ts";
 import type { Route } from "../../http/routes.ts";
 import nav from "../nav.ts";
 
@@ -33,25 +33,8 @@ export default [
     name: "library_upload",
     method: "POST",
     pathname: "/library/upload/",
-    async handler({ request, flash }) {
-      throw new Error("upload feature is under development!");
-      /*
-      const formData = await request.formData();
-      const file: File | null = formData?.get("file") as File;
-      if (!file) {
-        return new Response("File required but not provided.", {
-          status: 400,
-        });
-      }
-      const tmp = await Deno.makeTempFile({
-        dir: "./tmp",
-      });
-      await Deno.writeFile(tmp, await file.bytes());
-      const fileURL = new URL(`../library/${file.name}`, import.meta.url);
-      await Deno.rename(tmp, fileURL);
-      flash.set("success", "file uploaded successfully!");
-      return Response.redirect(new URL("/library/", request.url));
-      */
+    async handler() {
+      return text("File uploads are not available yet.", { status: 501 });
     },
   },
 ] as Route[];

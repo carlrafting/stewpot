@@ -1,17 +1,39 @@
 import { assert, assertEquals, assertStringIncludes } from "@std/assert";
-import { fromFileUrl, toFileUrl } from "@std/path";
+import { join } from "@std/path/join";
+import { toFileUrl } from "@std/path/to-file-url";
 import { app } from "./main.ts";
+import type { BuildAdapter } from "./build/adapter.ts";
 
-function createTestHandler(root: string) {
+async function createTestHandler(
+  root: string,
+  build?: BuildAdapter,
+): Promise<Awaited<ReturnType<typeof app>>> {
   const rootUrl = toFileUrl(root).href.replace(/\/?$/, "/");
-  const sessionsPath = fromFileUrl(new URL("sessions.db", rootUrl));
-  const kvPath = fromFileUrl(new URL("kv.db", rootUrl));
+  const sessionsPath = join(root, "sessions.db");
+  const kvPath = join(root, "kv.db");
 
-  return app({
+  const handler = await app({
     meta: { url: rootUrl },
     sessions: { path: sessionsPath },
     kv: { path: kvPath },
+    build,
   });
+  testHandlers.set(root, handler);
+  return handler;
+}
+
+const testHandlers = new Map<
+  string,
+  Awaited<ReturnType<typeof createTestHandler>>
+>();
+
+async function closeTestHandler(root: string): Promise<void> {
+  const handler = testHandlers.get(root);
+  if (handler) {
+    await handler.close();
+    testHandlers.delete(root);
+  }
+  await Deno.remove(root, { recursive: true });
 }
 
 function createInfo(): Deno.ServeHandlerInfo {
@@ -44,7 +66,33 @@ Deno.test("requests without a session receive a new session cookie", async () =>
     assertEquals(response.headers.get("location"), request.url);
     assertStringIncludes(response.headers.get("set-cookie") ?? "", "session=");
   } finally {
-    await Deno.remove(root, { recursive: true });
+    await closeTestHandler(root);
+  }
+});
+
+Deno.test("library upload route reports page not found", async () => {
+  const root = await Deno.makeTempDir();
+  try {
+    const handler = await createTestHandler(root);
+    const initial = await handler.fetch(
+      new Request("https://example.com/library/"),
+      createInfo(),
+    );
+    const sessionId = getSessionId(initial);
+
+    const response = await handler.fetch(
+      new Request("https://example.com/library/upload/", {
+        method: "POST",
+        headers: {
+          cookie: `session=${sessionId}`,
+        },
+      }),
+      createInfo(),
+    );
+    assertEquals(response.status, 404);
+    assertStringIncludes(await response.text(), "Page was not found!");
+  } finally {
+    await closeTestHandler(root);
   }
 });
 
@@ -67,8 +115,126 @@ Deno.test("documents page renders when the session cookie is present", async () 
     assertEquals(response.status, 200);
     const page = await response.text();
     assertStringIncludes(page, "New Document");
+    assertStringIncludes(page, '<label for="title">Title</label>');
+    assertStringIncludes(page, 'name="title"');
+    assertStringIncludes(page, '<label for="path">Public path</label>');
   } finally {
-    await Deno.remove(root, { recursive: true });
+    await closeTestHandler(root);
+  }
+});
+
+Deno.test("build page streams output from the configured adapter", async () => {
+  const root = await Deno.makeTempDir();
+  try {
+    const adapter: BuildAdapter = {
+      name: "Test builder",
+      async build({ projectRoot, write }) {
+        assertEquals(projectRoot, root);
+        write("Generated \x1b[3");
+        write("2mindex.html\x1b[0m\n");
+      },
+    };
+    const handler = await createTestHandler(root, adapter);
+    const initial = await handler.fetch(
+      new Request("https://example.com/build/"),
+      createInfo(),
+    );
+    const sessionId = getSessionId(initial);
+    const page = await handler.fetch(
+      new Request("https://example.com/build/", {
+        headers: { cookie: `session=${sessionId}` },
+      }),
+      createInfo(),
+    );
+    assertEquals(page.status, 200);
+    assertStringIncludes(await page.text(), "Test builder");
+
+    const response = await handler.fetch(
+      new Request("https://example.com/build/run/", {
+        method: "POST",
+        headers: { cookie: `session=${sessionId}` },
+      }),
+      createInfo(),
+    );
+    assertEquals(response.status, 200);
+    const output = await response.text();
+    assertStringIncludes(output, "Starting Test builder build...");
+    assertStringIncludes(output, "Generated index.html");
+    assertStringIncludes(output, "Build completed successfully.");
+    assertEquals(output.includes("\x1b"), false);
+  } finally {
+    await closeTestHandler(root);
+  }
+});
+
+Deno.test("build endpoint rejects overlapping builds for one project", async () => {
+  const root = await Deno.makeTempDir();
+  let releaseBuild = () => {};
+  try {
+    const adapter: BuildAdapter = {
+      name: "Test builder",
+      async build() {
+        await new Promise<void>((resolve) => {
+          releaseBuild = resolve;
+        });
+      },
+    };
+    const handler = await createTestHandler(root, adapter);
+    const initial = await handler.fetch(
+      new Request("https://example.com/build/"),
+      createInfo(),
+    );
+    const sessionId = getSessionId(initial);
+    const firstResponse = await handler.fetch(
+      new Request("https://example.com/build/run/", {
+        method: "POST",
+        headers: { cookie: `session=${sessionId}` },
+      }),
+      createInfo(),
+    );
+    const secondResponse = await handler.fetch(
+      new Request("https://example.com/build/run/", {
+        method: "POST",
+        headers: { cookie: `session=${sessionId}` },
+      }),
+      createInfo(),
+    );
+    assertEquals(secondResponse.status, 409);
+    assertStringIncludes(await secondResponse.text(), "already running");
+    releaseBuild();
+    assertStringIncludes(
+      await firstResponse.text(),
+      "Build completed successfully.",
+    );
+  } finally {
+    releaseBuild();
+    await closeTestHandler(root);
+  }
+});
+
+Deno.test("build endpoint reports when no adapter is configured", async () => {
+  const root = await Deno.makeTempDir();
+  try {
+    const handler = await createTestHandler(root);
+    const initial = await handler.fetch(
+      new Request("https://example.com/build/run/", { method: "POST" }),
+      createInfo(),
+    );
+    const sessionId = getSessionId(initial);
+    const response = await handler.fetch(
+      new Request("https://example.com/build/run/", {
+        method: "POST",
+        headers: { cookie: `session=${sessionId}` },
+      }),
+      createInfo(),
+    );
+    assertEquals(response.status, 503);
+    assertStringIncludes(
+      await response.text(),
+      "No build adapter is configured",
+    );
+  } finally {
+    await closeTestHandler(root);
   }
 });
 
@@ -84,6 +250,7 @@ Deno.test("document creation saves data and redirects to the edit screen", async
     const form = new URLSearchParams({
       title: "Welcome post",
       content: "This is the body of the document.",
+      path: "/welcome/",
       draft: "true",
     });
 
@@ -105,7 +272,7 @@ Deno.test("document creation saves data and redirects to the edit screen", async
     assertStringIncludes(location, "/document/");
     assertStringIncludes(location, "/edit/");
 
-    const kv = await Deno.openKv(fromFileUrl(new URL("kv.db", toFileUrl(root).href)));
+    const kv = await Deno.openKv(join(root, "kv.db"));
     const documents: unknown[] = [];
     for await (const entry of kv.list({ prefix: ["documents"] })) {
       documents.push(entry.value);
@@ -114,15 +281,95 @@ Deno.test("document creation saves data and redirects to the edit screen", async
 
     const document = documents[0] as {
       title: string;
+      path: string;
       content: string;
       draft: boolean;
     };
     assertEquals(document.title, "Welcome post");
+    assertEquals(document.path, "/welcome/");
     assertEquals(document.content, "This is the body of the document.");
     assertEquals(document.draft, true);
     await kv.close();
   } finally {
-    await Deno.remove(root, { recursive: true });
+    await closeTestHandler(root);
+  }
+});
+
+Deno.test("build endpoint passes published pages to the configured adapter", async () => {
+  const root = await Deno.makeTempDir();
+  let adapterPaths: string[] = [];
+  let stagedDirectory = "";
+  let adapterProjectRoot = "";
+  const buildAdapter: BuildAdapter = {
+    name: "test",
+    async build({ projectRoot, documents, documentsDirectory, write }) {
+      adapterProjectRoot = projectRoot;
+      stagedDirectory = documentsDirectory;
+      adapterPaths = documents.map((document) => document.path);
+      const generated = await Deno.readTextFile(
+        join(documentsDirectory, "welcome", "index.html"),
+      );
+      assertStringIncludes(generated, "<h1>Welcome</h1>");
+      write("Adapter output.\n");
+    },
+  };
+  try {
+    const handler = await createTestHandler(root, buildAdapter);
+    const initial = await handler.fetch(
+      new Request("https://example.com/build/"),
+      createInfo(),
+    );
+    const sessionId = getSessionId(initial);
+    const buildPage = await handler.fetch(
+      new Request("https://example.com/build/", {
+        headers: { cookie: `session=${sessionId}` },
+      }),
+      createInfo(),
+    );
+    assertEquals(buildPage.status, 200);
+    assertStringIncludes(await buildPage.text(), "Build site");
+    const kv = await Deno.openKv(join(root, "kv.db"));
+    await kv.set(["documents", "published"], {
+      id: "published",
+      title: "Welcome",
+      path: "/welcome/",
+      content: "",
+      created: "2026-01-01",
+      updated: "2026-01-01",
+      draft: false,
+    });
+    await kv.close();
+
+    const response = await handler.fetch(
+      new Request("https://example.com/build/run/", {
+        method: "POST",
+        headers: { cookie: `session=${sessionId}` },
+      }),
+      createInfo(),
+    );
+    assertEquals(response.status, 200);
+    const output = await response.text();
+    assertEquals(adapterProjectRoot, root);
+    assertEquals(adapterPaths, ["/welcome/"]);
+    assertStringIncludes(output, "Prepared 1 published page(s).");
+    assertStringIncludes(output, "Adapter output.");
+    assertStringIncludes(output, "Build completed successfully.");
+    assertEquals(
+      await Deno.stat(join(root, "welcome", "index.html")).then(
+        () => true,
+        () => false,
+      ),
+      false,
+    );
+    assertEquals(
+      await Deno.stat(stagedDirectory).then(
+        () => true,
+        () => false,
+      ),
+      false,
+    );
+  } finally {
+    await closeTestHandler(root);
   }
 });
 
@@ -134,7 +381,7 @@ Deno.test("documents index displays saved documents", async () => {
     const initial = await handler.fetch(sessionRequest, createInfo());
     const sessionId = getSessionId(initial);
 
-    const kv = await Deno.openKv(fromFileUrl(new URL("kv.db", toFileUrl(root).href)));
+    const kv = await Deno.openKv(join(root, "kv.db"));
     await kv.set(["documents", "doc-1"], {
       id: "doc-1",
       title: "First document",
@@ -144,6 +391,14 @@ Deno.test("documents index displays saved documents", async () => {
       draft: false,
       blocks: [],
     });
+    await kv.set(["documents", "legacy-doc"], {
+      id: "legacy-doc",
+      content: "Legacy body",
+      created: "2026-01-01T00:00:00",
+      updated: "2026-01-01T00:00:00",
+      draft: false,
+    });
+
     await kv.close();
 
     const response = await handler.fetch(
@@ -159,8 +414,49 @@ Deno.test("documents index displays saved documents", async () => {
     const page = await response.text();
     assertStringIncludes(page, "First document");
     assertStringIncludes(page, "/document/doc-1/edit/");
+    assertStringIncludes(page, "Untitled");
+    assertStringIncludes(page, "/legacy-doc/");
   } finally {
-    await Deno.remove(root, { recursive: true });
+    await closeTestHandler(root);
+  }
+});
+
+Deno.test("document creation rejects a duplicate public path", async () => {
+  const root = await Deno.makeTempDir();
+  try {
+    const handler = await createTestHandler(root);
+    const initial = await handler.fetch(
+      new Request("https://example.com/documents/new/"),
+      createInfo(),
+    );
+    const sessionId = getSessionId(initial);
+    const headers = {
+      cookie: `session=${sessionId}`,
+      "content-type": "application/x-www-form-urlencoded",
+    };
+
+    const first = await handler.fetch(
+      new Request("https://example.com/documents/create/", {
+        method: "POST",
+        headers,
+        body: new URLSearchParams({ title: "First", path: "/same/" }),
+      }),
+      createInfo(),
+    );
+    assertEquals(first.status, 302);
+
+    const duplicate = await handler.fetch(
+      new Request("https://example.com/documents/create/", {
+        method: "POST",
+        headers,
+        body: new URLSearchParams({ title: "Second", path: "/same/" }),
+      }),
+      createInfo(),
+    );
+    assertEquals(duplicate.status, 409);
+    assertStringIncludes(await duplicate.text(), "already uses this path");
+  } finally {
+    await closeTestHandler(root);
   }
 });
 
@@ -174,7 +470,7 @@ Deno.test("editing a document shows the document title and form", async () => {
     );
     const sessionId = getSessionId(initial);
 
-    const kv = await Deno.openKv(fromFileUrl(new URL("kv.db", toFileUrl(root).href)));
+    const kv = await Deno.openKv(join(root, "kv.db"));
     await kv.set(["documents", "doc-2"], {
       id: "doc-2",
       title: "Editable document",
@@ -199,12 +495,111 @@ Deno.test("editing a document shows the document title and form", async () => {
     const page = await response.text();
     assertStringIncludes(page, "Editable document");
     assertStringIncludes(page, "Save Document");
+    assertStringIncludes(page, 'value="Editable document"');
+    assertStringIncludes(page, 'id="title" type="text" name="title"');
   } finally {
-    await Deno.remove(root, { recursive: true });
+    await closeTestHandler(root);
   }
 });
 
-Deno.test("missing document id in edit route returns a page with no document", async () => {
+Deno.test("document updates save title and draft state without losing content", async () => {
+  const root = await Deno.makeTempDir();
+  try {
+    const handler = await createTestHandler(root);
+    const initial = await handler.fetch(
+      new Request("https://example.com/documents/new/"),
+      createInfo(),
+    );
+    const sessionId = getSessionId(initial);
+
+    const kv = await Deno.openKv(join(root, "kv.db"));
+    await kv.set(["documents", "doc-update"], {
+      id: "doc-update",
+      title: "Before",
+      content: "Keep this content",
+      created: "2026-01-01T00:00:00",
+      updated: "2026-01-01T00:00:00",
+      draft: false,
+      blocks: [],
+    });
+    await kv.close();
+
+    const response = await handler.fetch(
+      new Request("https://example.com/document/doc-update/update/", {
+        method: "POST",
+        headers: {
+          cookie: `session=${sessionId}`,
+          "content-type": "application/x-www-form-urlencoded",
+        },
+        body: new URLSearchParams({ title: "Updated title", draft: "on" }),
+      }),
+      createInfo(),
+    );
+
+    assertEquals(response.status, 302);
+    assertEquals(
+      response.headers.get("location"),
+      "https://example.com/document/doc-update/edit/",
+    );
+
+    const persisted = await Deno.openKv(join(root, "kv.db"));
+    const document = await persisted.get<{
+      title: string;
+      path: string;
+      content: string;
+      draft: boolean;
+      updated: string;
+    }>(["documents", "doc-update"]);
+    assertEquals(document.value?.title, "Updated title");
+    assertEquals(document.value?.path, "/before/");
+    assertEquals(document.value?.content, "Keep this content");
+    assertEquals(document.value?.draft, true);
+    assert(document.value?.updated !== "2026-01-01T00:00:00");
+    await persisted.close();
+  } finally {
+    await closeTestHandler(root);
+  }
+});
+
+Deno.test("document update rejects a missing title", async () => {
+  const root = await Deno.makeTempDir();
+  try {
+    const handler = await createTestHandler(root);
+    const initial = await handler.fetch(
+      new Request("https://example.com/documents/new/"),
+      createInfo(),
+    );
+    const sessionId = getSessionId(initial);
+    const kv = await Deno.openKv(join(root, "kv.db"));
+    await kv.set(["documents", "doc-1"], {
+      id: "doc-1",
+      title: "Existing document",
+      content: "Body",
+      created: "2026-01-01T00:00:00",
+      updated: "2026-01-01T00:00:00",
+      draft: false,
+      blocks: [],
+    });
+    await kv.close();
+
+    const response = await handler.fetch(
+      new Request("https://example.com/document/doc-1/update/", {
+        method: "POST",
+        headers: {
+          cookie: `session=${sessionId}`,
+          "content-type": "application/x-www-form-urlencoded",
+        },
+        body: new URLSearchParams({ title: " " }),
+      }),
+      createInfo(),
+    );
+    assertEquals(response.status, 400);
+  } finally {
+    await closeTestHandler(root);
+  }
+});
+
+Deno.test("document update rejects an unknown document id", async () => {
   const root = await Deno.makeTempDir();
   try {
     const handler = await createTestHandler(root);
@@ -215,7 +610,34 @@ Deno.test("missing document id in edit route returns a page with no document", a
     const sessionId = getSessionId(initial);
 
     const response = await handler.fetch(
-      new Request("https://example.com/document//edit/", {
+      new Request("https://example.com/document/missing/update/", {
+        method: "POST",
+        headers: {
+          cookie: `session=${sessionId}`,
+          "content-type": "application/x-www-form-urlencoded",
+        },
+        body: new URLSearchParams({ title: "Title" }),
+      }),
+      createInfo(),
+    );
+    assertEquals(response.status, 404);
+  } finally {
+    await closeTestHandler(root);
+  }
+});
+
+Deno.test("editing an unknown document returns 404", async () => {
+  const root = await Deno.makeTempDir();
+  try {
+    const handler = await createTestHandler(root);
+    const initial = await handler.fetch(
+      new Request("https://example.com/documents/new/"),
+      createInfo(),
+    );
+    const sessionId = getSessionId(initial);
+
+    const response = await handler.fetch(
+      new Request("https://example.com/document/missing/edit/", {
         headers: {
           cookie: `session=${sessionId}`,
         },
@@ -223,11 +645,9 @@ Deno.test("missing document id in edit route returns a page with no document", a
       createInfo(),
     );
 
-    assertEquals(response.status, 200);
-    const page = await response.text();
-    assertStringIncludes(page, "There\'s no document associated with this id.");
+    assertEquals(response.status, 404);
   } finally {
-    await Deno.remove(root, { recursive: true });
+    await closeTestHandler(root);
   }
 });
 
@@ -241,7 +661,7 @@ Deno.test("document blocks can be created for an existing document", async () =>
     );
     const sessionId = getSessionId(initial);
 
-    const kv = await Deno.openKv(fromFileUrl(new URL("kv.db", toFileUrl(root).href)));
+    const kv = await Deno.openKv(join(root, "kv.db"));
     await kv.set(["documents", "doc-3"], {
       id: "doc-3",
       title: "Block document",
@@ -270,7 +690,7 @@ Deno.test("document blocks can be created for an existing document", async () =>
     assert(location, "expected a redirect location");
     assertStringIncludes(location, "/document/doc-3/edit/");
 
-    const persist = await Deno.openKv(fromFileUrl(new URL("kv.db", toFileUrl(root).href)));
+    const persist = await Deno.openKv(join(root, "kv.db"));
     const blockEntries: unknown[] = [];
     for await (const entry of persist.list({ prefix: ["blocks", "doc-3"] })) {
       blockEntries.push(entry.value);
@@ -280,11 +700,11 @@ Deno.test("document blocks can be created for an existing document", async () =>
     const block = blockEntries[0] as { type: string };
     assertEquals(block.type, "text");
   } finally {
-    await Deno.remove(root, { recursive: true });
+    await closeTestHandler(root);
   }
 });
 
-Deno.test("invalid block type is still stored as provided and redirect occurs", async () => {
+Deno.test("invalid block types are rejected", async () => {
   const root = await Deno.makeTempDir();
   try {
     const handler = await createTestHandler(root);
@@ -294,7 +714,7 @@ Deno.test("invalid block type is still stored as provided and redirect occurs", 
     );
     const sessionId = getSessionId(initial);
 
-    const kv = await Deno.openKv(fromFileUrl(new URL("kv.db", toFileUrl(root).href)));
+    const kv = await Deno.openKv(join(root, "kv.db"));
     await kv.set(["documents", "doc-4"], {
       id: "doc-4",
       title: "More blocks",
@@ -313,16 +733,323 @@ Deno.test("invalid block type is still stored as provided and redirect occurs", 
           cookie: `session=${sessionId}`,
           "content-type": "application/x-www-form-urlencoded",
         },
-        body: new URLSearchParams({ type: "code" }).toString(),
+        body: new URLSearchParams({ type: "bogus" }).toString(),
       }),
       createInfo(),
     );
 
-    assertEquals(response.status, 302);
-    const location = response.headers.get("location");
-    assert(location, "expected a redirect location");
-    assertStringIncludes(location, "/document/doc-4/edit/");
+    assertEquals(response.status, 400);
+    const persist = await Deno.openKv(join(root, "kv.db"));
+    const blocks: unknown[] = [];
+    for await (const entry of persist.list({ prefix: ["blocks", "doc-4"] })) {
+      blocks.push(entry.value);
+    }
+    await persist.close();
+    assertEquals(blocks.length, 0);
   } finally {
-    await Deno.remove(root, { recursive: true });
+    await closeTestHandler(root);
+  }
+});
+
+Deno.test("blocks cannot be created for an unknown document", async () => {
+  const root = await Deno.makeTempDir();
+  try {
+    const handler = await createTestHandler(root);
+    const initial = await handler.fetch(
+      new Request("https://example.com/documents/new/"),
+      createInfo(),
+    );
+    const sessionId = getSessionId(initial);
+
+    const response = await handler.fetch(
+      new Request("https://example.com/document/missing/blocks/new/", {
+        method: "POST",
+        headers: {
+          cookie: `session=${sessionId}`,
+          "content-type": "application/x-www-form-urlencoded",
+        },
+        body: new URLSearchParams({ type: "text" }),
+      }),
+      createInfo(),
+    );
+    assertEquals(response.status, 404);
+  } finally {
+    await closeTestHandler(root);
+  }
+});
+
+Deno.test("all block types render editors and save typed content", async () => {
+  const root = await Deno.makeTempDir();
+  try {
+    const handler = await createTestHandler(root);
+    const initial = await handler.fetch(
+      new Request("https://example.com/documents/new/"),
+      createInfo(),
+    );
+    const sessionId = getSessionId(initial);
+    const documentId = "typed-blocks";
+    const blocks = [
+      {
+        id: "heading-1",
+        type: "heading",
+        order: 0,
+        content: { type: "heading", level: 2, text: "Old heading" },
+      },
+      {
+        id: "markdown-1",
+        type: "markdown",
+        order: 1,
+        content: { type: "markdown", body: "Old markdown" },
+      },
+      {
+        id: "text-1",
+        type: "text",
+        order: 2,
+        content: { type: "text", body: "Old text" },
+      },
+      {
+        id: "media-1",
+        type: "media",
+        order: 3,
+        content: { type: "media", url: "", alt: "", caption: "" },
+      },
+      {
+        id: "file-1",
+        type: "file",
+        order: 4,
+        content: { type: "file", url: "", filename: "", size: 0 },
+      },
+      {
+        id: "code-1",
+        type: "code",
+        order: 5,
+        content: { type: "code", body: "Old code" },
+      },
+    ];
+    const kv = await Deno.openKv(join(root, "kv.db"));
+    await kv.set(["documents", documentId], {
+      id: documentId,
+      title: "Typed blocks",
+      content: "",
+      created: "2026-01-01",
+      updated: "2026-01-01",
+      draft: false,
+    });
+    for (const block of blocks) {
+      await kv.set(["blocks", documentId, block.id], block);
+    }
+    await kv.close();
+
+    const editor = await handler.fetch(
+      new Request(`https://example.com/document/${documentId}/edit/`, {
+        headers: { cookie: `session=${sessionId}` },
+      }),
+      createInfo(),
+    );
+    assertEquals(editor.status, 200);
+    const page = await editor.text();
+    assertStringIncludes(page, "<block-ordering>");
+    assertEquals(
+      page.match(/<block-preview>/g)?.length,
+      blocks.length,
+    );
+    for (
+      const type of ["heading", "markdown", "text", "media", "file", "code"]
+    ) {
+      assertStringIncludes(page, `data-block-type="${type}"`);
+    }
+    assertStringIncludes(page, "data-block-outline");
+    assertStringIncludes(page, "<block-ordering>");
+    assertStringIncludes(page, "<block-preview>");
+    assertStringIncludes(
+      page,
+      'class="outline-drag-handle" draggable="true"',
+    );
+    assertStringIncludes(page, 'href="#block-heading-1"');
+    assertStringIncludes(page, 'id="block-heading-1"');
+
+    const updates = [
+      ["heading-1", { level: "3", text: "Updated heading" }],
+      ["markdown-1", { body: "**Updated markdown**" }],
+      ["text-1", { body: "Updated text" }],
+      [
+        "media-1",
+        {
+          url: "https://example.com/image.png",
+          alt: "An image",
+          caption: "Image caption",
+        },
+      ],
+      [
+        "file-1",
+        {
+          url: "https://example.com/file.pdf",
+          filename: "file.pdf",
+          size: "42",
+        },
+      ],
+      ["code-1", { body: "const answer = 42;" }],
+    ] as const;
+    for (const [blockId, values] of updates) {
+      const response = await handler.fetch(
+        new Request(
+          `https://example.com/document/${documentId}/blocks/${blockId}/update/`,
+          {
+            method: "POST",
+            headers: {
+              cookie: `session=${sessionId}`,
+              "content-type": "application/x-www-form-urlencoded",
+            },
+            body: new URLSearchParams(values),
+          },
+        ),
+        createInfo(),
+      );
+      assertEquals(response.status, 302);
+    }
+
+    const saved = await Deno.openKv(join(root, "kv.db"));
+    const expectedContent = [
+      { type: "heading", level: 3, text: "Updated heading" },
+      { type: "markdown", body: "**Updated markdown**" },
+      { type: "text", body: "Updated text" },
+      {
+        type: "media",
+        url: "https://example.com/image.png",
+        alt: "An image",
+        caption: "Image caption",
+      },
+      {
+        type: "file",
+        url: "https://example.com/file.pdf",
+        filename: "file.pdf",
+        size: 42,
+      },
+      { type: "code", body: "const answer = 42;" },
+    ];
+    for (let index = 0; index < blocks.length; index++) {
+      const block = await saved.get<{ content: unknown }>([
+        "blocks",
+        documentId,
+        blocks[index].id,
+      ]);
+      assertEquals(block.value?.content, expectedContent[index]);
+    }
+    await saved.close();
+  } finally {
+    await closeTestHandler(root);
+  }
+});
+
+Deno.test("blocks can be reordered without JavaScript and deleted", async () => {
+  const root = await Deno.makeTempDir();
+  try {
+    const handler = await createTestHandler(root);
+    const initial = await handler.fetch(
+      new Request("https://example.com/documents/new/"),
+      createInfo(),
+    );
+    const sessionId = getSessionId(initial);
+    const documentId = "ordered-blocks";
+    const kv = await Deno.openKv(join(root, "kv.db"));
+    await kv.set(["documents", documentId], {
+      id: documentId,
+      title: "Ordered",
+      content: "",
+      created: "2026-01-01",
+      updated: "2026-01-01",
+      draft: false,
+    });
+    for (
+      const [id, order] of [["first", 0], ["second", 1], ["third", 2]] as const
+    ) {
+      await kv.set(["blocks", documentId, id], {
+        id,
+        type: "text",
+        order,
+        content: { type: "text", body: id },
+      });
+    }
+    await kv.close();
+
+    const moved = await handler.fetch(
+      new Request(
+        `https://example.com/document/${documentId}/blocks/order/`,
+        {
+          method: "POST",
+          headers: {
+            cookie: `session=${sessionId}`,
+            "content-type": "application/x-www-form-urlencoded",
+          },
+          body: new URLSearchParams({ blockId: "second", direction: "up" }),
+        },
+      ),
+      createInfo(),
+    );
+    assertEquals(moved.status, 302);
+
+    const persisted = await Deno.openKv(join(root, "kv.db"));
+    const blocks = [];
+    for await (
+      const entry of persisted.list<{ id: string; order: number }>({
+        prefix: ["blocks", documentId],
+      })
+    ) blocks.push(entry.value);
+    blocks.sort((a, b) => a.order - b.order);
+    assertEquals(blocks.map((block) => block.id), ["second", "first", "third"]);
+    await persisted.close();
+
+    const deleted = await handler.fetch(
+      new Request(
+        `https://example.com/document/${documentId}/blocks/first/delete/`,
+        {
+          method: "POST",
+          headers: { cookie: `session=${sessionId}` },
+        },
+      ),
+      createInfo(),
+    );
+    assertEquals(deleted.status, 302);
+    const verify = await Deno.openKv(join(root, "kv.db"));
+    assertEquals(
+      (await verify.get(["blocks", documentId, "first"])).value,
+      null,
+    );
+    await verify.close();
+  } finally {
+    await closeTestHandler(root);
+  }
+});
+
+Deno.test("markdown preview renders formatting and escapes raw HTML", async () => {
+  const root = await Deno.makeTempDir();
+  try {
+    const handler = await createTestHandler(root);
+    const initial = await handler.fetch(
+      new Request("https://example.com/documents/new/"),
+      createInfo(),
+    );
+    const sessionId = getSessionId(initial);
+    const response = await handler.fetch(
+      new Request("https://example.com/document/blocks/markdown-preview/", {
+        method: "POST",
+        headers: {
+          cookie: `session=${sessionId}`,
+          "content-type": "application/x-www-form-urlencoded",
+          accept: "application/json",
+        },
+        body: new URLSearchParams({
+          body: "# Preview\n\n<script>alert(1)</script>",
+        }),
+      }),
+      createInfo(),
+    );
+    assertEquals(response.status, 200);
+    const { html } = await response.json();
+    assertStringIncludes(html, "<h1>Preview</h1>");
+    assertStringIncludes(html, "&lt;script&gt;");
+    assertEquals(html.includes("<script>"), false);
+  } finally {
+    await closeTestHandler(root);
   }
 });
