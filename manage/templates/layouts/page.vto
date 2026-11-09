@@ -1,30 +1,40 @@
 {{ layout "./document.vto" }}
 
-<header>
+<header class="site-header">
   <nav class="skiplinks">
     <a href="#main" class="skiplink">Skip to main content</a>
   </nav>
-  <div class="meta">
-    <a href="/">@stewpot/manage</a>
-    <span class="version">{{ version }}</span>
+  <div class="header-inner">
+    <div class="brand-row">
+      <a class="brand" href="/">
+        <span class="brand-mark" aria-hidden="true">S</span>
+        <span>@stewpot/manage</span>
+      </a>
+      <span class="version">v{{ version }}</span>
+    </div>
+    {{ if nav }}
+    <nav class="primary-nav" aria-label="Primary navigation">
+      {{ for link of nav }}
+      <a href="{{ link.href }}" {{ if url?.pathname === link.href }}aria-current="page"{{ /if }}>{{ link.text }}</a>
+      {{ /for }}
+    </nav>
+    {{ /if }}
   </div>
-  {{ if nav }}
-  <nav>
-    {{ for link of nav }}
-    <a href="{{ link.href }}">{{ link.text }}</a>
-    {{ /for }}
-  </nav>
-  {{ /if }}
-  {{ if title }}
+</header>
+
+{{ if title }}
+<div class="header-inner page-heading">
   <h1>{{ title }}</h1>
-  {{ /if }}
   {{ if description }}
     <p>{{ description }}</p>
   {{ /if }}
-</header>
+</div>
+{{ /if }}
 
 <main id="main">
-{{ content }}
+  <div class="page-content">
+    {{ content }}
+  </div>
 </main>
 
 {{ /layout}}

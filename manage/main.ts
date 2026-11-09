@@ -53,7 +53,7 @@ export async function app(
   KvRepository.connections = connections;
   const render = createTemplateRender({
     includes: new FileLoader(
-      new URL("templates", import.meta.url).pathname,
+      fromFileUrl(new URL("templates", import.meta.url)),
     ),
   });
   const staticPathPattern = new URLPattern({ pathname: "/assets/*" });

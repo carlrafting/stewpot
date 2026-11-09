@@ -1,18 +1,24 @@
 {{ layout "layouts/page.vto" }}
 
-<a href="./create/">New Route</a> <span>Create new route</span>
+<div class="page-actions">
+  <a class="button" href="./create/">New route</a>
+</div>
 
 {{ if data?.routes }}
-<ul>
+<ul class="resource-list">
 {{ for route of data.routes }}
   <li>
-    name: {{ route.name }}<br>
-    path: {{ route.path }}<br>
-    type: {{ route.type }}<br>
-    ref: {{ route.ref }}<br>
+    <dl class="route-details">
+      <div><dt>Name</dt><dd>{{ route.name }}</dd></div>
+      <div><dt>Path</dt><dd><code>{{ route.path }}</code></dd></div>
+      <div><dt>Type</dt><dd>{{ route.type }}</dd></div>
+      <div><dt>Reference</dt><dd><code>{{ route.ref }}</code></dd></div>
+    </dl>
   </li>
 {{ /for }}
 </ul>
+{{ else }}
+<div class="empty-state"><strong>No routes yet</strong>Routes you create will appear here.</div>
 {{ /if }}
 
 {{ /layout }}

@@ -1,11 +1,11 @@
 import { assert, assertEquals, assertStringIncludes } from "@std/assert";
-import { toFileUrl } from "@std/path/to-file-url";
+import { fromFileUrl, toFileUrl } from "@std/path";
 import { app } from "./main.ts";
 
 function createTestHandler(root: string) {
   const rootUrl = toFileUrl(root).href.replace(/\/?$/, "/");
-  const sessionsPath = new URL("sessions.db", rootUrl).pathname;
-  const kvPath = new URL("kv.db", rootUrl).pathname;
+  const sessionsPath = fromFileUrl(new URL("sessions.db", rootUrl));
+  const kvPath = fromFileUrl(new URL("kv.db", rootUrl));
 
   return app({
     meta: { url: rootUrl },
@@ -105,7 +105,7 @@ Deno.test("document creation saves data and redirects to the edit screen", async
     assertStringIncludes(location, "/document/");
     assertStringIncludes(location, "/edit/");
 
-    const kv = await Deno.openKv(new URL("kv.db", toFileUrl(root).href).pathname);
+    const kv = await Deno.openKv(fromFileUrl(new URL("kv.db", toFileUrl(root).href)));
     const documents: unknown[] = [];
     for await (const entry of kv.list({ prefix: ["documents"] })) {
       documents.push(entry.value);
@@ -134,7 +134,7 @@ Deno.test("documents index displays saved documents", async () => {
     const initial = await handler.fetch(sessionRequest, createInfo());
     const sessionId = getSessionId(initial);
 
-    const kv = await Deno.openKv(new URL("kv.db", toFileUrl(root).href).pathname);
+    const kv = await Deno.openKv(fromFileUrl(new URL("kv.db", toFileUrl(root).href)));
     await kv.set(["documents", "doc-1"], {
       id: "doc-1",
       title: "First document",
@@ -174,7 +174,7 @@ Deno.test("editing a document shows the document title and form", async () => {
     );
     const sessionId = getSessionId(initial);
 
-    const kv = await Deno.openKv(new URL("kv.db", toFileUrl(root).href).pathname);
+    const kv = await Deno.openKv(fromFileUrl(new URL("kv.db", toFileUrl(root).href)));
     await kv.set(["documents", "doc-2"], {
       id: "doc-2",
       title: "Editable document",
@@ -241,7 +241,7 @@ Deno.test("document blocks can be created for an existing document", async () =>
     );
     const sessionId = getSessionId(initial);
 
-    const kv = await Deno.openKv(new URL("kv.db", toFileUrl(root).href).pathname);
+    const kv = await Deno.openKv(fromFileUrl(new URL("kv.db", toFileUrl(root).href)));
     await kv.set(["documents", "doc-3"], {
       id: "doc-3",
       title: "Block document",
@@ -270,7 +270,7 @@ Deno.test("document blocks can be created for an existing document", async () =>
     assert(location, "expected a redirect location");
     assertStringIncludes(location, "/document/doc-3/edit/");
 
-    const persist = await Deno.openKv(new URL("kv.db", toFileUrl(root).href).pathname);
+    const persist = await Deno.openKv(fromFileUrl(new URL("kv.db", toFileUrl(root).href)));
     const blockEntries: unknown[] = [];
     for await (const entry of persist.list({ prefix: ["blocks", "doc-3"] })) {
       blockEntries.push(entry.value);
@@ -294,7 +294,7 @@ Deno.test("invalid block type is still stored as provided and redirect occurs", 
     );
     const sessionId = getSessionId(initial);
 
-    const kv = await Deno.openKv(new URL("kv.db", toFileUrl(root).href).pathname);
+    const kv = await Deno.openKv(fromFileUrl(new URL("kv.db", toFileUrl(root).href)));
     await kv.set(["documents", "doc-4"], {
       id: "doc-4",
       title: "More blocks",
