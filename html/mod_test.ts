@@ -25,7 +25,7 @@ Deno.test("html should create link element correctly", (t) => {
     undefined,
     {
       selfClose: true,
-    }
+    },
   );
   assertEquals(link, '<link href="/foo/bar">');
   assertSnapshot(t, link);
@@ -82,4 +82,27 @@ Deno.test("escape disabled", async (c) => {
   </header>`;
   assertEquals(result, `<header>\n    <nav></nav>\n  </header>`);
   await assertSnapshot(c, result);
+});
+
+Deno.test("html joins attributes, handles booleans and missing children", () => {
+  assertEquals(
+    html("a", { href: "/x", class: "btn" }, ["Go"]),
+    '<a href="/x" class="btn">\nGo\n</a>',
+  );
+  assertEquals(
+    html("header", { class: "banner" }),
+    '<header class="banner"></header>',
+  );
+  assertEquals(html("p", {}, ["hi"]), "<p>\nhi\n</p>");
+  assertEquals(
+    html(
+      "input",
+      { type: "checkbox", checked: false, required: true },
+      undefined,
+      {
+        selfClose: true,
+      },
+    ),
+    '<input type="checkbox" required>',
+  );
 });
