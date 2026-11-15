@@ -1,6 +1,6 @@
 {
   "name": "@stewpot/html",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "exports": "./mod.ts",
   "tasks": {
     "dev": "deno test -RW --watch"
