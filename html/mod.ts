@@ -119,27 +119,22 @@ export function html(
     escape: false,
   },
 ): string {
-  const attrs = Object.entries(attributes).map(([key, value]) =>
-    `${key}="${value}"`
-  );
+  const attrs = Object.entries(attributes)
+    .filter(([, value]) => value !== false)
+    .map(([key, value]) => value === true ? key : `${key}="${value}"`)
+    .join(" ");
+  const openTag = attrs ? `<${element} ${attrs}>` : `<${element}>`;
   const joinWithNewline = options.newLine ? "\n" : "";
   if (options.selfClose && !children) {
+    return openTag;
+  }
+  if (children) {
+    const childrenHtmlString: string = children.join(joinWithNewline);
     return [
-      `<${element} ${attrs}>`,
+      openTag,
+      options.escape ? e(childrenHtmlString) : childrenHtmlString,
+      `</${element}>`,
     ].join(joinWithNewline);
   }
-  const elementHtmlArray = [
-    `<${element} ${attrs}>`,
-    undefined,
-    `</${element}>`,
-  ];
-  if (children) {
-    const childrenHtmlString: string = children?.join(joinWithNewline);
-    elementHtmlArray[1] = options.escape && children
-      ? e(childrenHtmlString)
-      : childrenHtmlString;
-    return elementHtmlArray.join(joinWithNewline);
-  }
-  elementHtmlArray.splice(1);
-  return elementHtmlArray.join(joinWithNewline);
+  return openTag + `</${element}>`;
 }
