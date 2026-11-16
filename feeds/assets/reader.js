@@ -115,6 +115,54 @@ customElements.define("toggle-theme", ToggleTheme);
 customElements.define("toggle-details", ToggleDetails);
 customElements.define("fetch-items", FetchItems);
 
+const subscribeButton = document.querySelector('[name="subscribe"]');
+const subscribeStatus = document.querySelector("#subscribe-status");
+
+const postSubscribe = async (body) => {
+  const response = await fetch("/subscribe", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(data.error || response.statusText);
+  }
+  return data;
+};
+
+subscribeButton?.addEventListener("click", async () => {
+  const input = prompt("Feed URL to subscribe to:");
+  if (!input || !input.trim()) return;
+
+  subscribeButton.disabled = true;
+  subscribeStatus.textContent = "Subscribing...";
+
+  try {
+    let result = await postSubscribe({ url: input.trim() });
+    if (result.confirmationRequired) {
+      const ok = prompt(
+        `subscribe to discovered feed at "${result.url}"? [y/N]`,
+      )?.toLocaleLowerCase();
+      if (ok !== "y" && ok !== "yes") {
+        subscribeStatus.textContent = "";
+        return;
+      }
+      result = await postSubscribe({
+        url: input.trim(),
+        confirmedUrl: result.url,
+      });
+    }
+    window.location.reload();
+  } catch (error) {
+    subscribeStatus.textContent = `Unable to subscribe: ${
+      error instanceof Error ? error.message : String(error)
+    }`;
+  } finally {
+    subscribeButton.disabled = false;
+  }
+});
+
 const fetchAllButton = document.querySelector('[name="fetch-all"]');
 const fetchAllStatus = document.querySelector("#fetch-all-status");
 

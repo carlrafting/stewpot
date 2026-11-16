@@ -514,12 +514,131 @@ export async function fetchAllFeeds(
  * @param input url string input
  */
 export function parseInputToURL(input: string): URL | undefined {
+  const url = toFeedURL(input);
+  if (!url) console.error(colors.red("error"), "invalid URL format!");
+  return url;
+}
+
+function toFeedURL(input: string): URL | undefined {
   if (!input.startsWith("http://") && !input.startsWith("https://")) {
     input = `https://${input}`;
   }
   try {
     return new URL(input);
   } catch (_error) {
-    console.error(colors.red("error"), "invalid URL format!");
+    return undefined;
   }
+}
+
+/** Resolves a feed input string to a URL, adding HTTPS when needed. */
+export function resolveFeedInput(
+  input: string | number | undefined,
+): URL | undefined {
+  if (typeof input !== "string" || !input.trim()) return;
+  return parseInputToURL(input.trim());
+}
+
+/** Finds a subscription by exact URL or matching hostname. */
+export function findFeedByUrl(
+  feeds: FeedData[],
+  value: URL | string | undefined,
+): FeedData | undefined {
+  const url = typeof value === "string" ? toFeedURL(value.trim()) : value;
+  if (!url) return undefined;
+
+  return feeds.find((feed) => {
+    try {
+      const current = new URL(feed.url);
+      return current.href === url.href || current.hostname === url.hostname;
+    } catch {
+      return false;
+    }
+  });
+}
+
+/** Adds a subscription and persists its metadata and items. */
+export async function persistFeedSubscription(
+  store: Storage,
+  feeds: FeedData[],
+  metadata: FeedData,
+  items: FeedItem[],
+): Promise<void> {
+  feeds.push(metadata);
+  await store.saveFeeds(feeds);
+  await store.saveItems(metadata.id, items, feeds);
+}
+
+/** A subscription input that was rejected; `status` is an HTTP-style code. */
+export class SubscriptionError extends Error {
+  status: number;
+  constructor(message: string, status: number) {
+    super(message);
+    this.name = "SubscriptionError";
+    this.status = status;
+  }
+}
+
+/** Thrown when a discovered feed URL must be confirmed before subscribing. */
+export class ConfirmationRequiredError extends Error {
+  url: string;
+  constructor(url: string) {
+    super("confirmation required");
+    this.name = "ConfirmationRequiredError";
+    this.url = url;
+  }
+}
+
+/**
+ * Validates input, discovers feeds for hostnames, and subscribes to the feed.
+ * Shared by the CLI and the reader.
+ *
+ * @param input user supplied feed URL or hostname
+ * @param feeds current subscriptions, updated in place when subscribed
+ * @param store storage used to persist the subscription
+ * @param confirm called with the discovered feed URL before subscribing to a
+ * hostname; returning `false` cancels the subscription
+ * @returns the subscribed feed, or `undefined` when cancelled
+ * @throws {SubscriptionError} when the input is invalid or already subscribed
+ */
+export async function subscribeToFeed(
+  input: unknown,
+  feeds: FeedData[],
+  store: Storage,
+  confirm: (url: URL) => boolean | Promise<boolean>,
+): Promise<FeedData | undefined> {
+  if (typeof input !== "string" || !input.trim()) {
+    throw new SubscriptionError("invalid input format!", 400);
+  }
+  let url = toFeedURL(input.trim());
+  if (!url) throw new SubscriptionError("invalid URL format!", 400);
+
+  if (findFeedByUrl(feeds, url)) {
+    throw new SubscriptionError("URL already exists!", 409);
+  }
+
+  if (url.pathname === "/") {
+    const discovered = await discoverFeed(url.href);
+    if (discovered) url = new URL(discovered);
+    if (!await confirm(url)) return undefined;
+  }
+
+  const metadata = await fetchFeedMetadata(url);
+  const { body } = await fetchFeedItemsFromURL(url, metadata);
+  if (!body || body.trim() === "") {
+    throw new SubscriptionError("no content for feed source", 422);
+  }
+
+  let parsed: ParsedFeed;
+  try {
+    parsed = parseFeed(body);
+  } catch (_error) {
+    throw new SubscriptionError(
+      `failed to parse feed ${url.href} - the feed content may be malformed`,
+      422,
+    );
+  }
+
+  const items = mapToFeedItems(parsed, body, metadata, url);
+  await persistFeedSubscription(store, feeds, metadata, items);
+  return metadata;
 }
