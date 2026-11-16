@@ -141,10 +141,7 @@ subscribeButton?.addEventListener("click", async () => {
   try {
     let result = await postSubscribe({ url: input.trim() });
     if (result.confirmationRequired) {
-      const ok = prompt(
-        `subscribe to discovered feed at "${result.url}"? [y/N]`,
-      )?.toLocaleLowerCase();
-      if (ok !== "y" && ok !== "yes") {
+      if (!confirm(`Subscribe to discovered feed at "${result.url}"?`)) {
         subscribeStatus.textContent = "";
         return;
       }
