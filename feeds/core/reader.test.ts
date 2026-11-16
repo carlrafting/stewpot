@@ -230,3 +230,85 @@ Deno.test("reader fetch-all route persists feed metadata and items", async () =>
     await Deno.remove(directory, { recursive: true });
   }
 });
+
+Deno.test("reader subscribe route validates input and rejects duplicates", async () => {
+  const feed: FeedData = {
+    id: "existing-feed",
+    url: "https://example.com/rss.xml",
+    format: "unknown",
+  };
+  const directory = await Deno.makeTempDir();
+  try {
+    const store = new FsStorage(join(directory, "feeds.json"));
+    await store.saveFeeds([feed]);
+    const handler = await app([feed], store);
+    const post = (body: unknown) =>
+      handler.fetch(
+        new Request("http://localhost/subscribe", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify(body),
+        }),
+        handlerInfo,
+      );
+
+    const getResponse = await handler.fetch(
+      new Request("http://localhost/subscribe"),
+      handlerInfo,
+    );
+    assertEquals(getResponse.status, 405);
+
+    const invalidJson = await handler.fetch(
+      new Request("http://localhost/subscribe", {
+        method: "POST",
+        body: "{not json",
+      }),
+      handlerInfo,
+    );
+    assertEquals(invalidJson.status, 400);
+
+    const missing = await post({});
+    assertEquals(missing.status, 400);
+
+    const duplicate = await post({ url: feed.url });
+    assertEquals(duplicate.status, 409);
+    assertEquals((await duplicate.json()).error, "URL already exists!");
+  } finally {
+    await Deno.remove(directory, { recursive: true });
+  }
+});
+
+Deno.test("reader subscribe route saves a new feed and returns 201", async () => {
+  const directory = await Deno.makeTempDir();
+  try {
+    const store = new FsStorage(join(directory, "feeds.json"));
+    const feeds: FeedData[] = [];
+    const handler = await app(feeds, store);
+    using _ = stub(
+      globalThis,
+      "fetch",
+      () =>
+        Promise.resolve(
+          new Response(rssFixture, {
+            headers: { "content-type": "application/rss+xml" },
+          }),
+        ),
+    );
+
+    const response = await handler.fetch(
+      new Request("http://localhost/subscribe", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ url: "https://example.com/rss.xml" }),
+      }),
+      handlerInfo,
+    );
+
+    assertEquals(response.status, 201);
+    assertEquals(feeds.length, 1);
+    assertEquals((await store.loadFeeds()).length, 1);
+    assertEquals((await store.loadItems(feeds[0].id)).length > 0, true);
+  } finally {
+    await Deno.remove(directory, { recursive: true });
+  }
+});

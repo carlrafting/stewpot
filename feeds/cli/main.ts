@@ -9,7 +9,6 @@ import {
   writeConfigToPath,
 } from "../core/config.ts";
 import {
-  discoverFeed,
   type FeedData,
   type FeedItem,
   fetchAllFeeds as fetchAllFeedSources,
@@ -17,9 +16,15 @@ import {
   fetchFeedItemsFromURL,
   fetchFeedMetadata,
   type FetchResults,
+  findFeedByUrl,
   mapToFeedItems,
-  parseInputToURL,
+  persistFeedSubscription,
+  resolveFeedInput,
+  SubscriptionError,
+  subscribeToFeed,
 } from "../core/main.ts";
+
+export { findFeedByUrl, persistFeedSubscription, resolveFeedInput };
 import {
   createStorage,
   type FsStorage,
@@ -128,32 +133,6 @@ export function getCommandInput(args: ParsedArguments): string | undefined {
   return typeof input === "string" ? input : undefined;
 }
 
-/** Resolves a feed input string to a URL, adding HTTPS when needed. */
-export function resolveFeedInput(
-  input: string | number | undefined,
-): URL | undefined {
-  if (typeof input !== "string" || !input.trim()) return;
-  return parseInputToURL(input.trim());
-}
-
-/** Finds a subscription by exact URL or matching hostname. */
-export function findFeedByUrl(
-  feeds: FeedData[],
-  value: URL | string | undefined,
-): FeedData | undefined {
-  const url = typeof value === "string" ? resolveFeedInput(value) : value;
-  if (!url) return undefined;
-
-  return feeds.find((feed) => {
-    try {
-      const current = new URL(feed.url);
-      return current.href === url.href || current.hostname === url.hostname;
-    } catch {
-      return false;
-    }
-  });
-}
-
 /** Removes the subscription matching the given URL or hostname. */
 export function removeFeedByUrl(
   feeds: FeedData[],
@@ -162,18 +141,6 @@ export function removeFeedByUrl(
   const target = findFeedByUrl(feeds, value);
   if (!target) return feeds;
   return feeds.filter((feed) => feed.id !== target.id);
-}
-
-/** Adds a subscription and persists its metadata and items. */
-export async function persistFeedSubscription(
-  store: Storage,
-  feeds: FeedData[],
-  metadata: FeedData,
-  items: FeedItem[],
-): Promise<void> {
-  feeds.push(metadata);
-  await store.saveFeeds(feeds);
-  await store.saveItems(metadata.id, items, feeds);
 }
 
 const init: Command = {
@@ -281,67 +248,33 @@ current items are then saved.`,
       return printCommandHelp(subscribe);
     }
 
-    const input = getCommandInput(args);
-    if (typeof input !== "string") {
-      console.error(colors.red("error"), "invalid input format!");
-      return 1;
-    }
-
-    const url = resolveFeedInput(input);
-    if (!url) {
-      return 1;
-    }
-
-    const exists = findFeedByUrl(feeds, url);
-    if (exists) {
-      console.error(colors.red("error"), "URL already exists!");
-      return 1;
-    }
-
-    if (url.pathname === "/") {
-      const oldHref = url.href;
-      const feedURL = await discoverFeed(url.href);
-      if (feedURL && feedURL !== url.href) {
-        url.href = feedURL;
-      }
-      const ok = prompt(
-        `subscribe to discovered feed for "${url.hostname}" at "${url.href}"? [y/N]`,
-      )?.toLocaleLowerCase();
-      if (ok !== "y" && ok !== "yes") {
-        url.href = oldHref;
-        return 1;
-      }
-    }
-
-    const metadata: FeedData = await fetchFeedMetadata(url);
-    const fetchResults: FetchResults = await fetchFeedItemsFromURL(
-      url,
-      metadata,
-    );
-    const content = fetchResults.body;
-
-    if (!content || content.trim() === "") {
-      throw new Error("no content for feed source");
-    }
-
-    let parsed;
     try {
-      parsed = parseFeed(content);
+      const metadata = await subscribeToFeed(
+        getCommandInput(args),
+        feeds,
+        store,
+        (url) => {
+          const ok = prompt(
+            `subscribe to discovered feed for "${url.hostname}" at "${url.href}"? [y/N]`,
+          )?.toLocaleLowerCase();
+          return ok === "y" || ok === "yes";
+        },
+      );
+      if (!metadata) return 1;
+
+      console.log(
+        colors.green("done"),
+        `saved feed items for ${new URL(metadata.url).hostname}`,
+      );
+      console.log(colors.green("subscribed!"), metadata.url);
+      return 0;
     } catch (error) {
-      if (error) {
-        console.error(colors.red("error"), { error });
+      if (error instanceof SubscriptionError) {
+        console.error(colors.red("error"), error.message);
         return 1;
       }
       throw error;
     }
-
-    const items: FeedItem[] = mapToFeedItems(parsed, content, metadata, url);
-    parsed = null;
-
-    await persistFeedSubscription(store, feeds, metadata, items);
-    console.log(colors.green("done"), `saved feed items for ${url.hostname}`);
-    console.log(colors.green("subscribed!"), metadata.url);
-    return 0;
   },
 };
 

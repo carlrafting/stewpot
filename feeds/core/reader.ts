@@ -2,7 +2,13 @@ import vento from "ventojs/mod.js";
 import { UrlLoader } from "ventojs/loaders/url.js";
 import type { FsStorage, KvStorage } from "./storage.ts";
 import denoConfig from "../deno.json" with { type: "json" };
-import { type FeedData, fetchAllFeeds } from "./main.ts";
+import {
+  ConfirmationRequiredError,
+  type FeedData,
+  fetchAllFeeds,
+  SubscriptionError,
+  subscribeToFeed,
+} from "./main.ts";
 
 export interface ReaderAuth {
   username: string;
@@ -21,6 +27,12 @@ const cssContentType = {
 const jsContentType = {
   "content-type": "text/javascript; charset=utf-8",
 };
+
+const jsonResponse = (status: number, body: unknown) =>
+  new Response(JSON.stringify(body), {
+    status,
+    headers: { "content-type": "application/json; charset=utf-8" },
+  });
 
 const fetchFile = async (filePath: string) => {
   const response = await fetch(
@@ -84,6 +96,53 @@ export async function app(
         } catch (error) {
           console.error("failed to fetch all feeds", error);
           return new Response("Failed to fetch feeds", { status: 500 });
+        }
+      }
+
+      if (url.pathname === "/subscribe") {
+        if (request.method !== "POST") {
+          return new Response("Method Not Allowed", {
+            status: 405,
+            headers: { allow: "POST" },
+          });
+        }
+
+        const body = await request.json().catch(() => undefined) as
+          | { url?: unknown; confirmedUrl?: unknown }
+          | undefined;
+        if (!body) {
+          return jsonResponse(400, { error: "invalid JSON body" });
+        }
+        const confirmedUrl = typeof body.confirmedUrl === "string"
+          ? body.confirmedUrl
+          : undefined;
+
+        try {
+          const feed = await subscribeToFeed(
+            body.url,
+            feeds,
+            store,
+            (discovered) => {
+              if (discovered.href === confirmedUrl) return true;
+              throw new ConfirmationRequiredError(discovered.href);
+            },
+          );
+          if (!feed) {
+            return jsonResponse(400, { error: "subscription cancelled" });
+          }
+          return jsonResponse(201, { feed });
+        } catch (error) {
+          if (error instanceof ConfirmationRequiredError) {
+            return jsonResponse(200, {
+              confirmationRequired: true,
+              url: error.url,
+            });
+          }
+          if (error instanceof SubscriptionError) {
+            return jsonResponse(error.status, { error: error.message });
+          }
+          console.error("failed to subscribe", error);
+          return jsonResponse(502, { error: "failed to fetch feed" });
         }
       }
 
