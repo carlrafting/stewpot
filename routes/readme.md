@@ -1,9 +1,9 @@
 # @stewpot/routes
 
 `simpleRoutes()` is a lightweight, composable routing middleware based on _the
-very minimal_ `@stewpot/middleware` & the standard library (@std) — no other external
-dependencies. It leverages `URLPattern` for path matching and integrates
-seamlessly with middleware stacks using `compose()`.
+very minimal_ `@stewpot/middleware` & the standard library (@std) — no other
+external dependencies. It leverages `URLPattern` for path matching and
+integrates seamlessly with middleware stacks using `compose()`.
 
 ## ✨ Features
 
