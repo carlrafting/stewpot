@@ -7,15 +7,17 @@
   const palette = JSON.parse(data);
   for (const { hue, level, hex } of palette) {
     const name = hue.toLowerCase();
-    output.push(`\t--${name}-hex-${level}: ${hex};`);
+    output.push(`  --${name}-hex-${level}: ${hex};`);
     if (level === "800") output.push("");
   }
   for (const { level, hue, oklch } of palette) {
     const name = hue.toLowerCase();
-    output.push(`\t--${name}-${level}: ${oklch};`);
+    output.push(`  --${name}-${level}: ${oklch};`);
     if (level === "800") output.push("");
   }
-  output.push("}");
-  Deno.writeTextFile(dest, output.join("\n"));
+  // No blank line before the closing brace, to match `deno fmt`.
+  if (output.at(-1) === "") output.pop();
+  output.push("}", "");
+  await Deno.writeTextFile(dest, output.join("\n"));
   console.log(`Created file at ${dest}`);
 }

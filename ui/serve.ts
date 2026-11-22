@@ -21,7 +21,7 @@ const staticPathPattern = new URLPattern({
 const headers: HeadersInit = {
   "content-type": "text/html; charset=utf-8",
 };
-const { TemporaryRedirect, NotFound } = STATUS_CODE;
+const { NotFound } = STATUS_CODE;
 
 async function fetch(req: Request): Promise<Response> {
   const url = new URL(req.url);
