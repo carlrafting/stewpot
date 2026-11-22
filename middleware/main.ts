@@ -4,25 +4,25 @@ import loggerMiddleware from "./logger.ts";
 import serveStaticMiddleware from "./static.ts";
 
 /**
- * This modules defines types used for middleware. It exports `compose()` and some helpers like: `insert()` & `replace()` for manipulating a stack of middleware.
+ * This module defines the types used for middleware. It exports `compose()` and
+ * some helpers like `insert()`, `replace()` and `remove()` for manipulating a
+ * stack of middleware.
  *
  * @example
  * ```ts
-
-import { compose, Middleware } from "jsr:@stewpot/middleware";
-
-const logger: Middleware = async (request, next) => {
-    console.log(`${request.method} ${request.url}`);
-    return await next();
-};
-
-const handler = compose([logger], () => {
-  return new Response("Hello from final handler!");
-});
-
-Deno.serve(handler);
-```
+ * import { compose, type Middleware } from "jsr:@stewpot/middleware";
  *
+ * const logger: Middleware = async (request, next) => {
+ *   console.log(`${request.method} ${request.url}`);
+ *   return await next();
+ * };
+ *
+ * const handler = compose([logger], () => {
+ *   return new Response("Hello from final handler!");
+ * });
+ *
+ * Deno.serve(handler);
+ * ```
  *
  * @module
  */

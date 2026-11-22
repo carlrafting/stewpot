@@ -22,9 +22,9 @@ export default function csrf(): Middleware {
 
       if (
         contentType &&
-        contentType.includes("application/x-www-form-urlencoded") ||
+          contentType.includes("application/x-www-form-urlencoded") ||
         contentType &&
-        contentType.includes("multipart/form-data")
+          contentType.includes("multipart/form-data")
       ) {
         try {
           const cloned = request.clone();

@@ -1,14 +1,17 @@
-import { serveDir } from "@std/http/file-server"
+import { serveDir } from "@std/http/file-server";
 import type { Middleware, NextHandler } from "./main.ts";
 import { join } from "@std/path";
 
 export interface Options {
-  path?: string,
-  debug?: boolean
-};
+  path?: string;
+  debug?: boolean;
+}
 
 export function serveStaticMiddleware(options?: Options): Middleware {
-  return async function serveStatic(request: Request, next: NextHandler): Promise<Response> {
+  return async function serveStatic(
+    request: Request,
+    next: NextHandler,
+  ): Promise<Response> {
     try {
       const response = await serveDir(request, {
         fsRoot: options?.path ?? join(Deno.cwd(), "./public"),
@@ -26,7 +29,7 @@ export function serveStaticMiddleware(options?: Options): Middleware {
       }
       throw error;
     }
-  }
+  };
 }
 
 export default serveStaticMiddleware;
