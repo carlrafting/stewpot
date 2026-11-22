@@ -23,6 +23,7 @@ import {
   SubscriptionError,
   subscribeToFeed,
 } from "../core/main.ts";
+import { feedsToOpml, importOpml } from "../core/opml.ts";
 
 export { findFeedByUrl, persistFeedSubscription, resolveFeedInput };
 import {
@@ -325,6 +326,106 @@ Remove the matching subscription and its cached items.`,
   },
 };
 
+const exportCommand: Command = {
+  name: "export",
+  description: "export subscriptions as OPML",
+  help: `Usage:
+  feeds export [file]
+
+Arguments:
+  file  Path to write the OPML document to. Prints to standard output when
+        omitted, so it can be redirected.`,
+  async run(
+    _input: Input,
+    options: Options,
+    _deps: Deps,
+    args: ParsedArguments,
+    feeds: FeedData[],
+  ): Promise<number> {
+    if (options.help) {
+      return printCommandHelp(exportCommand);
+    }
+
+    const opml = feedsToOpml(feeds);
+    const file = getCommandInput(args);
+    if (file === undefined) {
+      console.log(opml);
+      return 0;
+    }
+
+    await Deno.writeTextFile(file, opml);
+    console.error(
+      colors.green("ok"),
+      `exported ${feeds.length} feeds to ${file}`,
+    );
+    return 0;
+  },
+};
+
+const importCommand: Command = {
+  name: "import",
+  description: "import subscriptions from OPML",
+  help: `Usage:
+  feeds import <file>
+
+Arguments:
+  file  Path to an OPML file.
+
+Subscribe to every feed in the file that is not already subscribed to.
+Nothing is fetched; run \`feeds fetch\` to download items.`,
+  async run(
+    _input: Input,
+    options: Options,
+    _deps: Deps,
+    args: ParsedArguments,
+    feeds: FeedData[],
+    store: Storage,
+  ): Promise<number> {
+    if (options.help) {
+      return printCommandHelp(importCommand);
+    }
+
+    const file = getCommandInput(args);
+    if (file === undefined) {
+      console.error(colors.red("error"), "missing OPML file path!");
+      return 1;
+    }
+
+    let xml: string;
+    try {
+      xml = await Deno.readTextFile(file);
+    } catch (error) {
+      console.error(
+        colors.red("error"),
+        `could not read ${file}: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
+      return 1;
+    }
+
+    let result;
+    try {
+      result = await importOpml(xml, feeds, store);
+    } catch (_error) {
+      console.error(colors.red("error"), `${file} is not a valid OPML file`);
+      return 1;
+    }
+
+    for (const { url, reason } of result.skipped) {
+      console.log(colors.yellow("skipped"), `${url} (${reason})`);
+    }
+    console.log(
+      colors.green("ok"),
+      `imported ${result.added.length} feeds, skipped ${result.skipped.length}`,
+    );
+    if (result.added.length > 0) {
+      console.log(colors.cyan("info"), "run `feeds fetch` to download items");
+    }
+    return 0;
+  },
+};
+
 async function tryFetchAndParse(
   feed: FeedData,
 ): Promise<
@@ -614,6 +715,8 @@ export const COMMANDS: Command[] = [
   list,
   subscribe,
   unsubscribe,
+  exportCommand,
+  importCommand,
   fetch,
   reader,
   upgrade,
@@ -672,6 +775,23 @@ export default async function main(
         feeds,
         store,
       );
+    case "export":
+      return await exportCommand.run(
+        input,
+        options,
+        deps,
+        parsedArgs,
+        feeds,
+      );
+    case "import":
+      return await importCommand.run(
+        input,
+        options,
+        deps,
+        parsedArgs,
+        feeds,
+        store,
+      );
     case "fetch":
       return await fetch.run(input, options, deps, feeds, store);
     case "reader":
@@ -717,7 +837,9 @@ ${colors.green("Commands")}:
   ${colors.yellow(list.name)}             - ${list.description}
   ${colors.yellow(subscribe.name)}        - ${subscribe.description}
   ${colors.yellow(unsubscribe.name)}      - ${unsubscribe.description}
-  ${colors.yellow(fetch.name)}            - ${fetch.description}
+  ${colors.yellow(exportCommand.name)}           - ${exportCommand.description}
+  ${colors.yellow(importCommand.name)}           - ${importCommand.description}
+  ${colors.yellow(fetch.name)}          - ${fetch.description}
   ${colors.yellow(reader.name)}           - ${reader.description}
   ${colors.yellow(upgrade.name)}          - ${upgrade.description}
   `);
