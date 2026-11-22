@@ -33,9 +33,10 @@ const handler = compose([logger], () => {
 Deno.serve(handler);
 ```
 
-Or run with the `deno serve` CLI:
+Or run with the `deno serve` CLI, from a file that exports the composed handler
+as its default export:
 
-```ts
+```ts ignore
 // serve.ts
 import handler from "./main.ts";
 
@@ -64,7 +65,7 @@ Middleware can:
 
 ## Compose
 
-```ts
+```ts ignore
 function compose(
   middlewares: Middleware[],
   finalHandler: RequestHandler,
@@ -82,13 +83,25 @@ the chain.
 return that same array, so calls can be chained:
 
 ```ts
-import { insert, remove, replace } from "jsr:@stewpot/middleware";
+import {
+  compose,
+  insert,
+  type Middleware,
+  remove,
+  replace,
+} from "jsr:@stewpot/middleware";
 
-insert(stack, 1, extra); // add `extra` at index 1
-replace(stack, 0, other); // swap the entry at index 0
+const pass: Middleware = (_request, next) => next();
+const stack: Middleware[] = [pass, pass, pass];
+
+insert(stack, 1, pass); // add an entry at index 1
+replace(stack, 0, pass); // swap the entry at index 0
 remove(stack, 2); // drop the entry at index 2
 
-const handler = compose(remove(replace(stack, 0, other), 2), finalHandler);
+const handler = compose(
+  remove(replace(stack, 0, pass), 1),
+  () => new Response("Hello!"),
+);
 ```
 
 ## Included middleware
@@ -149,6 +162,8 @@ Pass your own list of user agent substrings to skip the download, for example in
 tests or offline:
 
 ```ts
+import aiblock from "jsr:@stewpot/middleware/aiblock";
+
 const middleware = await aiblock({ blocklist: ["GPTBot", "CCBot"] });
 ```
 

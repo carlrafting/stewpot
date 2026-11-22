@@ -1,6 +1,6 @@
 import { assert, assertEquals, assertNotEquals } from "@std/assert";
 import { getSetCookies } from "@std/http/cookie";
-import csrf, { generateCSRFToken } from "./csrf.ts";
+import csrf, { csrfToken, generateCSRFToken } from "./csrf.ts";
 
 function post(body: string, cookie?: string): Request {
   const headers = new Headers({
@@ -176,6 +176,59 @@ Deno.test("csrf rejects a request when the cookie is missing", async () => {
   );
 
   assertEquals(response.status, 403);
+});
+
+Deno.test("csrfToken gives handlers the token on a first request", async () => {
+  const middleware = csrf();
+  const request = new Request("http://localhost/");
+  let seen: string | undefined;
+
+  const response = await middleware(request, () => {
+    seen = csrfToken(request);
+    return new Response("ok");
+  });
+
+  assert(seen, "the handler can read the token before the cookie exists");
+  const cookie = getSetCookies(response.headers).find((c) =>
+    c.name === "csrf_token"
+  );
+  assertEquals(cookie?.value, seen, "the cookie carries the same token");
+});
+
+Deno.test("csrfToken returns the token from the cookie on later requests", async () => {
+  const middleware = csrf();
+  const request = new Request("http://localhost/", {
+    headers: { cookie: "csrf_token=existing" },
+  });
+  let seen: string | undefined;
+
+  await middleware(request, () => {
+    seen = csrfToken(request);
+    return new Response("ok");
+  });
+
+  assertEquals(seen, "existing");
+});
+
+Deno.test("csrfToken is undefined for a request without a token", () => {
+  assertEquals(csrfToken(new Request("http://localhost/")), undefined);
+});
+
+Deno.test("a token read from csrfToken is accepted when submitted back", async () => {
+  const middleware = csrf();
+  const first = new Request("http://localhost/");
+  let token: string | undefined;
+  await middleware(first, () => {
+    token = csrfToken(first);
+    return new Response("form");
+  });
+
+  const response = await middleware(
+    post(`csrf_token=${encodeURIComponent(token!)}`, `csrf_token=${token}`),
+    () => new Response("ok"),
+  );
+
+  assertEquals(response.status, 200);
 });
 
 Deno.test("csrf responds 400 to a malformed multipart POST", async () => {
