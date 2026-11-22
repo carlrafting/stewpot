@@ -10,6 +10,7 @@
     "dev": "deno -RWN --watch=templates/,static/ main.ts",
     "serve": "deno serve --port=8001 -RW serve.ts",
     "bundle": "deno -RW bundle.ts",
+    "test": "deno test -RWN --allow-run",
     "doc:lint": "deno doc --lint main.ts && deno check --doc main.ts"
   },
   "imports": {
