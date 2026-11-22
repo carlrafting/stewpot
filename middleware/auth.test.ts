@@ -21,6 +21,23 @@ Deno.test("auth redirects to the sign-in page without the cookie", async () => {
   assertEquals(nextCalled, false);
 });
 
+Deno.test("auth redirect does not echo request headers", async () => {
+  const headers = new Headers({
+    cookie: "session=secret",
+    authorization: "Bearer token",
+  });
+  const middleware = auth();
+
+  const response = await middleware(
+    new Request("http://localhost/private", { headers }),
+    () => new Response("secret"),
+  );
+
+  assertEquals(response.headers.get("cookie"), null);
+  assertEquals(response.headers.get("authorization"), null);
+  assertEquals(response.headers.get("location"), "/signin");
+});
+
 Deno.test("auth lets requests with the cookie through", async () => {
   const middleware = auth();
 

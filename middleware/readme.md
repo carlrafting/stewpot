@@ -78,7 +78,8 @@ the chain.
 
 ## Stack helpers
 
-`insert()`, `replace()` and `remove()` change a middleware array in place:
+`insert()`, `replace()` and `remove()` change a middleware array in place and
+return that same array, so calls can be chained:
 
 ```ts
 import { insert, remove, replace } from "jsr:@stewpot/middleware";
@@ -86,10 +87,9 @@ import { insert, remove, replace } from "jsr:@stewpot/middleware";
 insert(stack, 1, extra); // add `extra` at index 1
 replace(stack, 0, other); // swap the entry at index 0
 remove(stack, 2); // drop the entry at index 2
-```
 
-Like `Array.prototype.splice`, they return the elements they removed rather than
-the new array, so keep using the array you passed in.
+const handler = compose(remove(replace(stack, 0, other), 2), finalHandler);
+```
 
 ## Included middleware
 
@@ -125,19 +125,31 @@ only.
 import devReload from "jsr:@stewpot/middleware/dev";
 
 const middleware = devReload({ watchPaths: ["./templates", "./public"] });
+
+// Stop watching files, for example when shutting down or in tests.
+middleware.close();
 ```
+
+Every watched path must exist, or `devReload()` throws.
 
 ### AI crawler block
 
 Responds with `403 Forbidden` to user agents on the
 [ai.robots.txt](https://github.com/ai-robots-txt/ai.robots.txt) blocklist. The
 list is fetched once, when the middleware is created, so creating it is async
-and needs network access.
+and needs network access. It throws if the list cannot be fetched.
 
 ```ts
 import aiblock from "jsr:@stewpot/middleware/aiblock";
 
 const middleware = await aiblock();
+```
+
+Pass your own list of user agent substrings to skip the download, for example in
+tests or offline:
+
+```ts
+const middleware = await aiblock({ blocklist: ["GPTBot", "CCBot"] });
 ```
 
 ## Type Exports

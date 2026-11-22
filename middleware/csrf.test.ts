@@ -88,6 +88,96 @@ Deno.test("csrf accepts a form POST whose token matches the cookie", async () =>
   assertEquals(await response.text(), "ok");
 });
 
+function jsonRequest(
+  method: string,
+  headers: Record<string, string> = {},
+): Request {
+  return new Request("http://localhost/api", {
+    method,
+    headers: { "content-type": "application/json", ...headers },
+    body: method === "GET" || method === "HEAD" ? undefined : "{}",
+  });
+}
+
+Deno.test("csrf rejects a JSON POST without a token", async () => {
+  let nextCalled = false;
+  const middleware = csrf();
+
+  const response = await middleware(
+    jsonRequest("POST", { cookie: "csrf_token=abc" }),
+    () => {
+      nextCalled = true;
+      return new Response("ok");
+    },
+  );
+
+  assertEquals(response.status, 403);
+  assertEquals(nextCalled, false);
+});
+
+Deno.test("csrf accepts a token sent in the x-csrf-token header", async () => {
+  const middleware = csrf();
+
+  const response = await middleware(
+    jsonRequest("POST", { cookie: "csrf_token=abc", "x-csrf-token": "abc" }),
+    () => new Response("ok"),
+  );
+
+  assertEquals(response.status, 200);
+});
+
+Deno.test("csrf rejects an x-csrf-token header that does not match", async () => {
+  const middleware = csrf();
+
+  const response = await middleware(
+    jsonRequest("POST", { cookie: "csrf_token=abc", "x-csrf-token": "nope" }),
+    () => new Response("ok"),
+  );
+
+  assertEquals(response.status, 403);
+});
+
+Deno.test("csrf protects PUT, PATCH and DELETE", async () => {
+  const middleware = csrf();
+
+  for (const method of ["PUT", "PATCH", "DELETE"]) {
+    const rejected = await middleware(
+      jsonRequest(method, { cookie: "csrf_token=abc" }),
+      () => new Response("ok"),
+    );
+    assertEquals(rejected.status, 403, `${method} without a token`);
+
+    const accepted = await middleware(
+      jsonRequest(method, { cookie: "csrf_token=abc", "x-csrf-token": "abc" }),
+      () => new Response("ok"),
+    );
+    assertEquals(accepted.status, 200, `${method} with a token`);
+  }
+});
+
+Deno.test("csrf does not require a token for safe methods", async () => {
+  const middleware = csrf();
+
+  for (const method of ["GET", "HEAD", "OPTIONS"]) {
+    const response = await middleware(
+      jsonRequest(method),
+      () => new Response("ok"),
+    );
+    assertEquals(response.status, 200, method);
+  }
+});
+
+Deno.test("csrf rejects a request when the cookie is missing", async () => {
+  const middleware = csrf();
+
+  const response = await middleware(
+    jsonRequest("POST", { "x-csrf-token": "abc" }),
+    () => new Response("ok"),
+  );
+
+  assertEquals(response.status, 403);
+});
+
 Deno.test("csrf responds 400 to a malformed multipart POST", async () => {
   const middleware = csrf();
   const request = new Request("http://localhost/form", {
