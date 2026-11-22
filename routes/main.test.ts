@@ -1,6 +1,4 @@
-import {
-  assertEquals,
-} from "jsr:@std/assert";
+import { assertEquals } from "@std/assert";
 import { assertSnapshot } from "@std/testing/snapshot";
 import simpleRoutes, { defineRoutes, onNotFound } from "./main.ts";
 import type { Middleware } from "../middleware/main.ts";
@@ -55,7 +53,7 @@ Deno.test("simpleRoutes returns 404 from onNotFound if next not called", async (
 
   const request = new Request("http://localhost/not-found", { method: "GET" });
   // Force middleware to NOT call next and instead handle 404 itself
-  const finalHandler = (): Promise<Response> | Response => onNotFound(request)
+  const finalHandler = (): Promise<Response> | Response => onNotFound(request);
   const response = await middleware(request, finalHandler);
 
   const text = await response.text();
@@ -75,7 +73,7 @@ Deno.test("simpleRoutes returns 500 from onError when handler throws", async () 
   ]);
   const middleware: Middleware = simpleRoutes(definitions, {
     normalizePath: true,
-    onError: (req, error) =>
+    onError: (_req, error) =>
       new Response(`Error: ${error.message}`, { status: 500 }),
   });
 
