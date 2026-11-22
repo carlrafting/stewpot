@@ -38,8 +38,7 @@ cd middleware && deno task test
 
 CI (`.github/workflows/ci.yml`) runs each package's tests, type-checks the
 workspace with `deno check`, and runs `deno fmt --check`, `deno lint` and the
-`doc:lint` tasks. Format, lint and `feeds` doc lint are advisory for now, so
-they report problems without failing the run. Tests and the type check must pass
-before a push to `main` is published to JSR.
+`doc:lint` tasks. All of them must pass before a push to `main` is published to
+JSR.
 
 ---
