@@ -9,7 +9,7 @@ import { SOURCES_FILENAME } from "../cli/main.ts";
 Deno.test("discoverFeed returns the first working common feed URL", async () => {
   const calls: string[] = [];
 
-  using _ = stub(globalThis, "fetch", async (input) => {
+  using _ = stub(globalThis, "fetch", (input) => {
     const url = typeof input === "string"
       ? input
       : input instanceof URL
@@ -18,14 +18,14 @@ Deno.test("discoverFeed returns the first working common feed URL", async () => 
     calls.push(url);
 
     if (url.endsWith("/feed.xml")) {
-      return new Response("", { status: 404 });
+      return Promise.resolve(new Response("", { status: 404 }));
     }
 
     if (url.endsWith("/rss.xml")) {
-      return new Response("", { status: 200 });
+      return Promise.resolve(new Response("", { status: 200 }));
     }
 
-    return new Response("", { status: 404 });
+    return Promise.resolve(new Response("", { status: 404 }));
   });
 
   const result = await discoverFeed("https://example.com");
@@ -36,7 +36,11 @@ Deno.test("discoverFeed returns the first working common feed URL", async () => 
 });
 
 Deno.test("discoverFeed returns undefined when every common candidate fails", async () => {
-  using _ = stub(globalThis, "fetch", async () => new Response("", { status: 404 }));
+  using _ = stub(
+    globalThis,
+    "fetch",
+    () => Promise.resolve(new Response("", { status: 404 })),
+  );
 
   const result = await discoverFeed("https://example.com");
 

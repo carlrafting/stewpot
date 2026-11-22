@@ -144,8 +144,9 @@ Deno.test("fetchAllFeeds saves items and refreshes metadata sequentially", async
   });
 
   await fetchAllFeeds(feeds, {
-    async saveItems(id, items) {
+    saveItems(id, items) {
       saved.push({ id, items });
+      return Promise.resolve();
     },
   });
 

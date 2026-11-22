@@ -6,8 +6,8 @@ import {
   ConfirmationRequiredError,
   type FeedData,
   fetchAllFeeds,
-  SubscriptionError,
   subscribeToFeed,
+  SubscriptionError,
 } from "./main.ts";
 
 export interface ReaderAuth {
