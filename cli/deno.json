@@ -4,7 +4,8 @@
   "exports": "./main.ts",
   "license": "MIT",
   "tasks": {
-    "dev": "deno test --watch"
+    "dev": "deno test --watch",
+    "test": "deno test -RW"
   },
   "imports": {
     "@std/assert": "jsr:@std/assert@^1.0.19",

@@ -1,0 +1,109 @@
+name: CI
+
+on:
+  pull_request:
+  # `main` is intentionally absent: publish.yml calls this workflow (workflow_call)
+  # for every push to `main`, so listing it here would run CI twice.
+  push:
+    branches:
+      - dev
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: test (${{ matrix.package }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        package:
+          - cli
+          - feeds
+          - html
+          - manage
+          - middleware
+          - routes
+          - ui
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+      - name: Setup Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      # `feeds` exposes its test entry point as `tests`; every other package uses `test`.
+      - name: Run tests
+        working-directory: ${{ matrix.package }}
+        run: deno task ${{ matrix.package == 'feeds' && 'tests' || 'test' }}
+
+  check:
+    name: type check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+      - name: Setup Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - name: Type check workspace
+        run: deno check
+
+  # fmt and lint are advisory for now: they report problems without failing the
+  # run (and therefore without blocking publish). Remove `continue-on-error`
+  # once `dev` has been merged into `main` and both pass.
+  fmt:
+    name: format
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+      - name: Setup Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - name: Check formatting
+        run: deno fmt --check
+
+  lint:
+    name: lint
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+      - name: Setup Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - name: Lint
+        run: deno lint
+
+  # `feeds` currently has missing-JSDoc errors, so its leg is advisory. Set
+  # `advisory: false` once they are documented.
+  doc-lint:
+    name: doc lint (${{ matrix.package }})
+    runs-on: ubuntu-latest
+    continue-on-error: ${{ matrix.advisory }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - package: manage
+            advisory: false
+          - package: feeds
+            advisory: true
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+      - name: Setup Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - name: Lint documentation
+        working-directory: ${{ matrix.package }}
+        run: deno task doc:lint
