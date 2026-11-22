@@ -5,7 +5,7 @@
   "license": "MIT",
   "tasks": {
     "dev": "deno test --watch",
-    "test": "deno test -RW"
+    "test": "deno test -RWE"
   },
   "imports": {
     "@std/assert": "jsr:@std/assert@^1.0.19",
