@@ -3,7 +3,7 @@ import createApp, { defaultOptions } from "./main.ts";
 
 const app = await createApp({
   ...defaultOptions,
-  build: lumeBuildAdapter
+  build: lumeBuildAdapter,
 });
 
 export default app;

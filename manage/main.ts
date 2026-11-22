@@ -73,12 +73,6 @@ export async function app(
       request: Request,
       info?: Deno.ServeHandlerInfo,
     ) {
-      if (info) {
-        const remoteAddr = info.remoteAddr;
-        // console.log({
-        //   remoteAddr,
-        // });
-      }
       const start = performance.now();
       const url = new URL(request.url);
       const headers = new Headers();

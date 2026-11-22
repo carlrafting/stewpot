@@ -55,10 +55,10 @@ export default app;
 
 The server process must have permission to run Deno (for example,
 `--allow-run=deno`). Builds are never started automatically, and the page does
-not accept command text. Custom adapters implement the exported `BuildAdapter` interface and receive
-the project root, published document snapshot, a temporary directory
-containing static HTML pages, an abort signal, and a function for writing
-output. For example:
+not accept command text. Custom adapters implement the exported `BuildAdapter`
+interface and receive the project root, published document snapshot, a temporary
+directory containing static HTML pages, an abort signal, and a function for
+writing output. For example:
 
 ```ts
 import type { BuildAdapter } from "@stewpot/manage";
@@ -109,7 +109,9 @@ const app = await createApp({
   build: {
     name: "My site builder",
     async build({ projectRoot, documents, documentsDirectory, signal, write }) {
-      write(`Building ${documents.length} published page(s) from ${projectRoot}\n`);
+      write(
+        `Building ${documents.length} published page(s) from ${projectRoot}\n`,
+      );
       // Consume documentsDirectory in the project's build pipeline.
     },
   },
@@ -119,8 +121,8 @@ export default app;
 
 Manage owns one document collection and one build configuration per app. A
 first-class Site model is deferred until an app needs multiple independent
-domains, themes, output targets, or document collections. Custom adapters
-should treat `documentsDirectory` as read-only input and honor the abort signal.
+domains, themes, output targets, or document collections. Custom adapters should
+treat `documentsDirectory` as read-only input and honor the abort signal.
 
 ## Component library
 
@@ -138,9 +140,9 @@ The field partial accepts `id`, `name`, `label`, and `type`, plus optional
 and an optional styling `variant`. The `.card` class, form-field styles, and
 design tokens live in `assets/global.css`.
 
-`<block-preview>` enhances a block editor form marked `data-block-editor`
-with a sibling `[data-block-preview]`. Its optional `preview-url` attribute
-overrides the Markdown preview endpoint. It dispatches the bubbling
+`<block-preview>` enhances a block editor form marked `data-block-editor` with a
+sibling `[data-block-preview]`. Its optional `preview-url` attribute overrides
+the Markdown preview endpoint. It dispatches the bubbling
 `manage:block-preview-updated` event with `detail.blockType`. Markdown preview
 is rendered by the server; other previews use DOM text and validated HTTP(S)
 URLs.

@@ -128,10 +128,11 @@ Deno.test("build page streams output from the configured adapter", async () => {
   try {
     const adapter: BuildAdapter = {
       name: "Test builder",
-      async build({ projectRoot, write }) {
+      build({ projectRoot, write }) {
         assertEquals(projectRoot, root);
         write("Generated \x1b[3");
         write("2mindex.html\x1b[0m\n");
+        return Promise.resolve();
       },
     };
     const handler = await createTestHandler(root, adapter);
