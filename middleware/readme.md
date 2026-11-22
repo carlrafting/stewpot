@@ -19,7 +19,7 @@ deno add jsr:@stewpot/middleware
 
 ```ts
 // main.ts
-import { compose, Middleware } from "jsr:@stewpot/middleware";
+import { compose, type Middleware } from "jsr:@stewpot/middleware";
 
 const logger: Middleware = async (request, next) => {
   console.log(`${request.method} ${request.url}`);
@@ -72,12 +72,80 @@ function compose(
 ```
 
 Combines an array of middleware functions with a final request handler.
+Middleware run in array order: the first entry sees the request first and the
+response last. A middleware that returns without calling `next()` short-circuits
+the chain.
+
+## Stack helpers
+
+`insert()`, `replace()` and `remove()` change a middleware array in place:
+
+```ts
+import { insert, remove, replace } from "jsr:@stewpot/middleware";
+
+insert(stack, 1, extra); // add `extra` at index 1
+replace(stack, 0, other); // swap the entry at index 0
+remove(stack, 2); // drop the entry at index 2
+```
+
+Like `Array.prototype.splice`, they return the elements they removed rather than
+the new array, so keep using the array you passed in.
+
+## Included middleware
+
+All of these are exported from the package root and from their own entry point.
+
+### Logger
+
+Logs each request and the status of its response.
+
+```ts
+import { logger } from "jsr:@stewpot/middleware/logger";
+```
+
+### Static files
+
+Serves files from a directory and falls through to the next middleware when no
+file matches. `path` defaults to `./public`; set `debug` to log file-server
+activity.
+
+```ts
+import serveStatic from "jsr:@stewpot/middleware/static";
+
+const middleware = serveStatic({ path: "./public", debug: true });
+```
+
+### Dev reload
+
+Reloads the browser when watched files change, by injecting a small script into
+HTML responses that connects back to `/reload` over a WebSocket. For development
+only.
+
+```ts
+import devReload from "jsr:@stewpot/middleware/dev";
+
+const middleware = devReload({ watchPaths: ["./templates", "./public"] });
+```
+
+### AI crawler block
+
+Responds with `403 Forbidden` to user agents on the
+[ai.robots.txt](https://github.com/ai-robots-txt/ai.robots.txt) blocklist. The
+list is fetched once, when the middleware is created, so creating it is async
+and needs network access.
+
+```ts
+import aiblock from "jsr:@stewpot/middleware/aiblock";
+
+const middleware = await aiblock();
+```
 
 ## Type Exports
 
 - `Middleware` – Standard middleware function type
 - `NextHandler` – Callback passed to middleware
 - `RequestHandler` – Final request handler (`(req) => Response`)
+- `Helper` – Signature shared by `insert()`, `replace()` and `remove()`
 
 ## Related Packages
 

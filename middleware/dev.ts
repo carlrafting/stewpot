@@ -1,7 +1,9 @@
 import { fromFileUrl, join } from "@std/path";
 import type { Middleware, NextHandler } from "./main.ts";
 
-interface Options {
+/** Options for {@linkcode devReload}. */
+export interface Options {
+  /** Files or directories to watch. Any change reloads connected browsers. */
   watchPaths: string[];
 }
 
@@ -41,6 +43,11 @@ const normalizePaths = (paths: string[]): string[] => {
   return results;
 };
 
+/**
+ * Reloads the browser when watched files change. HTML responses get a small
+ * script injected that connects to `/reload` over a WebSocket. Intended for
+ * development only.
+ */
 export default function devReload(
   options: Options = defaultOptions,
 ): Middleware {
