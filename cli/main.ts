@@ -80,8 +80,6 @@ export function run(
   });
 }
 
-/** stewpot root directory as absolute fs path */
-const ENV_ROOT = "STEWPOT_ROOT";
 /** override directory with environment variable (absolute path) */
 const ENV_OVERRIDE = "STEWPOT_DIR_OVERRIDE";
 /** what environment stewpot packages should run under */
