@@ -43,6 +43,51 @@ Deno.test("init repairs the config file created by the previous 404 bug", async 
   assertEquals(config.includes('storage: { type: "fs" }'), true);
 });
 
+Deno.test("import and export round-trip OPML, keeping export stdout clean", async () => {
+  const root = await Deno.makeTempDir();
+  const env = { STEWPOT_DIR_OVERRIDE: root };
+  const decode = (bytes: Uint8Array) => new TextDecoder().decode(bytes);
+  await run(["init"], cliPath, { env }).output();
+
+  const opmlPath = join(root, "in.opml");
+  await Deno.writeTextFile(
+    opmlPath,
+    `<opml version="2.0"><head><title>t</title></head><body>
+      <outline text="Blog" xmlUrl="https://site.example/a.xml"/>
+    </body></opml>`,
+  );
+
+  const imported = await run(["import", opmlPath], cliPath, { env }).output();
+  assertEquals(imported.success, true, decode(imported.stderr));
+  assertEquals(decode(imported.stdout).includes("imported 1 feeds"), true);
+
+  const exported = await run(["export"], cliPath, { env }).output();
+  assertEquals(exported.success, true, decode(exported.stderr));
+  // diagnostics such as "loading config" must not leak into the document
+  assertEquals(decode(exported.stdout).startsWith("<?xml"), true);
+  assertEquals(
+    decode(exported.stdout).includes('xmlUrl="https://site.example/a.xml"'),
+    true,
+  );
+});
+
+Deno.test("import fails for a missing or invalid OPML file", async () => {
+  const root = await Deno.makeTempDir();
+  const env = { STEWPOT_DIR_OVERRIDE: root };
+  await run(["init"], cliPath, { env }).output();
+
+  const missing = await run(["import", join(root, "nope.opml")], cliPath, {
+    env,
+  }).output();
+  assertEquals(missing.success, false);
+
+  const invalidPath = join(root, "bad.opml");
+  await Deno.writeTextFile(invalidPath, "not opml");
+  const invalid = await run(["import", invalidPath], cliPath, { env })
+    .output();
+  assertEquals(invalid.success, false);
+});
+
 Deno.test("detectMode treats installed modules outside a Git checkout as production", async () => {
   const cwd = await Deno.makeTempDir();
   const scriptPath = join(cwd, "detect-mode.ts");
