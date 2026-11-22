@@ -33,8 +33,10 @@ export default [
     name: "library_upload",
     method: "POST",
     pathname: "/library/upload/",
-    async handler() {
-      return text("File uploads are not available yet.", { status: 501 });
+    handler() {
+      return Promise.resolve(
+        text("File uploads are not available yet.", { status: 501 }),
+      );
     },
   },
 ] as Route[];

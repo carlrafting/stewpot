@@ -16,7 +16,7 @@ export default {
     const page = await render("sessions/index.vto");
     const sessions = await repository.getAllByKey<Session>(key);
     const data: { sessions: Session[] } = { sessions: [] };
-    for (const { key, value, versionstamp } of sessions) {
+    for (const { value } of sessions) {
       data.sessions.push(value);
     }
     const body = await page({ title, description, url, nav, data });
