@@ -20,8 +20,8 @@ import {
   mapToFeedItems,
   persistFeedSubscription,
   resolveFeedInput,
-  SubscriptionError,
   subscribeToFeed,
+  SubscriptionError,
 } from "../core/main.ts";
 import { feedsToOpml, importOpml } from "../core/opml.ts";
 
@@ -153,7 +153,7 @@ const init: Command = {
 Create the default configuration file for feeds. If a configuration file
 already exists, it is left unchanged.`,
   async run(
-    input: Input,
+    _input: Input,
     options: Options,
     deps: Deps,
   ): Promise<number> {
@@ -535,7 +535,7 @@ saved to the configured storage.`,
       return printCommandHelp(fetch);
     }
 
-    const [command, input] = _input;
+    const [, input] = _input;
 
     if (feeds.length === 0) {
       console.error(colors.red("error"), "feeds empty, nothing to fetch");

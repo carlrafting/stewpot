@@ -41,6 +41,12 @@
       "core/desktop.ts"
     ]
   },
+  "fmt": {
+    "exclude": [
+      "fixtures",
+      "assets/rss-icon.svg"
+    ]
+  },
   "tasks": {
     "dev:cli": {
       "description": "Run CLI in development mode",

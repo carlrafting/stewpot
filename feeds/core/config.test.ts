@@ -11,7 +11,7 @@ function setup() {
   });
 }
 
-Deno.test("define", (t) => {
+Deno.test("define", () => {
   const config = setup();
   assertEquals(config.reader?.hostname, "0.0.0.0");
   assertEquals(config.reader?.port, 8080);
