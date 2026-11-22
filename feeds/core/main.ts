@@ -103,13 +103,13 @@ export type ParsedFeed = {
  * @param parsed parsed feed from feedsmith
  * @param content response body content
  * @param metadata FeedData
- * @param url feed source URL instance
+ * @param _url feed source URL instance. Currently unused; kept so existing callers keep working.
  */
 export function mapToFeedItems(
   parsed: ParsedFeed,
   content: string,
   metadata: FeedData,
-  url: URL,
+  _url: URL,
 ): FeedItem[] {
   const items: FeedItem[] = [];
   const format = parsed.format;
@@ -570,7 +570,14 @@ export async function persistFeedSubscription(
 
 /** A subscription input that was rejected; `status` is an HTTP-style code. */
 export class SubscriptionError extends Error {
+  /** HTTP-style status code describing why the input was rejected. */
   status: number;
+  /**
+   * Creates an error for a rejected subscription input.
+   *
+   * @param message human-readable reason the input was rejected
+   * @param status HTTP-style status code, such as `400`
+   */
   constructor(message: string, status: number) {
     super(message);
     this.name = "SubscriptionError";
@@ -580,7 +587,13 @@ export class SubscriptionError extends Error {
 
 /** Thrown when a discovered feed URL must be confirmed before subscribing. */
 export class ConfirmationRequiredError extends Error {
+  /** The discovered feed URL that needs to be confirmed. */
   url: string;
+  /**
+   * Creates an error asking for confirmation of a discovered feed URL.
+   *
+   * @param url the discovered feed URL that needs to be confirmed
+   */
   constructor(url: string) {
     super("confirmation required");
     this.name = "ConfirmationRequiredError";
