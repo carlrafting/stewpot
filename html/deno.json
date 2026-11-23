@@ -3,7 +3,8 @@
   "version": "0.3.2",
   "exports": "./mod.ts",
   "tasks": {
-    "dev": "deno test -RW --watch"
+    "dev": "deno test -RW --watch",
+    "test": "deno test -RW"
   },
   "license": "MIT",
   "imports": {

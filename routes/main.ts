@@ -29,7 +29,7 @@ export const defineRoutes = (definitions: Definition[]): Definition[] =>
   definitions;
 
 /** Error response displayed for server-related errors */
-export function onError(request: Request, error: Error): Response {
+export function onError(_request: Request, _error: Error): Response {
   const headers = new Headers(defaultHeaders);
   const status = 500;
   const html = `
@@ -47,7 +47,7 @@ export function onError(request: Request, error: Error): Response {
 }
 
 /** Not found response displayed when no route mathches the requested URL */
-export function onNotFound(request: Request): Response {
+export function onNotFound(_request: Request): Response {
   const headers = new Headers(defaultHeaders);
   const status = 404;
   const html = `

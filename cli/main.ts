@@ -80,9 +80,16 @@ export function run(
   });
 }
 
-/** stewpot root directory as absolute fs path */
+/**
+ * stewpot root directory as absolute fs path. Each package keeps its files in a
+ * subdirectory of it, like it does under `~/.stewpot`.
+ */
 const ENV_ROOT = "STEWPOT_ROOT";
-/** override directory with environment variable (absolute path) */
+/**
+ * override directory with environment variable (absolute path)
+ *
+ * @deprecated use {@linkcode ENV_ROOT} instead
+ */
 const ENV_OVERRIDE = "STEWPOT_DIR_OVERRIDE";
 /** what environment stewpot packages should run under */
 const ENV_MODE = "STEWPOT_MODE";
@@ -92,14 +99,27 @@ const STEWPOT_DIRNAME = ".stewpot";
 /**
  * resolves path to directory based on os environment
  *
+ * In order of precedence: `STEWPOT_ROOT` (the directory is `<root>/<to>`), the
+ * deprecated `STEWPOT_DIR_OVERRIDE` (used as is, with a warning), the local
+ * `tmp` directory in development, and `~/.stewpot/<to>` in production.
+ *
  * @returns {string} the resolved root path as string
  */
 export function resolvePath(to: string): string | undefined {
   const env = Deno.env;
   const root = STEWPOT_DIRNAME;
 
+  const envRoot = env.get(ENV_ROOT);
+  if (envRoot) return join(envRoot, to);
+
   const override = env.get(ENV_OVERRIDE);
-  if (override) return override;
+  if (override) {
+    console.error(
+      yellow("warn"),
+      `${ENV_OVERRIDE} is deprecated. use ${ENV_ROOT} instead.`,
+    );
+    return override;
+  }
 
   const mode = detectMode();
   // console.log({ mode });

@@ -47,7 +47,8 @@ export async function loadConfig(
 
   try {
     if (!config) throw new Error("Config path must be provided");
-    console.log(colors.cyan("info"), `loading config at ${config}`);
+    // stderr, so commands that print data (e.g. `feeds export`) stay pipeable
+    console.error(colors.cyan("info"), `loading config at ${config}`);
     const configModule = await import(toFileUrl(config).href);
     return configModule.default;
   } catch (_) {

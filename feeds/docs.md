@@ -17,6 +17,17 @@ proxy. The generic `HOSTNAME` environment variable does not configure the
 reader's bind address; use `--hostname` or the `reader.hostname` config setting
 instead.
 
+## Where data is stored
+
+By default the CLI keeps its config, feeds and items in `~/.stewpot/feeds`. Set
+the `STEWPOT_ROOT` environment variable to an absolute path to use
+`$STEWPOT_ROOT/feeds` instead.
+
+`STEWPOT_DIR_OVERRIDE`, which pointed directly at the feeds directory, is
+deprecated and prints a warning. It still works when `STEWPOT_ROOT` is not set;
+when both are set, `STEWPOT_ROOT` wins. To migrate, set `STEWPOT_ROOT` to the
+parent of the directory you used before.
+
 # Run CLI reader as system service with caddy web server (WSL/Linux)
 
 Instructions for installing caddy, are

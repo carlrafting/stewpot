@@ -27,4 +27,18 @@ more is coming as it usually goes.
 - [@stewpot/html](/html/)
   [![JSR](https://jsr.io/badges/@stewpot/html)](https://jsr.io/@stewpot/html)
 
+# Development
+
+Every package has a `test` task (`feeds` calls it `tests`). Run it from inside
+the package directory:
+
+```sh
+cd middleware && deno task test
+```
+
+CI (`.github/workflows/ci.yml`) runs each package's tests, type-checks the
+workspace with `deno check`, and runs `deno fmt --check`, `deno lint` and the
+`doc:lint` tasks. All of them must pass before a push to `main` is published to
+JSR.
+
 ---

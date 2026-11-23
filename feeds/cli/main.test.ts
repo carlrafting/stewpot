@@ -18,29 +18,79 @@ Deno.test("detectMode treats modules in a local Git checkout as development", ()
   assertEquals(detectMode(), "development");
 });
 
-Deno.test("init writes the default config file", async () => {
+/**
+ * Creates a temporary stewpot root. `env` points the CLI at it with
+ * `STEWPOT_ROOT`, and `feeds` is the directory the feeds CLI keeps its data in.
+ */
+async function makeRoot() {
   const root = await Deno.makeTempDir();
-  const result = await run(["init"], cliPath, {
-    env: { STEWPOT_DIR_OVERRIDE: root },
-  }).output();
+  const feeds = join(root, "feeds");
+  await Deno.mkdir(feeds);
+  return { root, feeds, env: { STEWPOT_ROOT: root } };
+}
+
+Deno.test("init writes the default config file", async () => {
+  const { feeds, env } = await makeRoot();
+  const result = await run(["init"], cliPath, { env }).output();
 
   assertEquals(result.success, true, new TextDecoder().decode(result.stderr));
-  const config = await Deno.readTextFile(join(root, CONFIG_FILENAME));
+  const config = await Deno.readTextFile(join(feeds, CONFIG_FILENAME));
   assertEquals(config.includes("404 Not Found"), false);
   assertEquals(config.includes('storage: { type: "fs" }'), true);
 });
 
 Deno.test("init repairs the config file created by the previous 404 bug", async () => {
-  const root = await Deno.makeTempDir();
-  await Deno.writeTextFile(join(root, CONFIG_FILENAME), "404 Not Found");
-  const result = await run(["init"], cliPath, {
-    env: { STEWPOT_DIR_OVERRIDE: root },
-  }).output();
+  const { feeds, env } = await makeRoot();
+  await Deno.writeTextFile(join(feeds, CONFIG_FILENAME), "404 Not Found");
+  const result = await run(["init"], cliPath, { env }).output();
 
   assertEquals(result.success, true, new TextDecoder().decode(result.stderr));
-  const config = await Deno.readTextFile(join(root, CONFIG_FILENAME));
+  const config = await Deno.readTextFile(join(feeds, CONFIG_FILENAME));
   assertEquals(config.includes("404 Not Found"), false);
   assertEquals(config.includes('storage: { type: "fs" }'), true);
+});
+
+Deno.test("import and export round-trip OPML, keeping export stdout clean", async () => {
+  const { root, env } = await makeRoot();
+  const decode = (bytes: Uint8Array) => new TextDecoder().decode(bytes);
+  await run(["init"], cliPath, { env }).output();
+
+  const opmlPath = join(root, "in.opml");
+  await Deno.writeTextFile(
+    opmlPath,
+    `<opml version="2.0"><head><title>t</title></head><body>
+      <outline text="Blog" xmlUrl="https://site.example/a.xml"/>
+    </body></opml>`,
+  );
+
+  const imported = await run(["import", opmlPath], cliPath, { env }).output();
+  assertEquals(imported.success, true, decode(imported.stderr));
+  assertEquals(decode(imported.stdout).includes("imported 1 feeds"), true);
+
+  const exported = await run(["export"], cliPath, { env }).output();
+  assertEquals(exported.success, true, decode(exported.stderr));
+  // diagnostics such as "loading config" must not leak into the document
+  assertEquals(decode(exported.stdout).startsWith("<?xml"), true);
+  assertEquals(
+    decode(exported.stdout).includes('xmlUrl="https://site.example/a.xml"'),
+    true,
+  );
+});
+
+Deno.test("import fails for a missing or invalid OPML file", async () => {
+  const { root, env } = await makeRoot();
+  await run(["init"], cliPath, { env }).output();
+
+  const missing = await run(["import", join(root, "nope.opml")], cliPath, {
+    env,
+  }).output();
+  assertEquals(missing.success, false);
+
+  const invalidPath = join(root, "bad.opml");
+  await Deno.writeTextFile(invalidPath, "not opml");
+  const invalid = await run(["import", invalidPath], cliPath, { env })
+    .output();
+  assertEquals(invalid.success, false);
 });
 
 Deno.test("detectMode treats installed modules outside a Git checkout as production", async () => {
@@ -101,15 +151,13 @@ Deno.test("should load config file it exists", async (t) => {
 Deno.test(
   "listCommand should list feed sources if there are more than 0",
   async () => {
-    const root = await Deno.makeTempDir();
+    const { feeds, env } = await makeRoot();
     await Deno.writeTextFile(
-      join(root, "sources.json"),
+      join(feeds, "sources.json"),
       JSON.stringify(sampleFeeds),
     );
     const args = ["list"];
-    const command = run(args, cliPath, {
-      env: { STEWPOT_DIR_OVERRIDE: root },
-    });
+    const command = run(args, cliPath, { env });
     const results = await command.output();
     assertEquals(results.success, true);
     assertEquals(results.code, 0);

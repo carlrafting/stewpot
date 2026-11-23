@@ -17,6 +17,11 @@
     "./routes",
     "./html"
   ],
+  "fmt": {
+    "exclude": [
+      ".zed"
+    ]
+  },
   "unstable": [
     "raw-imports",
     "kv",
