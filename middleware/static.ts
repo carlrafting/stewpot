@@ -2,11 +2,18 @@ import { serveDir } from "@std/http/file-server";
 import type { Middleware, NextHandler } from "./main.ts";
 import { join } from "@std/path";
 
+/** Options for {@linkcode serveStaticMiddleware}. */
 export interface Options {
+  /** Directory to serve files from. Defaults to `./public` in the working directory. */
   path?: string;
+  /** Log file-server activity and errors to the console. Defaults to `false`. */
   debug?: boolean;
 }
 
+/**
+ * Serves files from a directory. Requests that do not match a file fall through
+ * to the next middleware.
+ */
 export function serveStaticMiddleware(options?: Options): Middleware {
   return async function serveStatic(
     request: Request,
