@@ -1,18 +1,25 @@
 import type { Middleware, NextHandler } from "./main.ts";
 import { getCookies } from "@std/http/cookie";
-import { STATUS_TEXT, STATUS_CODE } from "@std/http/status";
+import { STATUS_CODE, STATUS_TEXT } from "@std/http/status";
 
-interface Options {
-  only: Array<Record<string, string>>
-  except: Record<string, string>
-  signin: string | null
+/** Options for the {@linkcode auth} middleware. */
+export interface Options {
+  /** Path of the sign-in page. Requests to it are never redirected. Defaults to `/signin`. */
+  signin?: string;
 }
 
+/**
+ * Redirects requests without an `authenticated` cookie to the sign-in page.
+ *
+ * This only checks that the cookie is present, not that its value was issued by
+ * the server, so it must not be relied on as real authentication.
+ */
 export default function auth(options?: Options): Middleware {
-  const only = options?.only;
-  const except = options?.except;
-  const signin = '/signin';
-  return async function authMiddleware(request: Request, next: NextHandler): Promise<Response> {
+  const signin = options?.signin ?? "/signin";
+  return async function authMiddleware(
+    request: Request,
+    next: NextHandler,
+  ): Promise<Response> {
     const url = new URL(request.url);
     const cookies = getCookies(request.headers);
     const allowed = cookies?.authenticated || url.pathname === signin;
@@ -24,10 +31,10 @@ export default function auth(options?: Options): Middleware {
     const status = STATUS_CODE.Found;
     const text = STATUS_TEXT[status];
     const headers = new Headers(request.headers);
-    headers.set('location', signin);
+    headers.set("location", signin);
     return new Response(text, {
       status,
-      headers
+      headers,
     });
   };
 }

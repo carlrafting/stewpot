@@ -5,10 +5,10 @@ Deno.test({
   name: "serves static file when it exists",
   async fn() {
     const root = await Deno.makeTempDir();
-    const fileName = "hello.txt"
+    const fileName = "hello.txt";
     const textFilePath = `${root}/${fileName}`;
     const options: Options = {
-      path: root
+      path: root,
     };
 
     await Deno.writeTextFile(
@@ -20,13 +20,12 @@ Deno.test({
     const request = new Request("http://localhost/" + fileName);
     const response = await middleware(request, () =>
       new Response("ok", {
-        status: 200
-      })
-    );
+        status: 200,
+      }));
     assertEquals(response.status, 200, "response returns correct http status");
     assertEquals(response.ok, true, "response is ok");
     assertEquals(await response.text(), "hello world");
-  }
+  },
 });
 
 Deno.test({
@@ -49,5 +48,5 @@ Deno.test({
     assertEquals(response.status, 200, "response returns correct http status");
     assertEquals(response.ok, true, "response is ok");
     assertEquals(await response.text(), "next");
-  }
+  },
 });

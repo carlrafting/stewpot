@@ -1,5 +1,5 @@
 import fetch from "./main.ts";
 
 export default {
-    fetch
+  fetch,
 } satisfies Deno.ServeDefaultExport;
