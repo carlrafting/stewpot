@@ -7,8 +7,13 @@ export interface Options {
   watchPaths: string[];
 }
 
+/** The middleware returned by {@linkcode devReload}. */
+export interface DevReloadMiddleware extends Middleware {
+  /** Stops watching files and closes any connected browsers' sockets. */
+  close(): void;
+}
+
 function injectReloadScript(html: string): string {
-  let modified = false;
   const script = `
 <script>
   const ws = new WebSocket('ws://' + location.host + '/reload');
@@ -18,14 +23,9 @@ function injectReloadScript(html: string): string {
 </script>
   `;
   if (html.includes("</body>")) {
-    modified = true;
     return html.replace("</body>", `${script}</body>`);
   }
-  if (!modified) {
-    modified = true;
-    return html += script;
-  }
-  return html;
+  return html + script;
 }
 
 const defaultOptions: Options = {
@@ -47,18 +47,21 @@ const normalizePaths = (paths: string[]): string[] => {
  * Reloads the browser when watched files change. HTML responses get a small
  * script injected that connects to `/reload` over a WebSocket. Intended for
  * development only.
+ *
+ * Call `close()` on the returned middleware to stop the file watcher.
+ *
+ * @throws If a watched path does not exist
  */
 export default function devReload(
   options: Options = defaultOptions,
-): Middleware {
+): DevReloadMiddleware {
   const connections = new Set<WebSocket>();
+  const watcher = Deno.watchFs(normalizePaths(options.watchPaths), {
+    recursive: true,
+  });
 
   (async () => {
     try {
-      const watcher = Deno.watchFs(normalizePaths(options.watchPaths), {
-        recursive: true,
-      });
-
       for await (const event of watcher) {
         const validEvent = event.kind === "modify" || event.kind === "create" ||
           event.kind === "remove" || event.kind === "rename";
@@ -69,11 +72,20 @@ export default function devReload(
         }
       }
     } catch (error) {
-      throw error;
+      // Closing the watcher can interrupt the pending read; that is expected.
+      if (
+        !(error instanceof Deno.errors.BadResource) &&
+        !(error instanceof Deno.errors.Interrupted)
+      ) {
+        throw error;
+      }
     }
   })();
 
-  return async function devReloadMiddleware(req: Request, next: NextHandler) {
+  async function devReloadMiddleware(
+    req: Request,
+    next: NextHandler,
+  ): Promise<Response> {
     const url = new URL(req.url);
     if (url.pathname === "/reload") {
       const { response, socket } = Deno.upgradeWebSocket(req);
@@ -85,13 +97,29 @@ export default function devReload(
     const contentType = response.headers.get("content-type") || "";
     if (contentType.includes("text/html")) {
       const original = await response.text();
+      // The injected script makes the body longer, so the original length is wrong.
+      const headers = new Headers(response.headers);
+      headers.delete("content-length");
       return new Response(injectReloadScript(original), {
         status: response.status,
-        headers: response.headers,
+        headers,
       });
     }
     return response;
-  };
+  }
+
+  let closed = false;
+  return Object.assign(devReloadMiddleware, {
+    close() {
+      if (closed) return;
+      closed = true;
+      watcher.close();
+      for (const socket of connections) {
+        socket.close();
+      }
+      connections.clear();
+    },
+  });
 }
 
 export { devReload };

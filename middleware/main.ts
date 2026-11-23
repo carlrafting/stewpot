@@ -46,8 +46,8 @@ export type RequestHandler = (
 ) => Promise<Response> | Response;
 
 /**
- * Signature shared by {@linkcode insert}, {@linkcode replace} and
- * {@linkcode remove}. The third argument is ignored by `remove`.
+ * Signature shared by {@linkcode insert} and {@linkcode replace}.
+ * {@linkcode remove} takes only the first two arguments.
  */
 export type Helper = (
   middleware: Middleware[],
@@ -62,52 +62,60 @@ export type Helper = (
  *
  * @param middlewares Middleware to run, outermost first
  * @param handler Final handler, called when every middleware calls `next()`
- * @returns A request handler that can be passed to `Deno.serve`
+ * @returns A request handler that can be passed to `Deno.serve`. The connection
+ * info that `Deno.serve` passes along is forwarded to the final handler.
  */
 export function compose(
   middlewares: Middleware[],
   handler: RequestHandler,
-): RequestHandler;
-export function compose(
-  middlewares: Middleware[],
-  handler: RequestHandler,
-  info?: Deno.ServeHandlerInfo,
 ): RequestHandler {
   return middlewares.reduceRight<RequestHandler>(
-    (next, mw) => async (request: Request) =>
+    (next, mw) => async (request: Request, info) =>
       await mw(request, () => next(request, info)),
     handler,
   );
 }
 
 /**
- * Inserts `fn` at `index`, in place. Like `Array.prototype.splice`, it returns
- * the removed elements, which is always an empty array here, not the new stack.
+ * Inserts `fn` at `index`, in place.
+ *
+ * @returns The same array that was passed in, for chaining
  */
 export const insert: Helper = (
   middleware: Middleware[],
   index: number,
   fn: Middleware,
-): Middleware[] => middleware.splice(index, 0, fn);
+): Middleware[] => {
+  middleware.splice(index, 0, fn);
+  return middleware;
+};
 
 /**
- * Replaces the middleware at `index` with `fn`, in place. Returns the replaced
- * middleware, not the new stack.
+ * Replaces the middleware at `index` with `fn`, in place.
+ *
+ * @returns The same array that was passed in, for chaining
  */
 export const replace: Helper = (
   middleware: Middleware[],
   index: number,
   fn: Middleware,
-): Middleware[] => middleware.splice(index, 1, fn);
+): Middleware[] => {
+  middleware.splice(index, 1, fn);
+  return middleware;
+};
 
 /**
- * Removes the middleware at `index`, in place. Returns the removed middleware,
- * not the new stack.
+ * Removes the middleware at `index`, in place.
+ *
+ * @returns The same array that was passed in, for chaining
  */
-export const remove: Helper = (
+export const remove = (
   middleware: Middleware[],
   index: number,
-): Middleware[] => middleware.splice(index, 1);
+): Middleware[] => {
+  middleware.splice(index, 1);
+  return middleware;
+};
 
 export {
   aiblockMiddleware,

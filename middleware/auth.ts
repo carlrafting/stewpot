@@ -30,11 +30,9 @@ export default function auth(options?: Options): Middleware {
 
     const status = STATUS_CODE.Found;
     const text = STATUS_TEXT[status];
-    const headers = new Headers(request.headers);
-    headers.set("location", signin);
     return new Response(text, {
       status,
-      headers,
+      headers: { location: signin },
     });
   };
 }
