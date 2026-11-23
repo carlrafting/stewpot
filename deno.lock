@@ -313,7 +313,7 @@
           "jsr:@std/semver@^1.0.8",
           "jsr:@std/testing@^1.0.20",
           "jsr:@std/ulid@1",
-          "jsr:@stewpot/cli@~0.1.2",
+          "jsr:@stewpot/cli@~0.2.0",
           "jsr:@stewpot/html@~0.3.2",
           "npm:feedsmith@^2.9.6",
           "npm:ventojs@^2.4.0"
